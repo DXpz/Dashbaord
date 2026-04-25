@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { Chart, registerables } from 'chart.js';
 import { cn } from '@/lib/utils';
 
 Chart.register(...registerables);
@@ -14,11 +14,15 @@ interface ChartWrapperProps {
   height?: string;
 }
 
-const palette = {
+const COLORS = {
   dark: '#1F1D3D',
   medium: '#35325B',
   light: '#B5B5AE',
   accent: '#EEEEEC',
+  green: '#22c55e',
+  orange: '#f97316',
+  red: '#c8151b',
+  blue: '#145478',
 };
 
 function hasData(data: any): boolean {
@@ -29,54 +33,92 @@ function hasData(data: any): boolean {
   return values.some((v: any) => v > 0);
 }
 
+function buildDefaultOptions(type: string) {
+  const isBar = type === 'bar';
+  const isPieDoughnut = type === 'pie' || type === 'doughnut';
+
+  const base: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 400 },
+    plugins: {
+      legend: {
+        display: isPieDoughnut,
+        position: 'bottom' as const,
+        labels: {
+          usePointStyle: true,
+          padding: 16,
+          font: { size: 11, family: 'Inter' },
+          color: COLORS.light,
+        },
+      },
+      tooltip: {
+        backgroundColor: COLORS.dark,
+        titleFont: { size: 12, family: 'Inter', weight: '600' },
+        bodyFont: { size: 11, family: 'Inter' },
+        padding: 10,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label(context: any) {
+            const value = context.parsed.y ?? context.parsed ?? 0;
+            const dataArr = context.dataset.data;
+            const total = Array.isArray(dataArr) ? dataArr.reduce((a: number, b: number) => a + b, 0) : 0;
+            const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+            return ` ${value.toLocaleString('es-ES')} (${pct}%)`;
+          },
+        },
+      },
+    },
+  };
+
+  if (isBar) {
+    base.scales = {
+      x: {
+        grid: { display: false },
+        ticks: {
+          font: { size: 11, family: 'Inter' },
+          color: COLORS.light,
+          maxRotation: 45,
+        },
+      },
+      y: {
+        grid: { color: 'rgba(0,0,0,0.04)' },
+        ticks: {
+          font: { size: 11, family: 'Inter' },
+          color: COLORS.light,
+          callback: (value: any) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value,
+        },
+      },
+    };
+  }
+
+  return base;
+}
+
 export function ChartWrapper({ type, data, options, className, height = '100%' }: ChartWrapperProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
-
     chartRef.current?.destroy();
 
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
-    const defaultOptions: any = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: type === 'pie' || type === 'doughnut',
-          position: 'bottom' as const,
-          labels: {
-            usePointStyle: true,
-            padding: 16,
-            font: { size: 11, family: 'Inter' },
-            color: palette.light,
-          },
-        },
-      },
-      scales: type === 'bar' || type === 'line' ? {
-        x: {
-          grid: { display: false },
-          ticks: { font: { size: 11, family: 'Inter' }, color: palette.light },
-        },
-        y: {
-          grid: { color: 'rgba(0,0,0,0.04)' },
-          ticks: { font: { size: 11, family: 'Inter' }, color: palette.light },
-        },
-      } : undefined,
+    const mergedOptions = {
+      ...buildDefaultOptions(type),
+      ...options,
     };
 
     chartRef.current = new Chart(ctx, {
       type,
       data,
-      options: { ...defaultOptions, ...options },
+      options: mergedOptions,
     });
 
-    return () => {
-      chartRef.current?.destroy();
-    };
+    return () => { chartRef.current?.destroy(); };
   }, [type, data, options]);
 
   const hasChartData = hasData(data);
