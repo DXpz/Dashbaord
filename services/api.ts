@@ -28,17 +28,6 @@ function getApiKey(): string {
   return 'RedApi_2026_SuperSegura_9XK2';
 }
 
-function stripApiPrefix(path: string): string {
-  if (path.startsWith('/api/')) return path.slice(4);
-  return path;
-}
-
-function getProxyUrl(path: string, params: Record<string, any> = {}): string {
-  const qs = buildQuery(params);
-  const suffix = stripApiPrefix(path);
-  return `/api/proxy?_path=${encodeURIComponent(suffix)}${qs}`;
-}
-
 export function setBase(url: string): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(STORAGE_KEY, url.replace(/\/+$/, ''));
@@ -104,12 +93,14 @@ async function fetchJson(url: string, init: RequestInit = {}, ms: number = FETCH
 }
 
 async function get(path: string, params: Record<string, any>) {
+  const base = getBase();
+  const qs = buildQuery(params);
+
   if (isProduction()) {
-    const url = getProxyUrl(path, params);
+    const url = `${path}${qs}`;
     return fetchJson(url);
   }
-  const base = getBase();
-  const url = `${base}${path}${buildQuery(params)}`;
+  const url = `${base}${path}${qs}`;
   return fetchJson(url);
 }
 
@@ -145,8 +136,13 @@ async function apiRoot(method: string, path: string, body?: any) {
 }
 
 async function getJsonPath(pathWithQuery: string) {
+  const base = getBase();
   const path = pathWithQuery.startsWith('/') ? pathWithQuery : `/${pathWithQuery}`;
-  return get(path, {});
+  if (isProduction()) {
+    return fetchJson(path);
+  }
+  const url = `${base}${path}`;
+  return fetchJson(url);
 }
 
 export const API = {
