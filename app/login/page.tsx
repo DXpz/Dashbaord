@@ -103,14 +103,10 @@ export default function LoginPage() {
 
       <div className="relative z-10 hidden lg:flex lg:w-3/5 items-center justify-center p-20">
         <div className="max-w-2xl">
-          <div className="mb-8">
-            <span className="text-xs font-medium text-[#B5B5AE] uppercase tracking-[0.25em]">Sales AI Assistant</span>
-          </div>
-
           <h1 className="leading-none mb-10 select-none">
             <span className="block text-[96px] font-bold text-[#1F1D3D] tracking-[-0.06em]">Conoce</span>
-            <span className="block text-[96px] font-extralight text-[#1F1D3D] tracking-[-0.06em] mt-[-12px]">hoy tu</span>
-            <span className="block text-[96px] font-semibold text-[#35325B] tracking-[-0.06em] mt-[-12px]">asistente IA</span>
+            <span className="block text-[96px] font-extralight text-[#1F1D3D] tracking-[-0.06em]">hoy tu</span>
+            <span className="block text-[108px] font-semibold text-[#35325B] tracking-[-0.04em] uppercase">asistente IA</span>
           </h1>
 
           <div className="ml-4 space-y-5">
@@ -120,8 +116,8 @@ export default function LoginPage() {
               'Dashboard inteligente en tiempo real',
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-[#22c55e]/20 flex items-center justify-center flex-shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
+                <div className="w-5 h-5 rounded-full bg-[#1F1D3D]/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1F1D3D" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
