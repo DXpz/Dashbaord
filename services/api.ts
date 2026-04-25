@@ -1,7 +1,7 @@
 /**
  * API Service - Migrated from vanilla JS api.js
  * Preserves all original logic with TypeScript types
- * Uses /api proxy in production, direct call in development
+ * Uses /api proxy in production (HTTPS), direct call in development (HTTP)
  */
 
 const STORAGE_KEY = 'dashboard_api_base';
@@ -28,14 +28,15 @@ function getApiKey(): string {
   return 'RedApi_2026_SuperSegura_9XK2';
 }
 
-function getApiUrl(path: string, params: Record<string, any> = {}): string {
-  const qs = buildQuery(params);
-  const base = getBase();
+function stripApiPrefix(path: string): string {
+  if (path.startsWith('/api/')) return path.slice(4);
+  return path;
+}
 
-  if (isProduction()) {
-    return `/api/proxy?_path=${encodeURIComponent(path.slice(1))}${qs}`;
-  }
-  return `${base}${path}${qs}`;
+function getProxyUrl(path: string, params: Record<string, any> = {}): string {
+  const qs = buildQuery(params);
+  const suffix = stripApiPrefix(path);
+  return `/api/proxy?_path=${encodeURIComponent(suffix)}${qs}`;
 }
 
 export function setBase(url: string): void {
@@ -103,13 +104,17 @@ async function fetchJson(url: string, init: RequestInit = {}, ms: number = FETCH
 }
 
 async function get(path: string, params: Record<string, any>) {
-  const url = getApiUrl(path, params);
+  if (isProduction()) {
+    const url = getProxyUrl(path, params);
+    return fetchJson(url);
+  }
+  const base = getBase();
+  const url = `${base}${path}${buildQuery(params)}`;
   return fetchJson(url);
 }
 
 async function getHealth() {
-  const url = getApiUrl('/api/health', {});
-  return fetchJson(url, {}, HEALTH_TIMEOUT_MS);
+  return get('/api/health', {});
 }
 
 async function apiRoot(method: string, path: string, body?: any) {
@@ -141,12 +146,7 @@ async function apiRoot(method: string, path: string, body?: any) {
 
 async function getJsonPath(pathWithQuery: string) {
   const path = pathWithQuery.startsWith('/') ? pathWithQuery : `/${pathWithQuery}`;
-  if (isProduction()) {
-    return fetchJson(path);
-  }
-  const base = getBase();
-  const url = `${base}${path}`;
-  return fetchJson(url);
+  return get(path, {});
 }
 
 export const API = {
@@ -265,25 +265,25 @@ export const API = {
   async leadHistory(opportunityNumber: string, mergeAudit = true) {
     const id = opportunityNumber?.trim();
     if (!id) throw new Error('opportunityNumber requerido');
-    return fetchJson(getApiUrl('/api/history', { opportunityNumber: id, mergeAudit: mergeAudit ? 1 : 0 }));
+    return get('/api/history', { opportunityNumber: id, mergeAudit: mergeAudit ? 1 : 0 });
   },
 
   async propuestaHistory(auditId: string) {
     const id = auditId?.trim();
     if (!id) throw new Error('audit_id requerido');
-    return fetchJson(getApiUrl(`/api/audit/${encodeURIComponent(id)}/propuesta/history`, {}));
+    return get(`/api/audit/${encodeURIComponent(id)}/propuesta/history`, {});
   },
 
   async propuestaHistoryByClient(clientId: string) {
     const id = clientId?.trim();
     if (!id) throw new Error('client_id requerido');
-    return fetchJson(getApiUrl(`/api/audit/client/${encodeURIComponent(id)}/propuesta/history`, {}));
+    return get(`/api/audit/client/${encodeURIComponent(id)}/propuesta/history`, {});
   },
 
   async auditByClient(clientId: string) {
     const id = clientId?.trim();
     if (!id) throw new Error('client_id requerido');
-    return fetchJson(getApiUrl(`/api/audit/by-client/${encodeURIComponent(id)}`, {}));
+    return get(`/api/audit/by-client/${encodeURIComponent(id)}`, {});
   },
 
   async ping() {
