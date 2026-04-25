@@ -32,14 +32,14 @@ export function FilterBar({
           type="date"
           value={filters.desde}
           onChange={(e) => onFilterChange('desde', e.target.value)}
-          className="text-sm text-[#35325B] bg-transparent outline-none border-none"
+          className="text-sm text-[#35325B] bg-transparent outline-none border-none cursor-pointer"
         />
         <span className="text-[#B5B5AE]">—</span>
         <input
           type="date"
           value={filters.hasta}
           onChange={(e) => onFilterChange('hasta', e.target.value)}
-          className="text-sm text-[#35325B] bg-transparent outline-none border-none"
+          className="text-sm text-[#35325B] bg-transparent outline-none border-none cursor-pointer"
         />
       </div>
 
@@ -73,21 +73,21 @@ export function FilterBar({
         </button>
         <button
           onClick={onFiltrar}
-          className="text-sm bg-[#1F1D3D] text-[#F5F5ED] px-4 py-1.5 hover:bg-[#35325B] transition-colors"
+          className="text-sm bg-[#1F1D3D] text-[#F5F5ED] px-4 py-1.5 rounded-md hover:bg-[#35325B] transition-colors"
         >
           Filtrar
         </button>
       </div>
 
       <div className={cn(
-        'flex items-center gap-1.5 text-xs',
-        connectionStatus === 'connected' ? 'text-[#B5B5AE]' :
-        connectionStatus === 'error' ? 'text-red-500' :
-        'text-[#B5B5AE]'
+        'flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full',
+        connectionStatus === 'connected' ? 'bg-green-50 text-[#1F1D3D]' :
+        connectionStatus === 'error' ? 'bg-red-50 text-red-600' :
+        'bg-[#EEEEEC] text-[#B5B5AE]'
       )}>
         <div className={cn(
           'w-1.5 h-1.5 rounded-full',
-          connectionStatus === 'connected' ? 'bg-[#B5B5AE]' :
+          connectionStatus === 'connected' ? 'bg-[#22c55e]' :
           connectionStatus === 'error' ? 'bg-red-500' :
           'bg-[#B5B5AE]'
         )} />

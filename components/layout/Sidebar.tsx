@@ -13,6 +13,7 @@ import {
   Globe,
   ShieldCheck,
   X,
+  BarChart3,
 } from 'lucide-react';
 
 const navItems = [
@@ -109,10 +110,13 @@ export function Sidebar() {
         <div className="flex flex-col h-full p-4">
           <div className="flex items-center justify-between mb-8 px-2">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#1F1D3D] flex items-center justify-center">
-                <span className="text-[#F5F5ED] text-xs font-bold">RED</span>
+              <div className="w-8 h-8 bg-[#1F1D3D] rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-4 h-4 text-[#B5B5AE]" strokeWidth={1.5} />
               </div>
-              <span className="font-medium text-[#1F1D3D] text-sm">Dashboard</span>
+              <div className="flex flex-col">
+                <span className="font-semibold text-[#1F1D3D] text-sm leading-tight">Dashboard</span>
+                <span className="text-[10px] text-[#B5B5AE] leading-tight">Metrics</span>
+              </div>
             </div>
             <button
               onClick={handleClose}
@@ -137,7 +141,7 @@ export function Sidebar() {
                       : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
                   )}
                 >
-                  <item.icon className="w-4 h-4" strokeWidth={1.5} />
+                  <item.icon className="w-4 h-4 stroke-width={isActive ? 2 : 1.5}" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -146,7 +150,7 @@ export function Sidebar() {
 
           <div className="mt-4 px-2">
             <div className="flex items-center gap-2 px-3 py-2">
-              <div className="w-1.5 h-1.5 bg-[#B5B5AE] rounded-full" />
+              <div className="w-1.5 h-1.5 bg-[#22c55e] rounded-full" />
               <span className="text-xs text-[#B5B5AE]">Sistema activo</span>
             </div>
           </div>

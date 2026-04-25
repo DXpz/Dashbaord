@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'RED Dashboard',
-  description: 'Métricas de Asesores de Ventas',
+  title: 'Dashboard',
+  description: 'Métricas y Análisis de Ventas',
 };
 
 export default function RootLayout({
