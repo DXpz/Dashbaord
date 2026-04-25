@@ -5,7 +5,7 @@ import { Shell } from '@/components/layout/Shell';
 import { KPICard } from '@/components/kpi/KPICard';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
-import { useDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
+import { useFuentes, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Globe, Target, TrendingUp } from 'lucide-react';
 
@@ -23,37 +23,28 @@ const CANAL_COLORS = [COLORS.blue, COLORS.dark, COLORS.medium, COLORS.green, COL
 
 export default function OrigenLeadsPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const { data, loading, error } = useDashboard(filters);
+  const { fuentes, loading } = useFuentes(filters);
   const connectionStatus = useConnectionStatus();
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
 
-  const fuenteData = data?.fuente_data || {};
-  const distribution = fuenteData?.distribution || {};
-  const evolution = fuenteData?.evolution || {};
+  const totalLeads = useMemo(() => {
+    return fuentes.reduce((sum: number, f: any) => sum + (f.auditorias || 0), 0);
+  }, [fuentes]);
 
-  const totalLeads = data?.Origenleads?.total_leads || fuenteData.total_leads || 0;
-  const topCanal = data?.Origenleads?.top_canal || fuenteData.top_canal || '—';
-  const muestra = data?.Origenleads?.muestra || fuenteData.muestra || 0;
+  const topFuente = useMemo(() => {
+    if (!fuentes.length) return '—';
+    const sorted = [...fuentes].sort((a, b) => (b.auditorias || 0) - (a.auditorias || 0));
+    return sorted[0]?.fuente || '—';
+  }, [fuentes]);
 
   const distChartData = useMemo(() => {
-    const labels = distribution.labels || [];
-    const values = distribution.values || [];
-    if (!labels.length) return null;
-    return { labels, values };
-  }, [distribution]);
-
-  const evoChartData = useMemo(() => {
-    const labels = evolution.labels || [];
-    if (!labels.length) return null;
-    const datasets = (evolution.datasets || []).map((ds: any, i: number) => ({
-      label: ds.label || ds.label_0 || 'Serie',
-      data: ds.data || ds.values || [],
-      backgroundColor: CANAL_COLORS[i % CANAL_COLORS.length],
-      borderRadius: 4,
-      borderSkipped: false,
-    }));
-    return { labels, datasets };
-  }, [evolution]);
+    if (!fuentes.length) return null;
+    const sorted = [...fuentes].sort((a, b) => (b.auditorias || 0) - (a.auditorias || 0));
+    return {
+      labels: sorted.map((f: any) => f.fuente || '—'),
+      values: sorted.map((f: any) => f.auditorias || 0),
+    };
+  }, [fuentes]);
 
   return (
     <Shell
@@ -70,64 +61,50 @@ export default function OrigenLeadsPage() {
           <div className="grid grid-cols-3 gap-4">
             {[...Array(3)].map((_, i) => (<Skeleton key={i} className="h-24" />))}
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Skeleton className="h-72" />
-            <Skeleton className="h-72" />
-          </div>
-        </div>
-      ) : error ? (
-        <div className="flex items-center justify-center h-64">
-          <p className="text-sm text-red-500">Error: {error}</p>
+          <Skeleton className="h-72" />
         </div>
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-4">
             <KPICard label="Leads Totales" value={totalLeads} icon={Target} className="delay-1" />
-            <KPICard label="Canal Principal" value={topCanal} icon={TrendingUp} className="delay-2" />
-            <KPICard label="Registros" value={muestra} icon={Globe} className="delay-3" />
+            <KPICard label="Canal Principal" value={topFuente} icon={TrendingUp} className="delay-2" />
+            <KPICard label="Canales Activos" value={fuentes.length} icon={Globe} className="delay-3" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            <div className="lg:col-span-2">
-              <ChartCard title="Distribución por Canal">
-                <ChartWrapper type="doughnut" data={{
-                  labels: distChartData?.labels || [],
-                  datasets: [{
-                    data: distChartData?.values || [],
-                    backgroundColor: CANAL_COLORS,
-                    borderWidth: 0,
-                  }],
-                }} height="200px" />
-              </ChartCard>
-            </div>
-            <div className="lg:col-span-3">
-              <ChartCard title="Evolución Temporal">
-                <ChartWrapper type="bar" data={{
-                  labels: evoChartData?.labels || [],
-                  datasets: evoChartData?.datasets || [],
-                }} height="200px" />
-              </ChartCard>
-            </div>
-          </div>
+          {distChartData ? (
+            <ChartCard title="Distribución por Canal" subtitle={`${fuentes.length} fuentes`}>
+              <ChartWrapper type="doughnut" data={{
+                labels: distChartData.labels,
+                datasets: [{
+                  data: distChartData.values,
+                  backgroundColor: CANAL_COLORS,
+                  borderWidth: 0,
+                }],
+              }} height="280px" />
+            </ChartCard>
+          ) : (
+            <ChartCard title="Distribución por Canal">
+              <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos de fuentes</div>
+            </ChartCard>
+          )}
 
-          {fuenteData.details?.length > 0 && (
+          {fuentes.length > 0 && (
             <div className="bg-white border border-[#EEEEEC]">
               <div className="px-5 py-4 border-b border-[#EEEEEC]">
-                <h3 className="text-sm font-medium text-[#1F1D3D]">Detalle por Canal</h3>
+                <h3 className="text-sm font-medium text-[#1F1D3D]">Detalle por Fuente</h3>
               </div>
               <div className="p-4 space-y-2">
-                {fuenteData.details.map((row: any, i: number) => (
+                {[...fuentes].sort((a, b) => (b.auditorias || 0) - (a.auditorias || 0)).map((fuente: any, i: number) => (
                   <div
-                    key={row.canal || i}
+                    key={fuente.fuente || i}
                     className="flex items-center justify-between p-3 rounded hover:bg-[#F5F5ED] transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CANAL_COLORS[i % CANAL_COLORS.length] }} />
-                      <span className="text-sm text-[#35325B]">{row.canal || '—'}</span>
+                      <span className="text-sm text-[#35325B]">{fuente.fuente || '—'}</span>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm font-semibold text-[#1F1D3D]">{row.leads || 0}</span>
-                      <span className="text-xs text-[#B5B5AE]">{row.percentage || 0}%</span>
+                      <span className="text-sm font-semibold text-[#1F1D3D]">{fuente.auditorias ?? 0}</span>
                     </div>
                   </div>
                 ))}

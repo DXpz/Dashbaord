@@ -144,3 +144,29 @@ export function useReuniones(filters: FilterState) {
 
   return { reuniones, loading };
 }
+
+export function useFuentes(filters: FilterState) {
+  const [fuentes, setFuentes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchFuentes = async () => {
+      setLoading(true);
+      try {
+        const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
+        const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
+        const result = await API.fuentes(desde ?? '', hasta ?? '', {});
+        const list = result?.fuentes || result?.items || result || [];
+        setFuentes(Array.isArray(list) ? list : []);
+      } catch (err) {
+        console.error('Error fetching fuentes:', err);
+        setFuentes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFuentes();
+  }, [filters.desde, filters.hasta, filters.pais]);
+
+  return { fuentes, loading };
+}
