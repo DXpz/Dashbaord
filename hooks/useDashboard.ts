@@ -129,7 +129,9 @@ export function useReuniones(filters: FilterState) {
     const fetchReuniones = async () => {
       setLoading(true);
       try {
-        const result = await API.reuniones(filters.desde, filters.hasta, 200, 0, {});
+        const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
+        const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
+        const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, {});
         setReuniones(result?.reuniones || result?.items || result || []);
       } catch (err) {
         console.error('Error fetching reuniones:', err);
