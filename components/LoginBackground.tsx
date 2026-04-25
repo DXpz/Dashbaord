@@ -163,7 +163,7 @@ export function LoginBackground() {
         }
       }
 
-      offset += 0.3;
+      offset += 0.08;
       animationId = requestAnimationFrame(draw);
     };
 

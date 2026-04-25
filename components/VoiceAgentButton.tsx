@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { ConversationProvider } from '@elevenlabs/react';
+import { usePathname } from 'next/navigation';
 
 const BUBBLE_MESSAGES = [
   '¿Necesitas ayuda en algo?',
@@ -23,8 +24,12 @@ export function VoiceAgentProvider({ children }: { children: React.ReactNode }) 
 
 export function VoiceAgentButton() {
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
   useEffect(() => setMounted(true), []);
+
   if (!mounted) return null;
+  if (pathname === '/login') return null;
+
   return (
     <ConversationProvider>
       <VoiceAgentInner />

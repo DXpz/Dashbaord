@@ -99,21 +99,12 @@ export default function LoginPage() {
 
       <div className="relative z-10 hidden lg:flex lg:w-1/2 items-center justify-center p-12">
         <div className="max-w-sm text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1F1D3D]/5 mb-6">
-            <div className="w-2 h-2 rounded-full bg-[#1F1D3D] animate-pulse" />
-            <span className="text-xs font-medium text-[#1F1D3D]">Asistente IA disponible</span>
-          </div>
-
-          <h1 className="text-3xl font-semibold text-[#1F1D3D] leading-tight mb-4">
-            Conoce nuestro<br />
-            <span className="text-[#35325B]">asistente de ventas</span>
+          <h1 className="text-4xl font-semibold text-[#1F1D3D] leading-tight mb-8">
+            Tu asistente<br />
+            de ventas
           </h1>
 
-          <p className="text-sm text-[#B5B5AE] leading-relaxed mb-8">
-            Automatiza tu pipeline, recibe análisis en tiempo real y deja que la inteligencia artificial maneje el seguimiento de tus leads mientras tú te enfocas en cerrar deals.
-          </p>
-
-          <div className="space-y-3">
+          <div className="space-y-4">
             {[
               'Análisis predictivo de conversiones',
               'Seguimiento automático de reuniones',
@@ -128,12 +119,6 @@ export default function LoginPage() {
                 <span className="text-sm text-[#35325B]">{item}</span>
               </div>
             ))}
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-[#EEEEEC]/50">
-            <p className="text-xs text-[#B5B5AE]">
-              Integración con ElevenLabs para asistente de voz inteligente
-            </p>
           </div>
         </div>
       </div>
