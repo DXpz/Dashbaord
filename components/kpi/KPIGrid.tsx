@@ -10,6 +10,7 @@ import {
   Clock,
   Activity,
   Users,
+  DollarSign,
 } from 'lucide-react';
 
 interface KPIGridProps {
@@ -20,7 +21,8 @@ interface KPIGridProps {
     propuestas: number;
     pendientes: number;
     enProceso: number;
-    totalAgendados: number;
+    noAgendados: number;
+    ventasCerradas: number;
   };
 }
 
@@ -32,7 +34,8 @@ export function KPIGrid({ data }: KPIGridProps) {
     { label: 'Propuestas', value: data.propuestas, icon: FileText },
     { label: 'Pendientes', value: data.pendientes, icon: Clock },
     { label: 'En Proceso', value: data.enProceso, icon: Activity },
-    { label: 'Total Agendados', value: data.totalAgendados, icon: Users },
+    { label: 'No Agendados', value: data.noAgendados, icon: Users },
+    { label: 'Ventas Cerradas', value: data.ventasCerradas, icon: DollarSign },
   ];
 
   return (

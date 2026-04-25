@@ -28,7 +28,6 @@ export default function HomePage() {
   const reunionesTotal = (resumen.reuniones_pendientes || 0) +
                         (resumen.reuniones_en_proceso || 0) +
                         (resumen.reuniones_cerrados || 0);
-  const totalAgendados = (resumen.reuniones_con_retro || 0) + (resumen.reuniones_sin_retro || 0);
 
   const decisiones = data?.decisiones || {};
   const decisionesAceptados = decisiones.decisiones_aceptados ?? 0;
@@ -70,7 +69,8 @@ export default function HomePage() {
               propuestas: resumen.propuestas_registradas ?? 0,
               pendientes: resumen.leads_no_agendados ?? 0,
               enProceso: resumen.en_seguimiento_sin_cierre ?? 0,
-              totalAgendados,
+              noAgendados: resumen.leads_no_agendados ?? 0,
+              ventasCerradas: resumen.ventas_cerradas ?? 0,
             }}
           />
 
