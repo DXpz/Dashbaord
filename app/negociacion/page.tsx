@@ -7,7 +7,7 @@ import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { useDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Activity, TrendingUp, DollarSign, Users } from 'lucide-react';
+import { Activity, TrendingUp, DollarSign, Users, Calendar } from 'lucide-react';
 
 const COLORS = {
   dark: '#1F1D3D',
@@ -15,6 +15,8 @@ const COLORS = {
   light: '#B5B5AE',
   green: '#22c55e',
   red: '#c8151b',
+  blue: '#145478',
+  orange: '#f97316',
 };
 
 export default function NegociacionPage() {
@@ -26,35 +28,33 @@ export default function NegociacionPage() {
   const resumen = data?.resumen || {};
   const negociacion = data?.negociacion || {};
   const decisiones = data?.decisiones || {};
-  const porRubro = negociacion?.por_rubro || [];
+  const decGlobal = decisiones?.global || {};
+  const porRubroNeg = negociacion?.por_rubro || [];
 
   const kpis = useMemo(() => ({
     seguimientos: resumen.seguimientos_registrados ?? 0,
     propuestas: resumen.propuestas_registradas ?? 0,
-    aceptados: decisiones.decisiones_aceptados ?? 0,
-    rechazados: decisiones.decisiones_rechazados ?? 0,
-  }), [resumen, decisiones]);
+    aceptados: decGlobal.aceptados_total ?? 0,
+    rechazados: decGlobal.rechazados_total ?? 0,
+    tasaAceptacion: decGlobal.tasa_aceptacion_pct ?? '—',
+  }), [resumen, decGlobal]);
 
   const globalStats = negociacion?.global || {};
 
   const porRubroChartData = useMemo(() => {
-    if (!porRubro.length) return null;
+    if (!porRubroNeg.length) return null;
     return {
-      labels: porRubro.map((r: any) => r.rubro || '—'),
-      values: porRubro.map((r: any) => r.veces || 0),
+      labels: porRubroNeg.map((r: any) => r.rubro || '—'),
+      values: porRubroNeg.map((r: any) => r.veces || 0),
     };
-  }, [porRubro]);
+  }, [porRubroNeg]);
 
-  const conversionChartData = useMemo(() => {
-    const aceptados = kpis.aceptados;
-    const rechazados = kpis.rechazados;
-    const total = aceptados + rechazados;
-    if (total === 0) return null;
-    return {
-      labels: ['Aceptados', 'Rechazados'],
-      values: [aceptados, rechazados],
-    };
-  }, [kpis]);
+  const aceptaron = kpis.aceptados;
+  const rechazaron = kpis.rechazados;
+  const conversionChartData = (aceptaron + rechazaron) > 0 ? {
+    labels: ['Aceptados', 'Rechazados'],
+    values: [aceptaron, rechazaron],
+  } : null;
 
   return (
     <Shell
@@ -91,33 +91,25 @@ export default function NegociacionPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ChartCard title="Seguimientos por Rubro">
-              {porRubroChartData ? (
-                <ChartWrapper type="bar" data={{
-                  labels: porRubroChartData.labels,
-                  datasets: [{
-                    data: porRubroChartData.values,
-                    backgroundColor: COLORS.dark,
-                    borderRadius: 4,
-                    borderSkipped: false,
-                  }],
-                }} height="280px" />
-              ) : (
-                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
-              )}
+              <ChartWrapper type="bar" data={{
+                labels: porRubroChartData?.labels || [],
+                datasets: [{
+                  data: porRubroChartData?.values || [],
+                  backgroundColor: COLORS.blue,
+                  borderRadius: 4,
+                  borderSkipped: false,
+                }],
+              }} height="280px" />
             </ChartCard>
-            <ChartCard title="Tasa de Conversión">
-              {conversionChartData ? (
-                <ChartWrapper type="doughnut" data={{
-                  labels: conversionChartData.labels,
-                  datasets: [{
-                    data: conversionChartData.values,
-                    backgroundColor: [COLORS.green, COLORS.red],
-                    borderWidth: 0,
-                  }],
-                }} height="280px" />
-              ) : (
-                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
-              )}
+            <ChartCard title="Tasa de Conversión" subtitle={`Tasa aceptación: ${kpis.tasaAceptacion}%`}>
+              <ChartWrapper type="doughnut" data={{
+                labels: conversionChartData?.labels || [],
+                datasets: [{
+                  data: conversionChartData?.values || [],
+                  backgroundColor: [COLORS.green, COLORS.red],
+                  borderWidth: 0,
+                }],
+              }} height="280px" />
             </ChartCard>
           </div>
 

@@ -33,8 +33,9 @@ export default function HomePage() {
                      (resumen.leads_no_agendados || 0);
 
   const decisiones = data?.decisiones || {};
-  const decisionesAceptados = decisiones.decisiones_aceptados ?? 0;
-  const decisionesRechazados = decisiones.decisiones_rechazados ?? 0;
+  const decGlobal = decisiones.global || {};
+  const decisionesAceptados = decGlobal.aceptados_total ?? 0;
+  const decisionesRechazados = decGlobal.rechazados_total ?? 0;
 
   return (
     <Shell
