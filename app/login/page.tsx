@@ -101,19 +101,19 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="relative z-10 hidden lg:flex lg:w-1/2 items-center justify-center p-16">
-        <div className="max-w-lg">
-          <div className="mb-6">
-            <span className="text-xs font-medium text-[#B5B5AE] uppercase tracking-[0.2em]">Sales Intelligence</span>
+      <div className="relative z-10 hidden lg:flex lg:w-3/5 items-center justify-center p-20">
+        <div className="max-w-2xl">
+          <div className="mb-8">
+            <span className="text-xs font-medium text-[#B5B5AE] uppercase tracking-[0.25em]">Sales AI Assistant</span>
           </div>
 
-          <h1 className="leading-none mb-6 select-none">
-            <span className="block text-[80px] font-bold text-[#1F1D3D] tracking-[-0.05em]">El futuro</span>
-            <span className="block text-[80px] font-extralight text-[#1F1D3D] tracking-[-0.05em] mt-[-8px]">del sales</span>
-            <span className="block text-[80px] font-semibold text-[#35325B] tracking-[-0.05em] mt-[-8px]">es hoy</span>
+          <h1 className="leading-none mb-10 select-none">
+            <span className="block text-[96px] font-bold text-[#1F1D3D] tracking-[-0.06em]">Conoce</span>
+            <span className="block text-[96px] font-extralight text-[#1F1D3D] tracking-[-0.06em] mt-[-12px]">hoy tu</span>
+            <span className="block text-[96px] font-semibold text-[#35325B] tracking-[-0.06em] mt-[-12px]">asistente IA</span>
           </h1>
 
-          <div className="ml-2 space-y-4">
+          <div className="ml-4 space-y-5">
             {[
               'Análisis predictivo de conversiones',
               'Seguimiento automático de reuniones',
