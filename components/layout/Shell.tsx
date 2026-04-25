@@ -3,8 +3,7 @@
 import * as React from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { FilterBar } from '@/components/layout/FilterBar';
-import { VoiceAgentProvider } from '@/components/VoiceAgentButton';
-import { VoiceAgentButton } from '@/components/VoiceAgentButton';
+import { VoiceAgentProvider, VoiceAgentButton } from '@/components/VoiceAgentButton';
 
 export function Shell({
   children,
