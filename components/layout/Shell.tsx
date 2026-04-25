@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { VoiceAgentProvider } from '@/components/VoiceAgentButton';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { FilterBar } from '@/components/layout/FilterBar';
+import { VoiceAgentProvider } from '@/components/VoiceAgentButton';
+import { VoiceAgentButton } from '@/components/VoiceAgentButton';
 
 export function Shell({
   children,
@@ -52,6 +53,7 @@ export function Shell({
           </div>
         </main>
       </div>
+      <VoiceAgentButton />
     </VoiceAgentProvider>
   );
 }
