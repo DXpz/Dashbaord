@@ -33,7 +33,8 @@ export default function GestionAsesoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const connectionStatus = useConnectionStatus();
-  const AsesoresOptions = useMemo(() => useAsesores(filters).map((a) => ({ value: a, label: a })), [filters]);
+  const asesoresList = useAsesores(filters);
+  const AsesoresOptions = useMemo(() => asesoresList.map((a: string) => ({ value: a, label: a })), [asesoresList]);
 
   const fetchAdvisors = async () => {
     setLoading(true);
