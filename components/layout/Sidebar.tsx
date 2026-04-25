@@ -1,0 +1,157 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  TrendingUp,
+  Calendar,
+  Globe,
+  ShieldCheck,
+  X,
+} from 'lucide-react';
+
+const navItems = [
+  { href: '/', label: 'Resumen', icon: LayoutDashboard },
+  { href: '/asesores', label: 'Asesores', icon: Users },
+  { href: '/propuestas', label: 'Propuestas', icon: FileText },
+  { href: '/negociacion', label: 'Negociación', icon: TrendingUp },
+  { href: '/reuniones', label: 'Reuniones', icon: Calendar },
+  { href: '/origen-leads', label: 'Origen Leads', icon: Globe },
+  { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
+];
+
+const EDGE_TRIGGER_WIDTH = 40;
+const LEAVE_DELAY_MS = 1500;
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
+  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const clearLeaveTimeout = useCallback(() => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
+    }
+  }, []);
+
+  const showSidebar = useCallback(() => {
+    clearLeaveTimeout();
+    setIsOpen(true);
+  }, [clearLeaveTimeout]);
+
+  const scheduleHide = useCallback(() => {
+    leaveTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, LEAVE_DELAY_MS);
+  }, [clearLeaveTimeout]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (e.clientX < EDGE_TRIGGER_WIDTH && !isHoveringSidebar) {
+        showSidebar();
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      clearLeaveTimeout();
+    };
+  }, [showSidebar, clearLeaveTimeout, isHoveringSidebar]);
+
+  useEffect(() => {
+    return () => {
+      clearLeaveTimeout();
+    };
+  }, [clearLeaveTimeout]);
+
+  const handleMouseEnter = () => {
+    setIsHoveringSidebar(true);
+    clearLeaveTimeout();
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHoveringSidebar(false);
+    scheduleHide();
+  };
+
+  const handleClose = () => {
+    clearLeaveTimeout();
+    setIsOpen(false);
+  };
+
+  return (
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-30"
+          onClick={handleClose}
+        />
+      )}
+
+      <aside
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={cn(
+          'fixed top-0 left-0 z-40 h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
+          'transform transition-transform duration-200 ease-out',
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <div className="flex flex-col h-full p-4">
+          <div className="flex items-center justify-between mb-8 px-2">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#1F1D3D] flex items-center justify-center">
+                <span className="text-[#F5F5ED] text-xs font-bold">RED</span>
+              </div>
+              <span className="font-medium text-[#1F1D3D] text-sm">Dashboard</span>
+            </div>
+            <button
+              onClick={handleClose}
+              className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <nav className="flex-1 space-y-0.5">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={handleClose}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+                  )}
+                >
+                  <item.icon className="w-4 h-4" strokeWidth={1.5} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="mt-4 px-2">
+            <div className="flex items-center gap-2 px-3 py-2">
+              <div className="w-1.5 h-1.5 bg-[#B5B5AE] rounded-full" />
+              <span className="text-xs text-[#B5B5AE]">Sistema activo</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
