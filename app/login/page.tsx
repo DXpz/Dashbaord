@@ -101,15 +101,15 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="relative z-10 hidden lg:flex lg:w-3/5 items-center justify-center p-20">
-        <div className="max-w-2xl">
-          <h1 className="leading-none mb-10 select-none">
-            <span className="block text-[96px] font-bold text-[#1F1D3D] tracking-[-0.06em]">Conoce</span>
-            <span className="block text-[96px] font-extralight text-[#1F1D3D] tracking-[-0.06em]">hoy tu</span>
-            <span className="block text-[108px] font-semibold text-[#35325B] tracking-[-0.04em] uppercase">asistente IA</span>
+      <div className="relative z-10 hidden lg:flex lg:w-[65%] items-center justify-center p-20">
+        <div className="max-w-3xl">
+          <h1 className="leading-none mb-12 select-none">
+            <span className="block text-[88px] font-bold text-[#1F1D3D] tracking-[-0.05em]">Conoce</span>
+            <span className="block text-[88px] font-light text-[#1F1D3D] tracking-[-0.05em]">hoy tu</span>
+            <span className="block text-[88px] font-semibold text-[#35325B] tracking-[-0.04em] uppercase mt-2">Asistente IA</span>
           </h1>
 
-          <div className="ml-4 space-y-5">
+          <div className="ml-2 space-y-5">
             {[
               'Análisis predictivo de conversiones',
               'Seguimiento automático de reuniones',
