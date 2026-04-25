@@ -101,27 +101,27 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="relative z-10 hidden lg:flex lg:w-1/2 items-center justify-center p-12">
-        <div className="max-w-md">
-          <div className="mb-2">
-            <span className="text-xs font-medium text-[#B5B5AE] uppercase tracking-widest">Dashboard</span>
+      <div className="relative z-10 hidden lg:flex lg:w-1/2 items-center justify-center p-16">
+        <div className="max-w-lg">
+          <div className="mb-6">
+            <span className="text-xs font-medium text-[#B5B5AE] uppercase tracking-[0.2em]">Sales Intelligence</span>
           </div>
 
-          <h1 className="leading-none mb-6">
-            <span className="block text-[72px] font-bold text-[#1F1D3D] tracking-[-0.04em]">Tu</span>
-            <span className="block text-[72px] font-light text-[#1F1D3D] tracking-[-0.04em] ml-8">asistente</span>
-            <span className="block text-[72px] font-semibold text-[#35325B] tracking-[-0.04em]">de ventas</span>
+          <h1 className="leading-none mb-6 select-none">
+            <span className="block text-[80px] font-bold text-[#1F1D3D] tracking-[-0.05em]">El futuro</span>
+            <span className="block text-[80px] font-extralight text-[#1F1D3D] tracking-[-0.05em] mt-[-8px]">del sales</span>
+            <span className="block text-[80px] font-semibold text-[#35325B] tracking-[-0.05em] mt-[-8px]">es hoy</span>
           </h1>
 
-          <div className="ml-4 space-y-4">
+          <div className="ml-2 space-y-4">
             {[
               'Análisis predictivo de conversiones',
               'Seguimiento automático de reuniones',
               'Dashboard inteligente en tiempo real',
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-[#1F1D3D]/10 flex items-center justify-center flex-shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1F1D3D" strokeWidth="2.5">
+                <div className="w-5 h-5 rounded-full bg-[#22c55e]/20 flex items-center justify-center flex-shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
