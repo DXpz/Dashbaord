@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { VoiceAgentButton } from '@/components/VoiceAgentButton';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
