@@ -1,9 +1,18 @@
 'use client';
 
 import { ConversationProvider, useConversation } from '@elevenlabs/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
+
+const BUBBLE_MESSAGES = [
+  '¿Necesitas ayuda en algo?',
+  '¿En qué puedo ayudarte hoy?',
+  '¿Tienes alguna duda?',
+  '¿Necesitas assistance?',
+];
+
+const BUBBLE_INTERVAL_MS = 45000;
 
 export function VoiceAgentProvider({ children }: { children: React.ReactNode }) {
   return <ConversationProvider>{children}</ConversationProvider>;
@@ -15,25 +24,49 @@ export function VoiceAgentButton() {
   const { status, startSession, endSession } = conversation;
   const [showBubble, setShowBubble] = useState(false);
   const [bubbleVisible, setBubbleVisible] = useState(false);
+  const [bubbleMessage, setBubbleMessage] = useState(BUBBLE_MESSAGES[0]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const scheduleNextBubble = useCallback(() => {
+    if (intervalRef.current) clearTimeout(intervalRef.current);
+    intervalRef.current = setTimeout(() => {
+      if (status !== 'connected' && status !== 'connecting') {
+        setBubbleMessage(BUBBLE_MESSAGES[Math.floor(Math.random() * BUBBLE_MESSAGES.length)]);
+        setShowBubble(true);
+        setTimeout(() => setBubbleVisible(true), 50);
+      }
+    }, BUBBLE_INTERVAL_MS);
+  }, [status]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowBubble(true), 1000);
-    return () => clearTimeout(timer);
+    const initial = setTimeout(() => {
+      setBubbleMessage(BUBBLE_MESSAGES[0]);
+      setShowBubble(true);
+      setTimeout(() => setBubbleVisible(true), 50);
+    }, 1000);
+    return () => clearTimeout(initial);
   }, []);
 
   useEffect(() => {
-    if (showBubble) {
-      const t = setTimeout(() => setBubbleVisible(true), 50);
-      return () => clearTimeout(t);
-    }
-  }, [showBubble]);
+    scheduleNextBubble();
+    return () => {
+      if (intervalRef.current) clearTimeout(intervalRef.current);
+    };
+  }, [scheduleNextBubble]);
 
   useEffect(() => {
-    if (status === 'connected') {
+    if (status === 'connected' || status === 'connecting') {
       setShowBubble(false);
       setBubbleVisible(false);
+      if (intervalRef.current) clearTimeout(intervalRef.current);
     }
   }, [status]);
+
+  const dismissBubble = () => {
+    setBubbleVisible(false);
+    setTimeout(() => setShowBubble(false), 300);
+    scheduleNextBubble();
+  };
 
   const handleClick = useCallback(async () => {
     if (status === 'connected' || status === 'connecting') {
@@ -41,6 +74,7 @@ export function VoiceAgentButton() {
     } else {
       setShowBubble(false);
       setBubbleVisible(false);
+      if (intervalRef.current) clearTimeout(intervalRef.current);
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(t => t.stop());
@@ -50,11 +84,6 @@ export function VoiceAgentButton() {
       }
     }
   }, [agentId, status, startSession, endSession]);
-
-  const dismissBubble = () => {
-    setBubbleVisible(false);
-    setTimeout(() => setShowBubble(false), 300);
-  };
 
   return (
     <>
@@ -80,7 +109,7 @@ export function VoiceAgentButton() {
                 </svg>
               </div>
               <p className="text-sm text-[#35325B] leading-relaxed pr-6">
-                Hola, soy tu asistente virtual. Si necesitas ayuda, no dudes en consultarme.
+                {bubbleMessage}
               </p>
             </div>
           </div>
