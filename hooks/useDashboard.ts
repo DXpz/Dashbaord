@@ -66,7 +66,9 @@ export function useDashboard(filters: FilterState) {
       );
       setData(result as DashboardData);
     } catch (err: any) {
-      setError(err.message || 'Error al cargar datos');
+      const message = err?.message || err?.cause?.message || 'Error al cargar datos';
+      setError(message);
+      throw new Error(message);
     } finally {
       setLoading(false);
     }

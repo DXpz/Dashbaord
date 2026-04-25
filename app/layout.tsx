@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { VoiceAgentButton } from '@/components/VoiceAgentButton';
+import { ClientLayout } from '@/components/ClientLayout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="min-h-screen antialiased">
-        {children}
+        <ErrorBoundary>
+          <ClientLayout>{children}</ClientLayout>
+        </ErrorBoundary>
       </body>
     </html>
   );
