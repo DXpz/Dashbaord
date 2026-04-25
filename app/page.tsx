@@ -216,23 +216,39 @@ export default function HomePage() {
       <ErrorBoundary
         fallback={
           <div className="min-h-[400px] flex items-center justify-center">
-            <div className="text-center max-w-md">
-              <div className="mb-6">
+            <div className="text-center max-w-sm animate-[fadeIn_0.5s_ease-out]">
+              <div className="mb-8">
                 <WorkingAnimation />
               </div>
-              <h1 className="text-xl font-semibold text-[#1F1D3D] mb-2">
-                Hey, estamos trabajando para mejorar nuestro servicio
-              </h1>
-              <p className="text-sm text-[#B5B5AE] mb-4">
-                Regresaremos pronto. Gracias por tu paciencia.
-              </p>
+              <div className="space-y-3">
+                <div className="w-12 h-1 bg-[#1F1D3D]/10 rounded-full mx-auto overflow-hidden">
+                  <div className="h-full bg-[#1F1D3D]/40 rounded-full animate-[slide_1.5s_ease-in-out_infinite]" style={{ width: '40%' }} />
+                </div>
+                <h1 className="text-lg font-semibold text-[#1F1D3D]">
+                  Mantenimiento en proceso
+                </h1>
+                <p className="text-sm text-[#B5B5AE] leading-relaxed">
+                  Estamos realizando mejoras para servirte mejor.
+                </p>
+              </div>
               <button
                 onClick={() => window.location.reload()}
-                className="mt-4 text-sm bg-[#1F1D3D] text-[#F5F5ED] px-4 py-2 rounded-lg hover:bg-[#35325B] transition-colors"
+                className="mt-6 text-sm bg-[#1F1D3D] text-[#F5F5ED] px-6 py-2.5 rounded-lg hover:bg-[#35325B] transition-colors"
               >
                 Reintentar
               </button>
             </div>
+            <style>{`
+              @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(8px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+              @keyframes slide {
+                0% { transform: translateX(-100%); }
+                50% { transform: translateX(150%); }
+                100% { transform: translateX(-100%); }
+              }
+            `}</style>
           </div>
         }
       >
