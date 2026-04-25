@@ -104,9 +104,9 @@ export default function LoginPage() {
       <div className="relative z-10 hidden lg:flex lg:w-[65%] items-center justify-center p-20">
         <div className="max-w-3xl">
           <h1 className="leading-none mb-12 select-none">
-            <span className="block text-[88px] font-bold text-[#1F1D3D] tracking-[-0.05em]">Conoce</span>
-            <span className="block text-[88px] font-light text-[#1F1D3D] tracking-[-0.05em]">hoy tu</span>
-            <span className="block text-[88px] font-semibold text-[#35325B] tracking-[-0.04em] uppercase mt-2">Asistente IA</span>
+            <span className="block text-[88px] font-bold text-[#1F1D3D] tracking-[-0.04em] uppercase">Métricas</span>
+            <span className="block text-[88px] font-light text-[#1F1D3D] tracking-[-0.04em] uppercase">con asistencia</span>
+            <span className="block text-[88px] font-bold text-[#35325B] tracking-[-0.04em] uppercase mt-2">ASISTENTE IA</span>
           </h1>
 
           <div className="ml-2 space-y-5">
