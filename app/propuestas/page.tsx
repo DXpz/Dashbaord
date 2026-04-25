@@ -15,6 +15,7 @@ const COLORS = {
   light: '#B5B5AE',
   red: '#c8151b',
   blue: '#145478',
+  green: '#22c55e',
 };
 
 export default function PropuestasPage() {
@@ -28,9 +29,11 @@ export default function PropuestasPage() {
   const motivosPerdida = data?.motivos_perdida || {};
   const negociacion = data?.negociacion || {};
   const decisiones = data?.decisiones || {};
+  const decGlobal = decisiones?.global || {};
 
   const motivosItems = motivosPerdida?.items || [];
   const negociacionGlobal = negociacion?.global || {};
+  const porRubroNeg = negociacion?.por_rubro || [];
 
   const kpis = useMemo(() => ({
     cantidad: resumen.propuestas_registradas ?? 0,
@@ -67,15 +70,24 @@ export default function PropuestasPage() {
   }, [motivosItems]);
 
   const negociacionChartData = useMemo(() => {
-    if (!negociacionGlobal?.seguimientos_con_resumen) return null;
+    const conResumen = negociacionGlobal.seguimientos_con_resumen || 0;
+    const negociaron = negociacionGlobal.negociaron || 0;
+    if (conResumen === 0 && negociaron === 0) return null;
     return {
       labels: ['Con Resumen', 'En Negociación'],
-      values: [
-        negociacionGlobal.seguimientos_con_resumen || 0,
-        negociacionGlobal.negociaron || 0,
-      ],
+      values: [conResumen, negociaron],
     };
   }, [negociacionGlobal]);
+
+  const decisionesChartData = useMemo(() => {
+    const aceptados = decGlobal.aceptados_total ?? 0;
+    const rechazados = decGlobal.rechazados_total ?? 0;
+    if (aceptados === 0 && rechazados === 0) return null;
+    return {
+      labels: ['Aceptados', 'Rechazados'],
+      values: [aceptados, rechazados],
+    };
+  }, [decGlobal]);
 
   return (
     <Shell
@@ -112,66 +124,50 @@ export default function PropuestasPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ChartCard title="Propuestas por Rubro" subtitle="Cantidad">
-              {rubroChartData ? (
-                <ChartWrapper type="bar" data={{
-                  labels: rubroChartData.labels,
-                  datasets: [{
-                    data: rubroChartData.values,
-                    backgroundColor: COLORS.blue,
-                    borderRadius: 4,
-                    borderSkipped: false,
-                  }],
-                }} height="240px" />
-              ) : (
-                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
-              )}
+              <ChartWrapper type="bar" data={{
+                labels: rubroChartData?.labels || [],
+                datasets: [{
+                  data: rubroChartData?.values || [],
+                  backgroundColor: COLORS.blue,
+                  borderRadius: 4,
+                  borderSkipped: false,
+                }],
+              }} height="240px" />
             </ChartCard>
             <ChartCard title="Tasa de Cierre %" subtitle="Por rubro">
-              {tasaChartData ? (
-                <ChartWrapper type="bar" data={{
-                  labels: tasaChartData.labels,
-                  datasets: [{
-                    data: tasaChartData.values,
-                    backgroundColor: COLORS.red,
-                    borderRadius: 4,
-                    borderSkipped: false,
-                  }],
-                }} height="240px" />
-              ) : (
-                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
-              )}
+              <ChartWrapper type="bar" data={{
+                labels: tasaChartData?.labels || [],
+                datasets: [{
+                  data: tasaChartData?.values || [],
+                  backgroundColor: COLORS.red,
+                  borderRadius: 4,
+                  borderSkipped: false,
+                }],
+              }} height="240px" />
             </ChartCard>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ChartCard title="Motivos de Pérdida" subtitle="Top 15">
-              {motivosChartData ? (
-                <ChartWrapper type="bar" data={{
-                  labels: motivosChartData.labels,
-                  datasets: [{
-                    data: motivosChartData.values,
-                    backgroundColor: COLORS.red,
-                    borderRadius: 4,
-                    borderSkipped: false,
-                  }],
-                }} height="240px" />
-              ) : (
-                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
-              )}
+              <ChartWrapper type="bar" data={{
+                labels: motivosChartData?.labels || [],
+                datasets: [{
+                  data: motivosChartData?.values || [],
+                  backgroundColor: COLORS.red,
+                  borderRadius: 4,
+                  borderSkipped: false,
+                }],
+              }} height="240px" />
             </ChartCard>
-            <ChartCard title="Negociación" subtitle="Seguimientos">
-              {negociacionChartData ? (
-                <ChartWrapper type="doughnut" data={{
-                  labels: negociacionChartData.labels,
-                  datasets: [{
-                    data: negociacionChartData.values,
-                    backgroundColor: [COLORS.dark, COLORS.medium],
-                    borderWidth: 0,
-                  }],
-                }} height="240px" />
-              ) : (
-                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
-              )}
+            <ChartCard title="Decisiones" subtitle="Aceptar / Rechazar">
+              <ChartWrapper type="doughnut" data={{
+                labels: decisionesChartData?.labels || [],
+                datasets: [{
+                  data: decisionesChartData?.values || [],
+                  backgroundColor: [COLORS.green, COLORS.red],
+                  borderWidth: 0,
+                }],
+              }} height="240px" />
             </ChartCard>
           </div>
         </div>
