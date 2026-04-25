@@ -98,13 +98,18 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 hidden lg:flex lg:w-1/2 items-center justify-center p-12">
-        <div className="max-w-sm text-left">
-          <h1 className="text-4xl font-semibold text-[#1F1D3D] leading-tight mb-8">
-            Tu asistente<br />
-            de ventas
+        <div className="max-w-md">
+          <div className="mb-2">
+            <span className="text-xs font-medium text-[#B5B5AE] uppercase tracking-widest">Dashboard</span>
+          </div>
+
+          <h1 className="leading-none mb-6">
+            <span className="block text-[72px] font-bold text-[#1F1D3D] tracking-[-0.04em]">Tu</span>
+            <span className="block text-[72px] font-light text-[#1F1D3D] tracking-[-0.04em] ml-8">asistente</span>
+            <span className="block text-[72px] font-semibold text-[#35325B] tracking-[-0.04em]">de ventas</span>
           </h1>
 
-          <div className="space-y-4">
+          <div className="ml-4 space-y-4">
             {[
               'Análisis predictivo de conversiones',
               'Seguimiento automático de reuniones',
