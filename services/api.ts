@@ -1,7 +1,7 @@
 /**
  * API Service - Migrated from vanilla JS api.js
  * Preserves all original logic with TypeScript types
- * Uses /api proxy on Vercel, direct call in development
+ * Uses /api proxy in production, direct call in development
  */
 
 const STORAGE_KEY = 'dashboard_api_base';
@@ -13,26 +13,29 @@ const HEALTH_TIMEOUT_MS = 90000;
 let _cache: any = null;
 let _cacheKey = '';
 
+function isProduction(): boolean {
+  if (typeof window === 'undefined') return true;
+  return window.location.protocol === 'https:';
+}
+
 function getBase(): string {
-  if (typeof window === 'undefined') {
-    const env = process.env.API_UPSTREAM;
-    if (env) return env.replace(/\/+$/, '');
-  } else {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && stored.trim()) return stored.trim().replace(/\/+$/, '');
-  }
+  const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+  if (stored && stored.trim()) return stored.trim().replace(/\/+$/, '');
   return DEFAULT_UPSTREAM;
 }
 
 function getApiKey(): string {
-  if (typeof window === 'undefined') {
-    return process.env.API_KEY || 'RedApi_2026_SuperSegura_9XK2';
-  }
   return 'RedApi_2026_SuperSegura_9XK2';
 }
 
-function isServerSide(): boolean {
-  return typeof window === 'undefined';
+function getApiUrl(path: string, params: Record<string, any> = {}): string {
+  const qs = buildQuery(params);
+  const base = getBase();
+
+  if (isProduction()) {
+    return `/api/proxy?_path=${encodeURIComponent(path.slice(1))}${qs}`;
+  }
+  return `${base}${path}${qs}`;
 }
 
 export function setBase(url: string): void {
@@ -100,14 +103,12 @@ async function fetchJson(url: string, init: RequestInit = {}, ms: number = FETCH
 }
 
 async function get(path: string, params: Record<string, any>) {
-  const base = getBase();
-  const url = `${base}/api/metrics${path}${buildQuery(params)}`;
+  const url = getApiUrl(path, params);
   return fetchJson(url);
 }
 
 async function getHealth() {
-  const base = getBase();
-  const url = `${base}/api/health${buildQuery()}`;
+  const url = getApiUrl('/api/health', {});
   return fetchJson(url, {}, HEALTH_TIMEOUT_MS);
 }
 
@@ -139,8 +140,11 @@ async function apiRoot(method: string, path: string, body?: any) {
 }
 
 async function getJsonPath(pathWithQuery: string) {
-  const base = getBase();
   const path = pathWithQuery.startsWith('/') ? pathWithQuery : `/${pathWithQuery}`;
+  if (isProduction()) {
+    return fetchJson(path);
+  }
+  const base = getBase();
   const url = `${base}${path}`;
   return fetchJson(url);
 }
@@ -166,7 +170,7 @@ export const API = {
     const base = getBase();
     const key = `${base}|${getApiKey()}|${desde || ''}|${hasta || ''}|${limite_motivos}|${limite_reuniones_muestra}|${group_by_asesores}|${group_by_propuestas}|${nombre}|${paisCode}`;
     if (_cache && _cacheKey === key) return _cache;
-    const data = await get('/dashboard', {
+    const data = await get('/api/metrics/dashboard', {
       desde, hasta, limite_motivos, limite_reuniones_muestra,
       group_by_asesores, group_by_propuestas,
       ...nombreParam(nombre),
@@ -178,55 +182,55 @@ export const API = {
   },
 
   resumen(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/resumen', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/api/metrics/resumen', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   asesores(desde: string, hasta: string, group_by = 'asesor', nombre?: string, pais?: string) {
-    return get('/asesores', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/api/metrics/asesores', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   asesor(nombre: string, desde: string, hasta: string, pais?: string) {
-    return get('/asesor', { nombre, desde, hasta, ...paisParam(pais) });
+    return get('/api/metrics/asesor', { nombre, desde, hasta, ...paisParam(pais) });
   },
 
   propuestasPorRubro(desde: string, hasta: string, group_by = 'rubro', nombre?: string, pais?: string) {
-    return get('/propuestas-por-rubro', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/api/metrics/propuestas-por-rubro', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   negociacion(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/negociacion', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/api/metrics/negociacion', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   motivosPerdida(desde: string, hasta: string, limite = 50, nombre?: string, pais?: string) {
-    return get('/motivos-perdida', { desde, hasta, limite, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/api/metrics/motivos-perdida', { desde, hasta, limite, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   motivosPerdidaAgrupados(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/motivos-perdida/agrupados', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/api/metrics/motivos-perdida/agrupados', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   reuniones(desde: string, hasta: string, limite = 200, offset = 0, extra: Record<string, any> = {}) {
-    return get('/reuniones', { desde, hasta, limite, offset, ...extra });
+    return get('/api/metrics/reuniones', { desde, hasta, limite, offset, ...extra });
   },
 
   listaAsesores(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/lista-asesores', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/api/metrics/lista-asesores', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   fuentes(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/fuentes', { desde, hasta, ...extra });
+    return get('/api/metrics/fuentes', { desde, hasta, ...extra });
   },
 
   tiempoRespuesta(desde: string, hasta: string, groupBy = 'asesor', extra: Record<string, any> = {}) {
-    return get('/tiempo-respuesta', { desde, hasta, group_by: groupBy, ...extra });
+    return get('/api/metrics/tiempo-respuesta', { desde, hasta, group_by: groupBy, ...extra });
   },
 
   nivelesEscalacion(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/niveles-escalacion', { desde, hasta, ...extra });
+    return get('/api/metrics/niveles-escalacion', { desde, hasta, ...extra });
   },
 
   decisiones(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/decisiones', { desde, hasta, ...extra });
+    return get('/api/metrics/decisiones', { desde, hasta, ...extra });
   },
 
   advisorsList(opts: boolean | { activo?: boolean; pais?: string } = true) {
@@ -261,33 +265,25 @@ export const API = {
   async leadHistory(opportunityNumber: string, mergeAudit = true) {
     const id = opportunityNumber?.trim();
     if (!id) throw new Error('opportunityNumber requerido');
-    const base = getBase();
-    const url = `${base}/api/history${buildQuery({ opportunityNumber: id, mergeAudit: mergeAudit ? 1 : 0 })}`;
-    return fetchJson(url);
+    return fetchJson(getApiUrl('/api/history', { opportunityNumber: id, mergeAudit: mergeAudit ? 1 : 0 }));
   },
 
   async propuestaHistory(auditId: string) {
     const id = auditId?.trim();
     if (!id) throw new Error('audit_id requerido');
-    const base = getBase();
-    const url = `${base}/api/audit/${encodeURIComponent(id)}/propuesta/history`;
-    return fetchJson(url);
+    return fetchJson(getApiUrl(`/api/audit/${encodeURIComponent(id)}/propuesta/history`, {}));
   },
 
   async propuestaHistoryByClient(clientId: string) {
     const id = clientId?.trim();
     if (!id) throw new Error('client_id requerido');
-    const base = getBase();
-    const url = `${base}/api/audit/client/${encodeURIComponent(id)}/propuesta/history`;
-    return fetchJson(url);
+    return fetchJson(getApiUrl(`/api/audit/client/${encodeURIComponent(id)}/propuesta/history`, {}));
   },
 
   async auditByClient(clientId: string) {
     const id = clientId?.trim();
     if (!id) throw new Error('client_id requerido');
-    const base = getBase();
-    const url = `${base}/api/audit/by-client/${encodeURIComponent(id)}`;
-    return fetchJson(url);
+    return fetchJson(getApiUrl(`/api/audit/by-client/${encodeURIComponent(id)}`, {}));
   },
 
   async ping() {
