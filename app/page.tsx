@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { KPIGrid } from '@/components/kpi/KPIGrid';
 import { ChartCard } from '@/components/charts/ChartCard';
@@ -84,6 +83,9 @@ export default function HomePage() {
 
   const AsesoresOptions = asesoresList.map((a) => ({ value: a, label: a }));
 
+  const resumen = data?.resumen || {};
+  const reunionesTotal = (resumen.reuniones_pendientes || 0) + (resumen.reuniones_en_proceso || 0) + (resumen.reuniones_cerrados || 0);
+
   return (
     <Shell
       pageTitle="Resumen"
@@ -114,14 +116,14 @@ export default function HomePage() {
         <div className="space-y-6">
           <KPIGrid
             data={{
-              aceptados: data.leads_aceptados ?? 0,
-              perdidos: data.leads_rechazados ?? 0,
-              reuniones: data.reuniones_count ?? 0,
-              propuestas: data.propuestas_count ?? 0,
-              pendientes: data.leads_pendientes ?? 0,
-              enProceso: data.leads_en_proceso ?? 0,
-              cerrados: data.leads_cerrados ?? 0,
-              ventasCerradas: data.ventasCerradas ?? 0,
+              aceptados: resumen.leads_aceptados ?? 0,
+              perdidos: resumen.leads_rechazados ?? 0,
+              reuniones: reunionesTotal,
+              propuestas: resumen.propuestas_registradas ?? 0,
+              pendientes: resumen.leads_no_agendados ?? 0,
+              enProceso: resumen.en_seguimiento_sin_cierre ?? 0,
+              cerrados: resumen.ventas_cerradas ?? 0,
+              ventasCerradas: resumen.ventas_cerradas ?? 0,
             }}
           />
 
