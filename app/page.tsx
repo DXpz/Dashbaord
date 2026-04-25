@@ -114,7 +114,7 @@ export default function HomePage() {
                 labels: ['Agendados', 'No Agendados'],
                 datasets: [{
                   data: [
-                    totalAgendados,
+                    (resumen.reuniones_con_retro || 0) + (resumen.reuniones_sin_retro || 0),
                     resumen.leads_no_agendados || 0,
                   ],
                   backgroundColor: [COLORS.green, COLORS.orange],
