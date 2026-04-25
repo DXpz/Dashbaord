@@ -67,7 +67,7 @@ export default function HomePage() {
               perdidos: resumen.leads_rechazados ?? 0,
               reuniones: reunionesTotal,
               propuestas: resumen.propuestas_registradas ?? 0,
-              pendientes: resumen.leads_no_agendados ?? 0,
+              pendientes: resumen.reuniones_pendientes ?? 0,
               enProceso: resumen.en_seguimiento_sin_cierre ?? 0,
               noAgendados: resumen.leads_no_agendados ?? 0,
               ventasCerradas: resumen.ventas_cerradas ?? 0,
