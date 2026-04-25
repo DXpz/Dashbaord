@@ -1,63 +1,81 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
+import { KPICard } from '@/components/kpi/KPICard';
 import { useDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FileText, TrendingDown, Target, PieChart } from 'lucide-react';
 
-function PropuestasChart({ data }: { data: any }) {
-  if (!data?.labels) {
-    return <div className="h-64 flex items-center justify-center text-gray-400 text-sm">Sin datos</div>;
-  }
-
-  return <ChartWrapper type="bar" data={{
-    labels: data.labels,
-    datasets: [{
-      data: data.values || [],
-      backgroundColor: '#1a1a1a',
-      borderRadius: 4,
-      borderSkipped: false,
-    }],
-  }} height="240px" />;
-}
-
-function TasaChart({ data }: { data: any }) {
-  if (!data?.labels) {
-    return <div className="h-64 flex items-center justify-center text-gray-400 text-sm">Sin datos</div>;
-  }
-
-  return <ChartWrapper type="bar" data={{
-    labels: data.labels,
-    datasets: [{
-      data: data.values || [],
-      backgroundColor: '#666666',
-      borderRadius: 4,
-      borderSkipped: false,
-    }],
-  }} height="240px" />;
-}
-
-function MotivosPie({ data }: { data: any }) {
-  if (!data?.labels) {
-    return <div className="h-48 flex items-center justify-center text-gray-400 text-sm">Sin datos</div>;
-  }
-
-  return <ChartWrapper type="doughnut" data={{
-    labels: data.labels,
-    datasets: [{
-      data: data.values || [],
-      backgroundColor: ['#1a1a1a', '#444444', '#666666', '#888888', '#aaaaaa'],
-      borderWidth: 0,
-    }],
-  }} height="180px" />;
-}
+const COLORS = {
+  dark: '#1F1D3D',
+  medium: '#35325B',
+  light: '#B5B5AE',
+  red: '#c8151b',
+  blue: '#145478',
+};
 
 export default function PropuestasPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading, error } = useDashboard(filters);
   const connectionStatus = useConnectionStatus();
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
+
+  const resumen = data?.resumen || {};
+  const propuestasPorRubro = data?.propuestas_por_rubro || [];
+  const motivosPerdida = data?.motivos_perdida || {};
+  const negociacion = data?.negociacion || {};
+  const decisiones = data?.decisiones || {};
+
+  const motivosItems = motivosPerdida?.items || [];
+  const negociacionGlobal = negociacion?.global || {};
+
+  const kpis = useMemo(() => ({
+    cantidad: resumen.propuestas_registradas ?? 0,
+    cerradas: resumen.ventas_cerradas ?? 0,
+    perdidas: resumen.ventas_perdidas ?? 0,
+    tasaCierre: resumen.propuestas_registradas > 0
+      ? ((resumen.ventas_cerradas / resumen.propuestas_registradas) * 100).toFixed(1)
+      : '0.0',
+  }), [resumen]);
+
+  const rubroChartData = useMemo(() => {
+    if (!propuestasPorRubro.length) return null;
+    return {
+      labels: propuestasPorRubro.map((r: any) => r.rubro || '—'),
+      values: propuestasPorRubro.map((r: any) => r.cantidad || 0),
+    };
+  }, [propuestasPorRubro]);
+
+  const tasaChartData = useMemo(() => {
+    if (!propuestasPorRubro.length) return null;
+    return {
+      labels: propuestasPorRubro.map((r: any) => r.rubro || '—'),
+      values: propuestasPorRubro.map((r: any) => r.tasa || 0),
+    };
+  }, [propuestasPorRubro]);
+
+  const motivosChartData = useMemo(() => {
+    if (!motivosItems.length) return null;
+    const sorted = [...motivosItems].sort((a: any, b: any) => (b.count || 0) - (a.count || 0)).slice(0, 15);
+    return {
+      labels: sorted.map((m: any) => (m.texto || '—').substring(0, 30)),
+      values: sorted.map((m: any) => m.count || 0),
+    };
+  }, [motivosItems]);
+
+  const negociacionChartData = useMemo(() => {
+    if (!negociacionGlobal?.seguimientos_con_resumen) return null;
+    return {
+      labels: ['Con Resumen', 'En Negociación'],
+      values: [
+        negociacionGlobal.seguimientos_con_resumen || 0,
+        negociacionGlobal.negociaron || 0,
+      ],
+    };
+  }, [negociacionGlobal]);
 
   return (
     <Shell
@@ -70,30 +88,92 @@ export default function PropuestasPage() {
       connectionStatus={connectionStatus}
     >
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Skeleton className="h-72" />
-          <Skeleton className="h-72" />
-          <Skeleton className="h-72" />
-          <Skeleton className="h-72" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (<Skeleton key={i} className="h-24" />))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Skeleton className="h-72" />
+            <Skeleton className="h-72" />
+          </div>
         </div>
       ) : error ? (
         <div className="flex items-center justify-center h-64">
           <p className="text-sm text-red-500">Error: {error}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ChartCard title="Propuestas por Rubro">
-            <PropuestasChart data={data?.chart_propuestas_rubro} />
-          </ChartCard>
-          <ChartCard title="Tasa de Cierre">
-            <TasaChart data={data?.chart_tasa_cierre} />
-          </ChartCard>
-          <ChartCard title="Motivos de Pérdida">
-            <MotivosPie data={data?.chart_motivos} />
-          </ChartCard>
-          <ChartCard title="Motivos por Categoría">
-            <MotivosPie data={data?.chart_motivos_cat} />
-          </ChartCard>
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPICard label="Total Propuestas" value={kpis.cantidad} icon={FileText} className="delay-1" />
+            <KPICard label="Cerradas" value={kpis.cerradas} icon={Target} className="delay-2" />
+            <KPICard label="Perdidas" value={kpis.perdidas} icon={TrendingDown} className="delay-3" />
+            <KPICard label="Tasa Cierre %" value={kpis.tasaCierre} icon={PieChart} className="delay-4" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ChartCard title="Propuestas por Rubro" subtitle="Cantidad">
+              {rubroChartData ? (
+                <ChartWrapper type="bar" data={{
+                  labels: rubroChartData.labels,
+                  datasets: [{
+                    data: rubroChartData.values,
+                    backgroundColor: COLORS.blue,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                  }],
+                }} height="240px" />
+              ) : (
+                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
+              )}
+            </ChartCard>
+            <ChartCard title="Tasa de Cierre %" subtitle="Por rubro">
+              {tasaChartData ? (
+                <ChartWrapper type="bar" data={{
+                  labels: tasaChartData.labels,
+                  datasets: [{
+                    data: tasaChartData.values,
+                    backgroundColor: COLORS.red,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                  }],
+                }} height="240px" />
+              ) : (
+                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
+              )}
+            </ChartCard>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ChartCard title="Motivos de Pérdida" subtitle="Top 15">
+              {motivosChartData ? (
+                <ChartWrapper type="bar" data={{
+                  labels: motivosChartData.labels,
+                  datasets: [{
+                    data: motivosChartData.values,
+                    backgroundColor: COLORS.red,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                  }],
+                }} height="240px" />
+              ) : (
+                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
+              )}
+            </ChartCard>
+            <ChartCard title="Negociación" subtitle="Seguimientos">
+              {negociacionChartData ? (
+                <ChartWrapper type="doughnut" data={{
+                  labels: negociacionChartData.labels,
+                  datasets: [{
+                    data: negociacionChartData.values,
+                    backgroundColor: [COLORS.dark, COLORS.medium],
+                    borderWidth: 0,
+                  }],
+                }} height="240px" />
+              ) : (
+                <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>
+              )}
+            </ChartCard>
+          </div>
         </div>
       )}
     </Shell>

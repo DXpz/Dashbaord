@@ -12,7 +12,7 @@ import { ArrowUpDown, Search, Users, TrendingUp, CheckCircle, XCircle } from 'lu
 
 type MetricKey = 'reuniones' | 'aceptaciones' | 'rechazos' | 'propuestas' | 'ventas_cerradas';
 
-const colors = {
+const COLORS = {
   dark: '#1F1D3D',
   medium: '#35325B',
   light: '#B5B5AE',
@@ -28,24 +28,42 @@ export default function AsesoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
-  const chartData = data?.chart_asesores || data?.asesores_data || null;
+
+  const resumen = data?.resumen || {};
+  const asesoresArray = data?.asesores || [];
 
   const tableData = useMemo(() => {
-    const rawData = data?.asesores_data || [];
-    if (!searchTerm) return rawData;
-    return rawData.filter((row: any) =>
+    if (!asesoresArray.length) return [];
+    return asesoresArray.map((a: any) => ({
+      nombre: a.asesor || a.nombre || a.nombre_vendedor || '—',
+      reuniones: a.total_reuniones ?? a.reuniones ?? 0,
+      aceptaciones: a.leads_aceptados ?? a.aceptaciones ?? 0,
+      rechazos: a.leads_rechazados ?? a.rechazos ?? 0,
+      tasa_decisiones_aceptacion: a.tasa_decisiones_aceptacion ?? 0,
+      con_retro: a.con_retroalimentacion ?? a.con_retro ?? 0,
+      propuestas: a.propuestas_enviadas ?? a.propuestas ?? 0,
+      ventas_cerradas: a.ventas_cerradas ?? 0,
+    }));
+  }, [asesoresArray]);
+
+  const filteredData = useMemo(() => {
+    if (!searchTerm) return tableData;
+    return tableData.filter((row: any) =>
       row.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [data, searchTerm]);
+  }, [tableData, searchTerm]);
 
   const sortedData = useMemo(() => {
-    if (!tableData.length) return tableData;
-    return [...tableData].sort((a: any, b: any) => {
+    if (!filteredData.length) return filteredData;
+    return [...filteredData].sort((a: any, b: any) => {
       const aVal = a[metric] ?? 0;
       const bVal = b[metric] ?? 0;
       return bVal - aVal;
     });
-  }, [tableData, metric]);
+  }, [filteredData, metric]);
+
+  const chartLabels = tableData.map((r: any) => r.nombre).slice(0, 20);
+  const chartValues = tableData.map((r: any) => r[metric] ?? 0).slice(0, 20);
 
   const stats = useMemo(() => {
     if (!tableData.length) return { total: 0, mejores: [], peores: [] };
@@ -56,6 +74,8 @@ export default function AsesoresPage() {
       peores: sorted.slice(-3).reverse(),
     };
   }, [tableData, metric]);
+
+  const chartData = chartLabels.length > 0 ? { labels: chartLabels, values: chartValues } : null;
 
   return (
     <Shell
@@ -126,12 +146,12 @@ export default function AsesoresPage() {
                   </select>
                 }
               >
-                {chartData?.labels ? (
+                {chartData ? (
                   <ChartWrapper type="bar" data={{
                     labels: chartData.labels,
                     datasets: [{
-                      data: chartData.values?.[metric] || [],
-                      backgroundColor: colors.dark,
+                      data: chartData.values,
+                      backgroundColor: COLORS.dark,
                       borderRadius: 4,
                       borderSkipped: false,
                     }],
@@ -145,7 +165,7 @@ export default function AsesoresPage() {
             <div className="bg-white border border-[#EEEEEC] p-5">
               <h3 className="text-sm font-medium text-[#1F1D3D] mb-4">Top 3</h3>
               <div className="space-y-3">
-                {stats.mejores.map((asesor, i) => (
+                {stats.mejores.map((asesor: any, i: number) => (
                   <div key={asesor.nombre || i} className="flex items-center justify-between p-3 bg-[#F5F5ED] rounded">
                     <div className="flex items-center gap-3">
                       <span className="w-6 h-6 flex items-center justify-center bg-[#1F1D3D] text-[#F5F5ED] text-xs font-bold rounded-full">{i + 1}</span>

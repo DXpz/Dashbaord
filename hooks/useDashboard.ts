@@ -130,7 +130,7 @@ export function useReuniones(filters: FilterState) {
       setLoading(true);
       try {
         const result = await API.reuniones(filters.desde, filters.hasta, 200, 0, {});
-        setReuniones(result?.reuniones || result || []);
+        setReuniones(result?.reuniones || result?.items || result || []);
       } catch (err) {
         console.error('Error fetching reuniones:', err);
       } finally {

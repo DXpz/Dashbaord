@@ -7,73 +7,14 @@ import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { useDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const colors = {
+const COLORS = {
   dark: '#1F1D3D',
   medium: '#35325B',
   light: '#B5B5AE',
+  green: '#22c55e',
+  orange: '#f97316',
+  red: '#c8151b',
 };
-
-function LeadsChart({ data }: { data: any }) {
-  if (!data?.labels) {
-    return <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>;
-  }
-
-  return <ChartWrapper type="bar" data={{
-    labels: data.labels,
-    datasets: [{
-      data: data.values || [],
-      backgroundColor: colors.dark,
-      borderRadius: 4,
-      borderSkipped: false,
-    }],
-  }} height="240px" />;
-}
-
-function PipelineChart({ data }: { data: any }) {
-  if (!data?.labels) {
-    return <div className="h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>;
-  }
-
-  return <ChartWrapper type="bar" data={{
-    labels: data.labels,
-    datasets: [{
-      data: data.values || [],
-      backgroundColor: colors.medium,
-      borderRadius: 4,
-      borderSkipped: false,
-    }],
-  }} height="240px" />;
-}
-
-function SimpleDoughnut({ data }: { data: any }) {
-  if (!data?.labels) {
-    return <div className="h-48 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>;
-  }
-
-  return <ChartWrapper type="doughnut" data={{
-    labels: data.labels,
-    datasets: [{
-      data: data.values || [],
-      backgroundColor: [colors.dark, colors.light, colors.medium],
-      borderWidth: 0,
-    }],
-  }} height="180px" />;
-}
-
-function SimplePie({ data }: { data: any }) {
-  if (!data?.labels) {
-    return <div className="h-48 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos</div>;
-  }
-
-  return <ChartWrapper type="pie" data={{
-    labels: data.labels,
-    datasets: [{
-      data: data.values || [],
-      backgroundColor: [colors.dark, colors.medium],
-      borderWidth: 0,
-    }],
-  }} height="180px" />;
-}
 
 export default function HomePage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
@@ -84,7 +25,13 @@ export default function HomePage() {
   const AsesoresOptions = asesoresList.map((a) => ({ value: a, label: a }));
 
   const resumen = data?.resumen || {};
-  const reunionesTotal = (resumen.reuniones_pendientes || 0) + (resumen.reuniones_en_proceso || 0) + (resumen.reuniones_cerrados || 0);
+  const reunionesTotal = (resumen.reuniones_pendientes || 0) +
+                        (resumen.reuniones_en_proceso || 0) +
+                        (resumen.reuniones_cerrados || 0);
+
+  const decisiones = data?.decisiones || {};
+  const decisionesAceptados = decisiones.decisiones_aceptados ?? 0;
+  const decisionesRechazados = decisiones.decisiones_rechazados ?? 0;
 
   return (
     <Shell
@@ -129,22 +76,75 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ChartCard title="Estado de Leads" subtitle="Distribución por estado">
-              <LeadsChart data={data.chart_leads} />
+              <ChartWrapper type="doughnut" data={{
+                labels: ['Pendientes', 'En Proceso', 'Cerrados'],
+                datasets: [{
+                  data: [
+                    resumen.reuniones_pendientes || 0,
+                    resumen.reuniones_en_proceso || 0,
+                    resumen.reuniones_cerrados || 0,
+                  ],
+                  backgroundColor: [COLORS.dark, COLORS.medium, COLORS.light],
+                  borderWidth: 0,
+                  hoverOffset: 10,
+                }],
+              }} height="240px" />
             </ChartCard>
             <ChartCard title="Pipeline de Ventas" subtitle="Totales por etapa">
-              <PipelineChart data={data.chart_ventas} />
+              <ChartWrapper type="doughnut" data={{
+                labels: ['Cerradas', 'Perdidas', 'En Negociación', 'En Seguimiento'],
+                datasets: [{
+                  data: [
+                    resumen.ventas_cerradas || 0,
+                    resumen.ventas_perdidas || 0,
+                    resumen.casos_con_negociacion_declarada || 0,
+                    resumen.en_seguimiento_sin_cierre || 0,
+                  ],
+                  backgroundColor: [COLORS.green, COLORS.red, COLORS.medium, COLORS.light],
+                  borderWidth: 0,
+                  hoverOffset: 10,
+                }],
+              }} height="240px" />
             </ChartCard>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <ChartCard title="Leads Agendados" subtitle="vs No Agendados">
-              <SimpleDoughnut data={data.chart_agendados} />
+              <ChartWrapper type="doughnut" data={{
+                labels: ['Agendados', 'No Agendados'],
+                datasets: [{
+                  data: [
+                    (resumen.reuniones_con_retro || 0) + (resumen.reuniones_sin_retro || 0),
+                    resumen.leads_no_agendados || 0,
+                  ],
+                  backgroundColor: [COLORS.green, COLORS.orange],
+                  borderWidth: 0,
+                }],
+              }} height="180px" />
             </ChartCard>
             <ChartCard title="Reuniones Retro" subtitle="Con vs Sin">
-              <SimplePie data={data.chart_retro} />
+              <ChartWrapper type="bar" data={{
+                labels: ['Con Feedback', 'Sin Feedback'],
+                datasets: [{
+                  data: [
+                    resumen.reuniones_con_retro || 0,
+                    resumen.reuniones_sin_retro || 0,
+                  ],
+                  backgroundColor: [COLORS.green, COLORS.orange],
+                  borderRadius: 4,
+                  borderSkipped: false,
+                }],
+              }} height="180px" />
             </ChartCard>
             <ChartCard title="Decisiones" subtitle="Aceptar / Rechazar">
-              <SimplePie data={data.chart_decisiones} />
+              <ChartWrapper type="pie" data={{
+                labels: ['Aceptados', 'Rechazados'],
+                datasets: [{
+                  data: [decisionesAceptados, decisionesRechazados],
+                  backgroundColor: [COLORS.dark, COLORS.medium],
+                  borderWidth: 0,
+                }],
+              }} height="180px" />
             </ChartCard>
           </div>
         </div>
