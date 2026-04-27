@@ -57,6 +57,7 @@ export function useDashboard(filters: FilterState) {
     setLoading(true);
     setError(null);
     try {
+      console.log('[useDashboard] fetching with filters:', filters);
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
@@ -64,9 +65,12 @@ export function useDashboard(filters: FilterState) {
         40,
         { pais: filters.pais, nombre: filters.asesor }
       );
+      console.log('[useDashboard] result keys:', Object.keys(result || {}));
+      console.log('[useDashboard] resumen fields:', Object.keys(result?.resumen || {}));
       setData(result as DashboardData);
     } catch (err: any) {
       const message = err?.message || err?.cause?.message || 'Error al cargar datos';
+      console.error('[useDashboard] error:', message);
       setError(message);
       throw new Error(message);
     } finally {
@@ -96,7 +100,7 @@ export function useConnectionStatus() {
     };
 
     checkConnection();
-    const interval = setInterval(checkConnection, 30000);
+    const interval = setInterval(checkConnection, 120000);
     return () => clearInterval(interval);
   }, []);
 
@@ -126,17 +130,24 @@ export function useAsesores(filters: FilterState) {
 export function useReuniones(filters: FilterState) {
   const [reuniones, setReuniones] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchReuniones = async () => {
       setLoading(true);
+      setError(null);
       try {
         const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
         const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
+        console.log('[useReuniones] fetching:', { desde, hasta, pais: filters.pais });
         const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, {});
-        setReuniones(result?.reuniones || result?.items || result || []);
-      } catch (err) {
-        console.error('Error fetching reuniones:', err);
+        console.log('[useReuniones] raw result:', result);
+        const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
+        console.log('[useReuniones] setReuniones:', list.length, 'items');
+        setReuniones(Array.isArray(list) ? list : []);
+      } catch (err: any) {
+        console.error('[useReuniones] error:', err);
+        setError(err.message || 'Error al cargar reuniones');
       } finally {
         setLoading(false);
       }
@@ -144,7 +155,7 @@ export function useReuniones(filters: FilterState) {
     fetchReuniones();
   }, [filters.desde, filters.hasta, filters.pais]);
 
-  return { reuniones, loading };
+  return { reuniones, loading, error };
 }
 
 export function useFuentes(filters: FilterState) {

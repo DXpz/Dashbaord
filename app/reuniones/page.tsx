@@ -43,7 +43,8 @@ function StageBadge({ stage }: { stage: any }) {
 
 export default function ReunionesPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const { reuniones, loading } = useReuniones(filters);
+  const { reuniones, loading, error } = useReuniones(filters);
+  console.log('[reuniones] render:', { loading, error, count: reuniones?.length });
   const connectionStatus = useConnectionStatus();
   const asesoresList = useAsesores(filters);
 
