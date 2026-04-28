@@ -15,15 +15,6 @@ const STAGE_COLORS = [
   '#B5B5AE',
 ];
 
-const STAGE_LABELS = [
-  'Nueva',
-  'Contactada',
-  'Cualificada',
-  'Propuesta',
-  'Negociación',
-  'Cerrada',
-];
-
 export default function HomePage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading, error } = useDashboard(filters);
@@ -31,7 +22,12 @@ export default function HomePage() {
   const asesoresList = useAsesores(filters);
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
+  console.log('[resumen] data keys:', Object.keys(data || {}));
+  console.log('[resumen] stages:', data?.stages);
+  console.log('[resumen] resumen fields:', Object.keys(data?.resumen || {}));
+
   const resumen = data?.resumen || {};
+  const stagesFromApi = data?.stages || [];
 
   const totalLeads = useMemo(() => {
     return (resumen.leads_aceptados || 0) +
@@ -47,20 +43,23 @@ export default function HomePage() {
   }, [data]);
 
   const stageData = useMemo(() => {
-    return STAGE_LABELS.map((label, i) => ({
-      label,
-      value: (resumen as any)[`stage_${i + 1}`] || Math.floor(Math.random() * 20) + 1,
-    }));
-  }, [resumen]);
+    if (stagesFromApi.length > 0) {
+      return stagesFromApi.map((s: any) => ({
+        label: s.label,
+        value: (resumen as any)[`stage_${s.id}`] || 0,
+      }));
+    }
+    return [];
+  }, [stagesFromApi, resumen]);
 
   const chartData = useMemo(() => {
-    const values = stageData.map(s => s.value);
-    const total = values.reduce((a, b) => a + b, 0) || 1;
+    const values = stageData.map((s: any) => s.value);
+    const total = values.reduce((a: number, b: number) => a + b, 0) || 1;
     return {
-      labels: STAGE_LABELS,
+      labels: stageData.map((s: any) => s.label),
       datasets: [{
         data: values,
-        backgroundColor: STAGE_COLORS,
+        backgroundColor: STAGE_COLORS.slice(0, stageData.length),
         borderWidth: 0,
         hoverOffset: 8,
       }],
@@ -153,8 +152,14 @@ export default function HomePage() {
               />
             </div>
 
+            {stageData.length === 0 && (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-sm text-[#B5B5AE]">Sin datos de etapas disponibles</p>
+            </div>
+          )}
+          {stageData.length > 0 && (
             <div className="flex-1 flex flex-col justify-center gap-5">
-              {stageData.map((stage, i) => {
+              {stageData.map((stage: any, i: number) => {
                 const pct = Math.round((stage.value / chartData.total) * 100);
                 return (
                   <div key={stage.label} className="flex items-center gap-4">
@@ -177,6 +182,7 @@ export default function HomePage() {
                 );
               })}
             </div>
+          )}
           </div>
         </div>
       </div>
