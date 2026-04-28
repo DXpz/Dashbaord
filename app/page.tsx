@@ -22,12 +22,9 @@ export default function HomePage() {
   const asesoresList = useAsesores(filters);
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
-  console.log('[resumen] data keys:', Object.keys(data || {}));
-  console.log('[resumen] stages:', data?.stages);
-  console.log('[resumen] resumen fields:', Object.keys(data?.resumen || {}));
-
   const resumen = data?.resumen || {};
   const stagesFromApi = data?.stages || [];
+  const leadsPorStage = data?.leads_por_stage || [];
 
   const totalLeads = useMemo(() => {
     return (resumen.leads_aceptados || 0) +
@@ -36,7 +33,7 @@ export default function HomePage() {
   }, [resumen]);
 
   const topAsesor = useMemo(() => {
-    const asesoresData = data?.asesores_data || [];
+    const asesoresData = data?.asesores || data?.asesores_data || [];
     if (!asesoresData.length) return { nombre: '—', leads: 0 };
     const sorted = [...asesoresData].sort((a: any, b: any) => (b.leads_aceptados || 0) - (a.leads_aceptados || 0));
     return sorted[0] || { nombre: '—', leads: 0 };
@@ -44,13 +41,16 @@ export default function HomePage() {
 
   const stageData = useMemo(() => {
     if (stagesFromApi.length > 0) {
-      return stagesFromApi.map((s: any) => ({
-        label: s.label,
-        value: (resumen as any)[`stage_${s.id}`] || 0,
-      }));
+      return stagesFromApi.map((s: any) => {
+        const fromApi = leadsPorStage.find((l: any) => l.stage === s.id);
+        return {
+          label: s.label,
+          value: fromApi?.total || 0,
+        };
+      });
     }
     return [];
-  }, [stagesFromApi, resumen]);
+  }, [stagesFromApi, leadsPorStage]);
 
   const chartData = useMemo(() => {
     const values = stageData.map((s: any) => s.value);
