@@ -39,26 +39,28 @@ export default function PropuestasPage() {
     cantidad: resumen.propuestas_registradas ?? 0,
     cerradas: resumen.ventas_cerradas ?? 0,
     perdidas: resumen.ventas_perdidas ?? 0,
-    tasaCierre: resumen.propuestas_registradas > 0
+    tasaCierre: (resumen.propuestas_registradas ?? 0) > 0
       ? ((resumen.ventas_cerradas / resumen.propuestas_registradas) * 100).toFixed(1)
       : '0.0',
   }), [resumen]);
 
   const rubroChartData = useMemo(() => {
-    if (!propuestasPorRubro.length) return null;
+    const arr = data?.propuestas_por_rubro || [];
+    if (!arr.length) return null;
     return {
-      labels: propuestasPorRubro.map((r: any) => r.rubro || '—'),
-      values: propuestasPorRubro.map((r: any) => r.cantidad || 0),
+      labels: arr.map((r: any) => r.rubro || '—'),
+      values: arr.map((r: any) => r.cantidad || 0),
     };
-  }, [propuestasPorRubro]);
+  }, [data]);
 
   const tasaChartData = useMemo(() => {
-    if (!propuestasPorRubro.length) return null;
+    const arr = data?.propuestas_por_rubro || [];
+    if (!arr.length) return null;
     return {
-      labels: propuestasPorRubro.map((r: any) => r.rubro || '—'),
-      values: propuestasPorRubro.map((r: any) => r.tasa || 0),
+      labels: arr.map((r: any) => r.rubro || '—'),
+      values: arr.map((r: any) => r.tasa || 0),
     };
-  }, [propuestasPorRubro]);
+  }, [data]);
 
   const motivosChartData = useMemo(() => {
     if (!motivosItems.length) return null;

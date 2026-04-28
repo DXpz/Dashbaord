@@ -29,14 +29,18 @@ export default function HomePage() {
   const totalLeads = useMemo(() => {
     return (resumen.leads_aceptados || 0) +
       (resumen.leads_rechazados || 0) +
-      (resumen.leads_no_agendados || 0);
+      (resumen.leads_pendientes_decision || 0);
   }, [resumen]);
 
   const topAsesor = useMemo(() => {
-    const asesoresData = data?.asesores || data?.asesores_data || [];
+    const asesoresData = data?.asesores || [];
     if (!asesoresData.length) return { nombre: '—', leads: 0 };
     const sorted = [...asesoresData].sort((a: any, b: any) => (b.leads_aceptados || 0) - (a.leads_aceptados || 0));
-    return sorted[0] || { nombre: '—', leads: 0 };
+    const best = sorted[0] || {};
+    return {
+      nombre: best.asesor || best.nombre || best.nombre_vendedor || '—',
+      leads: best.leads_aceptados || 0,
+    };
   }, [data]);
 
   const stageData = useMemo(() => {
