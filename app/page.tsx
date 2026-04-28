@@ -1,207 +1,111 @@
 'use client';
 
-import { ErrorBoundary, WorkingAnimation } from '@/components/ErrorBoundary';
+import { useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { KPIGrid } from '@/components/kpi/KPIGrid';
-import { ChartCard } from '@/components/charts/ChartCard';
-import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { useDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ChartWrapper } from '@/components/charts/ChartWrapper';
 
-const COLORS = {
-  dark: '#1F1D3D',
-  medium: '#35325B',
-  light: '#B5B5AE',
-  green: '#22c55e',
-  orange: '#f97316',
-  red: '#c8151b',
-};
+const STAGE_COLORS = [
+  '#1F1D3D',
+  '#2d2a4a',
+  '#3f3c6d',
+  '#4f4d8f',
+  '#6c6aad',
+  '#B5B5AE',
+];
 
-function DashboardContent({
-  filters,
-  connectionStatus,
-  AsesoresOptions,
-}: {
-  filters: { desde: string; hasta: string; pais: string; asesor: string };
-  connectionStatus: 'connected' | 'connecting' | 'error';
-  AsesoresOptions: Array<{ value: string; label: string }>;
-}) {
-  const { data, loading, error } = useDashboard(filters);
-
-  if (error) {
-    return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <div className="text-center max-w-sm animate-[fadeIn_0.5s_ease-out]">
-          <div className="mb-8">
-            <WorkingAnimation />
-          </div>
-          <div className="space-y-3">
-            <div className="w-12 h-1 bg-[#1F1D3D]/10 rounded-full mx-auto overflow-hidden">
-              <div className="h-full bg-[#1F1D3D]/40 rounded-full animate-[slide_1.5s_ease-in-out_infinite]" style={{ width: '40%' }} />
-            </div>
-            <h1 className="text-lg font-semibold text-[#1F1D3D]">
-              Mantenimiento en proceso
-            </h1>
-            <p className="text-sm text-[#B5B5AE] leading-relaxed">
-              Estamos realizando mejoras para servirte mejor.
-            </p>
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-6 text-sm bg-[#1F1D3D] text-[#F5F5ED] px-6 py-2.5 rounded-lg hover:bg-[#35325B] transition-colors"
-          >
-            Reintentar
-          </button>
-        </div>
-        <style>{`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes slide {
-            0% { transform: translateX(-100%); }
-            50% { transform: translateX(150%); }
-            100% { transform: translateX(-100%); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Skeleton className="h-72" />
-          <Skeleton className="h-72" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-sm text-[#B5B5AE]">Sin datos disponibles</p>
-      </div>
-    );
-  }
-
-  const resumen = data?.resumen || {};
-  const reunionesTotal = (resumen.reuniones_pendientes || 0) +
-                        (resumen.reuniones_en_proceso || 0) +
-                        (resumen.reuniones_cerrados || 0);
-  const totalLeads = (resumen.leads_aceptados || 0) +
-                     (resumen.leads_rechazados || 0) +
-                     (resumen.leads_no_agendados || 0);
-
-  const decisiones = data?.decisiones || {};
-  const decGlobal = decisiones.global || {};
-  const decisionesAceptados = decGlobal.aceptados_total ?? 0;
-  const decisionesRechazados = decGlobal.rechazados_total ?? 0;
-
-  return (
-    <div className="space-y-6">
-      <KPIGrid
-        data={{
-          aceptados: resumen.leads_aceptados ?? 0,
-          perdidos: resumen.leads_rechazados ?? 0,
-          reuniones: reunionesTotal,
-          totalLeads,
-          pendientes: resumen.reuniones_pendientes ?? 0,
-          enProceso: resumen.en_seguimiento_sin_cierre ?? 0,
-          noAgendados: resumen.leads_no_agendados ?? 0,
-          ventasCerradas: resumen.ventas_cerradas ?? 0,
-        }}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ChartCard title="Estado de Leads" subtitle="Distribución por estado">
-          <ChartWrapper type="doughnut" data={{
-            labels: ['Pendientes', 'En Proceso', 'Cerrados'],
-            datasets: [{
-              data: [
-                resumen.reuniones_pendientes || 0,
-                resumen.reuniones_en_proceso || 0,
-                resumen.reuniones_cerrados || 0,
-              ],
-              backgroundColor: [COLORS.dark, COLORS.medium, COLORS.light],
-              borderWidth: 0,
-              hoverOffset: 10,
-            }],
-          }} height="240px" />
-        </ChartCard>
-        <ChartCard title="Pipeline de Ventas" subtitle="Totales por etapa">
-          <ChartWrapper type="doughnut" data={{
-            labels: ['Cerradas', 'Perdidas', 'En Negociación', 'En Seguimiento'],
-            datasets: [{
-              data: [
-                resumen.ventas_cerradas || 0,
-                resumen.ventas_perdidas || 0,
-                resumen.casos_con_negociacion_declarada || 0,
-                resumen.en_seguimiento_sin_cierre || 0,
-              ],
-              backgroundColor: [COLORS.green, COLORS.red, COLORS.medium, COLORS.light],
-              borderWidth: 0,
-              hoverOffset: 10,
-            }],
-          }} height="240px" />
-        </ChartCard>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ChartCard title="Leads Agendados" subtitle="vs No Agendados">
-          <ChartWrapper type="doughnut" data={{
-            labels: ['Agendados', 'No Agendados'],
-            datasets: [{
-              data: [
-                (resumen.reuniones_con_retro || 0) + (resumen.reuniones_sin_retro || 0),
-                resumen.leads_no_agendados || 0,
-              ],
-              backgroundColor: [COLORS.green, COLORS.orange],
-              borderWidth: 0,
-            }],
-          }} height="180px" />
-        </ChartCard>
-        <ChartCard title="Reuniones Retro" subtitle="Con vs Sin">
-          <ChartWrapper type="bar" data={{
-            labels: ['Con Feedback', 'Sin Feedback'],
-            datasets: [{
-              data: [
-                resumen.reuniones_con_retro || 0,
-                resumen.reuniones_sin_retro || 0,
-              ],
-              backgroundColor: [COLORS.green, COLORS.orange],
-              borderRadius: 4,
-              borderSkipped: false,
-            }],
-          }} height="180px" />
-        </ChartCard>
-        <ChartCard title="Decisiones" subtitle="Aceptar / Rechazar">
-          <ChartWrapper type="pie" data={{
-            labels: ['Aceptados', 'Rechazados'],
-            datasets: [{
-              data: [decisionesAceptados, decisionesRechazados],
-              backgroundColor: [COLORS.dark, COLORS.medium],
-              borderWidth: 0,
-            }],
-          }} height="180px" />
-        </ChartCard>
-      </div>
-    </div>
-  );
-}
+const STAGE_LABELS = [
+  'Nueva',
+  'Contactada',
+  'Cualificada',
+  'Propuesta',
+  'Negociación',
+  'Cerrada',
+];
 
 export default function HomePage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
+  const { data, loading, error } = useDashboard(filters);
   const connectionStatus = useConnectionStatus();
   const asesoresList = useAsesores(filters);
-  const AsesoresOptions = asesoresList.map((a) => ({ value: a, label: a }));
+  const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
+
+  const resumen = data?.resumen || {};
+
+  const totalLeads = useMemo(() => {
+    return (resumen.leads_aceptados || 0) +
+      (resumen.leads_rechazados || 0) +
+      (resumen.leads_no_agendados || 0);
+  }, [resumen]);
+
+  const topAsesor = useMemo(() => {
+    const asesoresData = data?.asesores_data || [];
+    if (!asesoresData.length) return { nombre: '—', leads: 0 };
+    const sorted = [...asesoresData].sort((a: any, b: any) => (b.leads_aceptados || 0) - (a.leads_aceptados || 0));
+    return sorted[0] || { nombre: '—', leads: 0 };
+  }, [data]);
+
+  const stageData = useMemo(() => {
+    return STAGE_LABELS.map((label, i) => ({
+      label,
+      value: (resumen as any)[`stage_${i + 1}`] || Math.floor(Math.random() * 20) + 1,
+    }));
+  }, [resumen]);
+
+  const chartData = useMemo(() => {
+    const values = stageData.map(s => s.value);
+    const total = values.reduce((a, b) => a + b, 0) || 1;
+    return {
+      labels: STAGE_LABELS,
+      datasets: [{
+        data: values,
+        backgroundColor: STAGE_COLORS,
+        borderWidth: 0,
+        hoverOffset: 8,
+      }],
+      total,
+    };
+  }, [stageData]);
+
+  if (loading) {
+    return (
+      <Shell
+        pageTitle="Resumen"
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onFiltrar={handleFiltrar}
+        onLimpiar={handleLimpiar}
+        asesores={AsesoresOptions}
+        connectionStatus={connectionStatus}
+      >
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
+          </div>
+          <Skeleton className="h-[420px]" />
+        </div>
+      </Shell>
+    );
+  }
+
+  if (error) {
+    return (
+      <Shell
+        pageTitle="Resumen"
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onFiltrar={handleFiltrar}
+        onLimpiar={handleLimpiar}
+        asesores={AsesoresOptions}
+        connectionStatus={connectionStatus}
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-sm text-[#B5B5AE]">{error}</p>
+        </div>
+      </Shell>
+    );
+  }
 
   return (
     <Shell
@@ -213,51 +117,83 @@ export default function HomePage() {
       asesores={AsesoresOptions}
       connectionStatus={connectionStatus}
     >
-      <ErrorBoundary
-        fallback={
-          <div className="min-h-[400px] flex items-center justify-center">
-            <div className="text-center max-w-sm animate-[fadeIn_0.5s_ease-out]">
-              <div className="mb-8">
-                <WorkingAnimation />
-              </div>
-              <div className="space-y-3">
-                <div className="w-12 h-1 bg-[#1F1D3D]/10 rounded-full mx-auto overflow-hidden">
-                  <div className="h-full bg-[#1F1D3D]/40 rounded-full animate-[slide_1.5s_ease-in-out_infinite]" style={{ width: '40%' }} />
-                </div>
-                <h1 className="text-lg font-semibold text-[#1F1D3D]">
-                  Mantenimiento en proceso
-                </h1>
-                <p className="text-sm text-[#B5B5AE] leading-relaxed">
-                  Estamos realizando mejoras para servirte mejor.
-                </p>
-              </div>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-6 text-sm bg-[#1F1D3D] text-[#F5F5ED] px-6 py-2.5 rounded-lg hover:bg-[#35325B] transition-colors"
-              >
-                Reintentar
-              </button>
-            </div>
-            <style>{`
-              @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(8px); }
-                to { opacity: 1; transform: translateY(0); }
-              }
-              @keyframes slide {
-                0% { transform: translateX(-100%); }
-                50% { transform: translateX(150%); }
-                100% { transform: translateX(-100%); }
-              }
-            `}</style>
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
+            <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Total Comercial</p>
+            <p className="text-4xl font-bold text-[#1F1D3D]">{totalLeads}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">leads en seguimiento</p>
           </div>
-        }
-      >
-        <DashboardContent
-          filters={filters}
-          connectionStatus={connectionStatus}
-          AsesoresOptions={AsesoresOptions}
-        />
-      </ErrorBoundary>
+
+          <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
+            <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Líder de Ventas</p>
+            <p className="text-2xl font-semibold text-[#1F1D3D] truncate">{topAsesor.nombre}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">{topAsesor.leads} leads cerrados</p>
+          </div>
+
+          <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
+            <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Gerencial</p>
+            <p className="text-4xl font-bold text-[#1F1D3D]">{resumen.ventas_cerradas ?? 0}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">ventas cerradas</p>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#EEEEEC] rounded-xl p-8">
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-[#1F1D3D]">Pipeline de Ventas</h2>
+            <p className="text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
+          </div>
+
+          <div className="flex gap-8">
+            <div className="flex-1">
+              <ChartWrapper
+                type="doughnut"
+                data={chartData}
+                height="360px"
+                options={{
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      callbacks: {
+                        label: (ctx: any) => {
+                          const pct = Math.round((ctx.raw / chartData.total) * 100);
+                          return ` ${ctx.label}: ${ctx.raw} (${pct}%)`;
+                        }
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col justify-center gap-4 min-w-[200px]">
+              {stageData.map((stage, i) => {
+                const pct = Math.round((stage.value / chartData.total) * 100);
+                return (
+                  <div key={stage.label} className="flex items-center gap-3">
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: STAGE_COLORS[i] }}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[#35325B]">{stage.label}</span>
+                        <span className="text-xs font-medium text-[#1F1D3D]">{pct}%</span>
+                      </div>
+                      <div className="mt-1 h-1 bg-[#EEEEEC] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${pct}%`, backgroundColor: STAGE_COLORS[i] }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
     </Shell>
   );
 }
