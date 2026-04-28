@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { cn } from '@/lib/utils';
 
@@ -33,7 +33,47 @@ function hasData(data: any): boolean {
   return values.some((v: any) => v > 0);
 }
 
-function buildDefaultOptions(type: string) {
+function DoughnutCenterLabel({ chart }: { chart: Chart }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const listener = () => {
+      const activeElements = chart.getActiveElements();
+      setActiveIndex(activeElements.length > 0 ? activeElements[0].index : null);
+    };
+    chart.canvas.addEventListener('mouseout', listener);
+    chart.canvas.addEventListener('mousemove', listener);
+    return () => {
+      chart.canvas.removeEventListener('mouseout', listener);
+      chart.canvas.removeEventListener('mousemove', listener);
+    };
+  }, [chart]);
+
+  const dataArr = (chart.data.datasets[0]?.data || []) as number[];
+  const total = dataArr.reduce((a: number, b: number) => a + b, 0);
+
+  if (activeIndex !== null) {
+    const val = dataArr[activeIndex] ?? 0;
+    const label = (chart.data.labels?.[activeIndex] as string) || '';
+    const pct = total > 0 ? Math.round(((val as number) / total) * 100) : 0;
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <span className="text-2xl font-bold text-[#1F1D3D]">{val}</span>
+        <span className="text-xs font-medium text-[#35325B]">{label}</span>
+        <span className="text-xs text-[#B5B5AE]">{pct}%</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+      <span className="text-2xl font-bold text-[#1F1D3D]">{total}</span>
+      <span className="text-xs text-[#B5B5AE]">Total</span>
+    </div>
+  );
+}
+
+function buildDefaultOptions(type: string, showCenter = false) {
   const isBar = type === 'bar';
   const isPieDoughnut = type === 'pie' || type === 'doughnut';
 
@@ -43,14 +83,7 @@ function buildDefaultOptions(type: string) {
     animation: { duration: 400 },
     plugins: {
       legend: {
-        display: isPieDoughnut,
-        position: 'bottom' as const,
-        labels: {
-          usePointStyle: true,
-          padding: 16,
-          font: { size: 11, family: 'Inter' },
-          color: COLORS.light,
-        },
+        display: false,
       },
       tooltip: {
         backgroundColor: COLORS.dark,
@@ -71,6 +104,10 @@ function buildDefaultOptions(type: string) {
       },
     },
   };
+
+  if (isPieDoughnut) {
+    base.cutout = '65%';
+  }
 
   if (isBar) {
     base.scales = {
@@ -99,6 +136,7 @@ function buildDefaultOptions(type: string) {
 export function ChartWrapper({ type, data, options, className, height = '100%' }: ChartWrapperProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -122,9 +160,10 @@ export function ChartWrapper({ type, data, options, className, height = '100%' }
   }, [type, data, options]);
 
   const hasChartData = hasData(data);
+  const isDoughnut = type === 'doughnut';
 
   return (
-    <div className={cn('relative w-full', className)} style={{ height }}>
+    <div ref={containerRef} className={cn('relative w-full', className)} style={{ height }}>
       {!hasChartData ? (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-full max-w-[200px] space-y-3 opacity-30">
@@ -149,7 +188,12 @@ export function ChartWrapper({ type, data, options, className, height = '100%' }
           </div>
         </div>
       ) : null}
+
       <canvas ref={canvasRef} className={!hasChartData ? 'invisible' : ''} />
+
+      {hasChartData && isDoughnut && chartRef.current && (
+        <DoughnutCenterLabel chart={chartRef.current} />
+      )}
     </div>
   );
 }

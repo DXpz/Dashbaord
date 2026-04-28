@@ -144,48 +144,34 @@ export default function HomePage() {
             <p className="text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
           </div>
 
-          <div className="flex gap-8">
-            <div className="flex-1">
+          <div className="flex gap-12">
+            <div className="w-[320px] h-[320px] flex-shrink-0">
               <ChartWrapper
                 type="doughnut"
                 data={chartData}
-                height="360px"
-                options={{
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      callbacks: {
-                        label: (ctx: any) => {
-                          const pct = Math.round((ctx.raw / chartData.total) * 100);
-                          return ` ${ctx.label}: ${ctx.raw} (${pct}%)`;
-                        }
-                      }
-                    }
-                  }
-                }}
+                height="320px"
               />
             </div>
 
-            <div className="flex flex-col justify-center gap-4 min-w-[200px]">
+            <div className="flex-1 flex flex-col justify-center gap-5">
               {stageData.map((stage, i) => {
                 const pct = Math.round((stage.value / chartData.total) * 100);
                 return (
-                  <div key={stage.label} className="flex items-center gap-3">
+                  <div key={stage.label} className="flex items-center gap-4">
                     <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      className="w-4 h-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: STAGE_COLORS[i] }}
                     />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-[#35325B]">{stage.label}</span>
-                        <span className="text-xs font-medium text-[#1F1D3D]">{pct}%</span>
-                      </div>
-                      <div className="mt-1 h-1 bg-[#EEEEEC] rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${pct}%`, backgroundColor: STAGE_COLORS[i] }}
-                        />
-                      </div>
+                    <span className="text-sm text-[#35325B] w-28">{stage.label}</span>
+                    <div className="flex-1 h-2 bg-[#EEEEEC] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, backgroundColor: STAGE_COLORS[i] }}
+                      />
+                    </div>
+                    <div className="w-20 text-right">
+                      <span className="text-base font-semibold text-[#1F1D3D]">{stage.value}</span>
+                      <span className="text-xs text-[#B5B5AE] ml-1">({pct}%)</span>
                     </div>
                   </div>
                 );
