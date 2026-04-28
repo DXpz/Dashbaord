@@ -12,7 +12,7 @@ const BUBBLE_MESSAGES = [
   '¿Necesitas assistance?',
 ];
 
-const BUBBLE_INTERVAL_MS = 45000;
+const BUBBLE_INTERVAL_MS = 1800000;
 
 export default function VoiceAgentInner() {
   const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID;
