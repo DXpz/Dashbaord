@@ -87,10 +87,10 @@ export default function HomePage() {
         <div className="space-y-8">
           <div className="flex gap-4">
             <div className="w-44 flex flex-col gap-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-20" />)}
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
             </div>
             <div className="flex-1 flex gap-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 flex-1" />)}
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 flex-1" />)}
             </div>
           </div>
           <Skeleton className="h-[280px]" />
@@ -147,22 +147,19 @@ export default function HomePage() {
           </div>
 
           <div className="flex-1 flex gap-3">
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
-              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Total Comercial</p>
-              <p className="text-3xl font-bold text-[#1F1D3D]">{resumen.atendidos_por_asesor ?? 0}</p>
-              <p className="text-[10px] text-[#B5B5AE] mt-0.5">leads cerrados</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Total Comercial</p>
+              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.atendidos_por_asesor ?? 0}</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
-              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Líder de Ventas</p>
-              <p className="text-3xl font-bold text-[#1F1D3D]">{liderLeads}</p>
-              <p className="text-[10px] text-[#B5B5AE] mt-0.5">leads escalados</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Líder de Ventas</p>
+              <p className="text-2xl font-bold text-[#1F1D3D]">{liderLeads}</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
-              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Gerencial</p>
-              <p className="text-3xl font-bold text-[#1F1D3D]">{gerenteLeads}</p>
-              <p className="text-[10px] text-[#B5B5AE] mt-0.5">leads escalados</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Gerencial</p>
+              <p className="text-2xl font-bold text-[#1F1D3D]">{gerenteLeads}</p>
             </div>
           </div>
         </div>
