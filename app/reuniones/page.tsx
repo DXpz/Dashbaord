@@ -34,11 +34,10 @@ function StatusBadge({ status }: { status: string }) {
   return <span className="text-xs text-gray-500">{status || '—'}</span>;
 }
 
-function StageBadge({ stage }: { stage: any }) {
-  if (stage == null) return <span className="text-gray-400">—</span>;
-  const n = Number(stage);
-  const labels: Record<number, string> = { 1: 'Nueva', 2: 'Contactada', 3: 'Cualificada', 4: 'Propuesta', 5: 'Negociación', 6: 'Cerrada' };
-  return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{labels[n] || `Etapa ${n}`}</span>;
+function StageBadge({ stageLabel, stageNum }: { stageLabel?: string; stageNum?: number }) {
+  if (stageLabel) return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{stageLabel}</span>;
+  if (stageNum == null) return <span className="text-gray-400">—</span>;
+  return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Etapa {stageNum}</span>;
 }
 
 export default function ReunionesPage() {
@@ -116,13 +115,13 @@ export default function ReunionesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Lead #</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Teléfono</TableHead>
                 <TableHead>Asesor</TableHead>
                 <TableHead>País</TableHead>
                 <TableHead>Etapa</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Min</TableHead>
                 <TableHead>Prop</TableHead>
               </TableRow>
             </TableHeader>
@@ -133,15 +132,15 @@ export default function ReunionesPage() {
                     key={reunion.id || reunion.opportunityNumber || i}
                     className={`animate-slide-up delay-${Math.min(i + 1, 8)}`}
                   >
+                    <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_id || reunion.opportunity_number || reunion.opportunityNumber || '—'}</TableCell>
                     <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</TableCell>
                     <TableCell className="text-[#B5B5AE]">{reunion.client_phone || reunion.telefono || '—'}</TableCell>
                     <TableCell className="text-[#35325B]">{reunion.advisor_name || reunion.asesor || '—'}</TableCell>
                     <TableCell>
                       <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
                     </TableCell>
-                    <TableCell><StageBadge stage={reunion.opportunity_stage || reunion.etapa} /></TableCell>
+                    <TableCell><StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} /></TableCell>
                     <TableCell><StatusBadge status={reunion.reunion_status || reunion.estado || reunion.status} /></TableCell>
-                    <TableCell className="text-[#B5B5AE]">{reunion.minutos_hasta_retro ?? reunion.min_retro ?? '—'}</TableCell>
                     <TableCell>
                       {reunion.propuesta || reunion.has_propuesta ? (
                         <span className="text-green-600 font-medium text-sm">Sí</span>
