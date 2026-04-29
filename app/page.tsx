@@ -32,16 +32,25 @@ export default function HomePage() {
   const gerenteLeads = resumen.atendidos_por_gerente ?? 0;
 
   const stageData = useMemo(() => {
-    if (stagesFromApi.length > 0) {
-      return stagesFromApi.map((s: any) => {
-        const fromApi = leadsPorStage.find((l: any) => l.stage === s.id);
-        return {
-          label: s.label,
-          value: fromApi?.total || 0,
-        };
-      });
-    }
-    return [];
+    if (stagesFromApi.length === 0 || leadsPorStage.length === 0) return [];
+
+    const totalEntry = leadsPorStage.find((l: any) => l.is_total_visual);
+    const total = totalEntry?.total ?? 0;
+
+    const rows: { label: string; value: number; subStage?: string; isTotal?: boolean }[] = [];
+
+    leadsPorStage.forEach((l: any) => {
+      if (l.is_total_visual) {
+        rows.push({ label: l.stage_label, value: l.total, isTotal: true });
+      } else if (l.sub_stage) {
+        rows.push({ label: l.stage_label, value: l.total, subStage: l.sub_stage });
+      } else {
+        const stageDef = stagesFromApi.find((s: any) => s.id === l.stage);
+        rows.push({ label: stageDef?.label || l.stage_label, value: l.total });
+      }
+    });
+
+    return rows;
   }, [stagesFromApi, leadsPorStage]);
 
   const chartData = useMemo(() => {
@@ -52,8 +61,8 @@ export default function HomePage() {
       datasets: [{
         data: values,
         backgroundColor: STAGE_COLORS.slice(0, stageData.length),
-        borderWidth: 0,
-        hoverOffset: 8,
+        borderRadius: 6,
+        borderSkipped: false,
       }],
       total,
     };
