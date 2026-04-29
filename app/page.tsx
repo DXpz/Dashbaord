@@ -143,6 +143,26 @@ export default function HomePage() {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
+            <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Leads Calificados</p>
+            <p className="text-4xl font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">aceptados</p>
+          </div>
+
+          <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
+            <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Leads No Agendados</p>
+            <p className="text-4xl font-bold text-[#1F1D3D]">{resumen.leads_pendientes_decision ?? 0}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">pendientes</p>
+          </div>
+
+          <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
+            <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Total Leads</p>
+            <p className="text-4xl font-bold text-[#1F1D3D]">{totalLeads}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">auditorías</p>
+          </div>
+        </div>
+
         <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
