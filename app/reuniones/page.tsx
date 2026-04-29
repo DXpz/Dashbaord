@@ -49,20 +49,29 @@ export default function ReunionesPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortDesc, setSortDesc] = useState(false);
 
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
   const filteredReuniones = useMemo(() => {
     if (!Array.isArray(reuniones)) return [];
-    if (!searchTerm) return reuniones;
-    const q = searchTerm.toLowerCase();
-    return reuniones.filter((r: any) =>
-      (r.client_name || r.cliente || '').toLowerCase().includes(q) ||
-      (r.advisor_name || r.asesor || '').toLowerCase().includes(q) ||
-      (r.subject || r.asunto || '').toLowerCase().includes(q) ||
-      (r.country || r.pais || '').toLowerCase().includes(q)
-    );
-  }, [reuniones, searchTerm]);
+    let result = reuniones;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter((r: any) =>
+        (r.client_name || r.cliente || '').toLowerCase().includes(q) ||
+        (r.advisor_name || r.asesor || '').toLowerCase().includes(q) ||
+        (r.subject || r.asunto || '').toLowerCase().includes(q) ||
+        (r.country || r.pais || '').toLowerCase().includes(q) ||
+        (r.client_id || r.opportunity_number || '').toString().toLowerCase().includes(q)
+      );
+    }
+    return [...result].sort((a: any, b: any) => {
+      const aNum = parseInt(a.client_id || a.opportunity_number || a.opportunityNumber || '0', 10);
+      const bNum = parseInt(b.client_id || b.opportunity_number || b.opportunityNumber || '0', 10);
+      return sortDesc ? bNum - aNum : aNum - bNum;
+    });
+  }, [reuniones, searchTerm, sortDesc]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReuniones.length / PAGE_SIZE));
   const paginatedReuniones = filteredReuniones.slice(
@@ -115,7 +124,11 @@ export default function ReunionesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Lead #</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => setSortDesc(d => !d)}>
+                  <span className="flex items-center gap-1">
+                    Lead # {sortDesc ? '↓' : '↑'}
+                  </span>
+                </TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Teléfono</TableHead>
                 <TableHead>Asesor</TableHead>
