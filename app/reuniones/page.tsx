@@ -6,7 +6,7 @@ import { useReuniones, useConnectionStatus, useAsesores, useFilters } from '@/ho
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
@@ -49,7 +49,6 @@ export default function ReunionesPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortDesc, setSortDesc] = useState(false);
 
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
@@ -69,9 +68,9 @@ export default function ReunionesPage() {
     return [...result].sort((a: any, b: any) => {
       const aNum = parseInt(a.client_id || a.opportunity_number || a.opportunityNumber || '0', 10);
       const bNum = parseInt(b.client_id || b.opportunity_number || b.opportunityNumber || '0', 10);
-      return sortDesc ? bNum - aNum : aNum - bNum;
+      return aNum - bNum;
     });
-  }, [reuniones, searchTerm, sortDesc]);
+  }, [reuniones, searchTerm]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReuniones.length / PAGE_SIZE));
   const paginatedReuniones = filteredReuniones.slice(
@@ -124,19 +123,7 @@ export default function ReunionesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-24">
-                  <button
-                    type="button"
-                    onClick={() => { setSortDesc(!sortDesc); setCurrentPage(1); }}
-                    className="flex items-center gap-1 hover:text-[#1F1D3D] text-[#B5B5AE] transition-colors cursor-pointer"
-                  >
-                    <span className="text-xs font-medium uppercase tracking-wider">Lead #</span>
-                    {sortDesc
-                      ? <ArrowDown className="h-3 w-3" />
-                      : <ArrowUp className="h-3 w-3" />
-                    }
-                  </button>
-                </TableHead>
+                <TableHead>Lead #</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Teléfono</TableHead>
                 <TableHead>Asesor</TableHead>
