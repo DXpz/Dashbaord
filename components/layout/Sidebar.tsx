@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   X,
   BarChart3,
+  CircleDot,
 } from 'lucide-react';
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { href: '/propuestas', label: 'Propuestas', icon: FileText },
   { href: '/negociacion', label: 'Negociación', icon: TrendingUp },
   { href: '/reuniones', label: 'Reuniones', icon: Calendar },
+  { href: '/round-robin', label: 'Round Robin', icon: CircleDot },
   { href: '/origen-leads', label: 'Origen Leads', icon: Globe },
   { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
 ];
