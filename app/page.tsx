@@ -52,8 +52,17 @@ export default function HomePage() {
   }, [stagesFromApi, leadsPorStage]);
 
   const flatData = useMemo(() => {
+    const seen = new Set<string>();
     return stageData.flatMap((s: any) => {
-      if (s.subs) return s.subs;
+      if (s.subs) {
+        return s.subs.filter((sub: any) => {
+          if (seen.has(sub.label)) return false;
+          seen.add(sub.label);
+          return true;
+        });
+      }
+      if (seen.has(s.label)) return [];
+      seen.add(s.label);
       return [{ label: s.label, value: s.value }];
     });
   }, [stageData]);
