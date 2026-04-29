@@ -32,14 +32,16 @@ export default function HomePage() {
   const gerenteLeads = resumen.atendidos_por_gerente ?? 0;
 
   const stageData = useMemo(() => {
-    if (stagesFromApi.length > 0) {
-      return stagesFromApi.map((s: any) => {
-        const fromApi = leadsPorStage.find((l: any) => l.stage === s.id);
-        return {
-          label: s.label,
-          value: fromApi?.total || 0,
-        };
-      });
+    if (leadsPorStage.length > 0) {
+      return stagesFromApi
+        .filter((s: any) => leadsPorStage.some((l: any) => l.stage === s.id))
+        .map((s: any) => {
+          const fromApi = leadsPorStage.find((l: any) => l.stage === s.id);
+          return {
+            label: s.label,
+            value: fromApi?.total || 0,
+          };
+        });
     }
     return [];
   }, [stagesFromApi, leadsPorStage]);
