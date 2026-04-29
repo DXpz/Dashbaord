@@ -133,19 +133,16 @@ export default function HomePage() {
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
               <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead Calificado</p>
               <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
-              <p className="text-[10px] text-[#B5B5AE] mt-0.5">aceptados</p>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
               <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead No Agendado</p>
               <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
-              <p className="text-[10px] text-[#B5B5AE] mt-0.5">pendientes</p>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
               <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Total Leads</p>
               <p className="text-lg font-bold text-[#1F1D3D]">{resumen.total_leads_general ?? totalLeads}</p>
-              <p className="text-[10px] text-[#B5B5AE] mt-0.5">auditorías</p>
             </div>
           </div>
 
