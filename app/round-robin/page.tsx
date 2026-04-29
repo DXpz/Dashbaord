@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { API } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFilters } from '@/hooks';
 import { useConnectionStatus } from '@/hooks/useDashboard';
-import { RefreshCw } from 'lucide-react';
 
 interface Advisor {
   id: number;
@@ -38,11 +37,11 @@ const WHEEL_COLORS = [
   '#B5B5AE',
 ];
 
-function SpinningWheel({ advisors, siguiente, spinning }: { advisors: Advisor[]; siguiente: Advisor; spinning: boolean }) {
-  const sliceAngle = 360 / advisors.length;
+function SpinningWheel({ advisors, siguiente }: { advisors: Advisor[]; siguiente: Advisor }) {
+  const sliceAngle = advisors.length > 0 ? 360 / advisors.length : 360;
 
   return (
-    <div className="relative w-80 h-80 mx-auto">
+    <div className="relative flex-1 max-w-xl">
       <svg viewBox="0 0 320 320" className="w-full h-full drop-shadow-lg">
         <g transform="translate(160,160)">
           {advisors.map((advisor, i) => {
@@ -50,10 +49,10 @@ function SpinningWheel({ advisors, siguiente, spinning }: { advisors: Advisor[];
             const endAngle = startAngle + sliceAngle;
             const startRad = (startAngle * Math.PI) / 180;
             const endRad = (endAngle * Math.PI) / 180;
-            const x1 = 140 * Math.cos(startRad);
-            const y1 = 140 * Math.sin(startRad);
-            const x2 = 140 * Math.cos(endRad);
-            const y2 = 140 * Math.sin(endRad);
+            const x1 = 150 * Math.cos(startRad);
+            const y1 = 150 * Math.sin(startRad);
+            const x2 = 150 * Math.cos(endRad);
+            const y2 = 150 * Math.sin(endRad);
             const largeArc = sliceAngle > 180 ? 1 : 0;
             const isWinner = advisor.id === siguiente.id;
             const color = isWinner ? '#10B981' : WHEEL_COLORS[i % WHEEL_COLORS.length];
@@ -61,44 +60,38 @@ function SpinningWheel({ advisors, siguiente, spinning }: { advisors: Advisor[];
             return (
               <g key={advisor.id}>
                 <path
-                  d={`M 0 0 L ${x1} ${y1} A 140 140 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                  d={`M 0 0 L ${x1} ${y1} A 150 150 0 ${largeArc} 1 ${x2} ${y2} Z`}
                   fill={color}
                   stroke="#F5F5ED"
                   strokeWidth="2"
                 />
                 <text
-                  transform={`rotate(${startAngle + sliceAngle / 2}) translate(70, 0) rotate(90)`}
+                  transform={`rotate(${startAngle + sliceAngle / 2}) translate(80, 0) rotate(90)`}
                   textAnchor="middle"
-                  className="fill-white text-[10px] font-medium uppercase tracking-wider"
-                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                  className="fill-white text-[11px] font-medium uppercase tracking-wider"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
                 >
                   {advisor.nombre_vendedor.split(' ')[0]}
                 </text>
               </g>
             );
           })}
-          <circle cx="0" cy="0" r="20" fill="#F5F5ED" stroke="#1F1D3D" strokeWidth="3" />
-          <text textAnchor="middle" dy="4" className="fill-[#1F1D3D] text-[10px] font-bold uppercase">
+          <circle cx="0" cy="0" r="24" fill="#F5F5ED" stroke="#1F1D3D" strokeWidth="3" />
+          <text textAnchor="middle" dy="4" className="fill-[#1F1D3D] text-[12px] font-bold uppercase">
             ↓
           </text>
         </g>
       </svg>
-      {spinning && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-72 h-72 rounded-full border-4 border-dashed border-[#B5B5AE] animate-spin" />
-        </div>
-      )}
     </div>
   );
 }
 
 export default function RoundRobinPage() {
-  const { filters } = useFilters();
+  const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const connectionStatus = useConnectionStatus();
   const [data, setData] = useState<RoundRobinData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [spinning, setSpinning] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -118,76 +111,63 @@ export default function RoundRobinPage() {
     fetchData();
   }, [filters.pais]);
 
-  const handleSpin = () => {
-    setSpinning(true);
-    setTimeout(() => setSpinning(false), 2000);
-  };
-
   const AdvisorsOptions = [{ value: '', label: 'Todos' }];
 
   return (
     <Shell
       pageTitle="Round Robin"
       filters={filters}
-      onFilterChange={() => {}}
-      onFiltrar={fetchData}
-      onLimpiar={fetchData}
+      onFilterChange={handleFilterChange}
+      onFiltrar={handleFiltrar}
+      onLimpiar={handleLimpiar}
       asesores={AdvisorsOptions}
       connectionStatus={connectionStatus}
     >
       {loading ? (
-        <Skeleton className="h-96 w-full" />
+        <div className="flex gap-8">
+          <Skeleton className="w-96 h-96 rounded-xl" />
+          <div className="flex-1 space-y-4">
+            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-32 rounded-xl" />
+          </div>
+        </div>
       ) : error ? (
         <div className="flex items-center justify-center h-64">
           <p className="text-sm text-red-500">{error}</p>
         </div>
       ) : data ? (
-        <div className="space-y-8">
-          <div className="flex gap-6 items-start">
-            <div className="flex-1">
-              <SpinningWheel
-                advisors={data.advisors}
-                siguiente={data.siguiente}
-                spinning={spinning}
-              />
-              <div className="flex justify-center mt-4">
-                <button
-                  onClick={handleSpin}
-                  className="flex items-center gap-2 bg-[#1F1D3D] text-white px-6 py-2 rounded-lg hover:bg-[#2d2a4a] transition-colors"
-                >
-                  <RefreshCw className={`h-4 w-4 ${spinning ? 'animate-spin' : ''}`} />
-                  <span className="text-sm font-medium uppercase tracking-wider">Girar</span>
-                </button>
+        <div className="flex gap-8">
+          <SpinningWheel
+            advisors={data.advisors}
+            siguiente={data.siguiente}
+          />
+
+          <div className="w-80 space-y-4">
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
+              <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-3">Siguiente Asesor</h3>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
+                <p className="text-lg font-bold text-[#1F1D3D]">{data.siguiente.nombre_vendedor}</p>
+                <p className="text-xs text-[#B5B5AE] mt-1">{data.siguiente.pais} · Sequence {data.siguiente.assignment_sequence}</p>
               </div>
             </div>
 
-            <div className="w-72 space-y-6">
-              <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
-                <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-3">Siguiente Asesor</h3>
-                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
-                  <p className="text-lg font-bold text-[#1F1D3D]">{data.siguiente.nombre_vendedor}</p>
-                  <p className="text-xs text-[#B5B5AE] mt-1">{data.siguiente.pais} · Sequence {data.siguiente.assignment_sequence}</p>
-                </div>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
+              <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-3">Últimos Asignados</h3>
+              <div className="space-y-2">
+                {data.ultimos_asignados.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between text-sm">
+                    <span className="text-[#35325B]">{a.nombre_vendedor}</span>
+                    <span className="text-[#B5B5AE] text-xs">
+                      {new Date(a.ultima_asignacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
-                <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-3">Últimos Asignados</h3>
-                <div className="space-y-2">
-                  {data.ultimos_asignados.map((a, i) => (
-                    <div key={a.id} className="flex items-center justify-between text-sm">
-                      <span className="text-[#35325B]">{a.nombre_vendedor}</span>
-                      <span className="text-[#B5B5AE] text-xs">
-                        {new Date(a.ultima_asignacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
-                <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-3">Total Activos</h3>
-                <p className="text-3xl font-bold text-[#1F1D3D]">{data.total_activos}</p>
-              </div>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
+              <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-3">Total Activos</h3>
+              <p className="text-3xl font-bold text-[#1F1D3D]">{data.total_activos}</p>
             </div>
           </div>
         </div>
