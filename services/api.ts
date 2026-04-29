@@ -229,6 +229,10 @@ export const API = {
     return get('/api/metrics/decisiones', { desde, hasta, ...extra });
   },
 
+  roundRobin(pais?: string) {
+    return get('/api/advisors/round-robin', pais ? { pais: normPaisQuery(pais) } : {});
+  },
+
   advisorsList(opts: boolean | { activo?: boolean; pais?: string } = true) {
     const params: Record<string, any> = {};
     let o = opts;
