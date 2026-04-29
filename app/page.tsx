@@ -26,9 +26,7 @@ export default function HomePage() {
   const stagesFromApi = data?.stages || [];
   const leadsPorStage = data?.leads_por_stage || [];
 
-  const totalLeads = (resumen.atendidos_por_asesor || 0) +
-    (resumen.atendidos_por_lider || 0) +
-    (resumen.atendidos_por_gerente || 0);
+  const totalLeads = resumen.total_auditorias ?? 0;
 
   const liderLeads = resumen.atendidos_por_lider ?? 0;
   const gerenteLeads = resumen.atendidos_por_gerente ?? 0;
