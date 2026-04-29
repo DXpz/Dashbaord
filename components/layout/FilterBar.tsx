@@ -17,6 +17,35 @@ interface FilterBarProps {
   connectionStatus: 'connected' | 'connecting' | 'error';
 }
 
+const MONTHS = [
+  { value: '01', label: 'Enero' },
+  { value: '02', label: 'Febrero' },
+  { value: '03', label: 'Marzo' },
+  { value: '04', label: 'Abril' },
+  { value: '05', label: 'Mayo' },
+  { value: '06', label: 'Junio' },
+  { value: '07', label: 'Julio' },
+  { value: '08', label: 'Agosto' },
+  { value: '09', label: 'Septiembre' },
+  { value: '10', label: 'Octubre' },
+  { value: '11', label: 'Noviembre' },
+  { value: '12', label: 'Diciembre' },
+];
+
+function getMonthFromDate(dateStr: string): { month: string; year: string } {
+  if (!dateStr) return { month: '', year: '' };
+  const [year, month] = dateStr.split('-');
+  return { month, year };
+}
+
+function setMonth(month: string, year: string): { desde: string; hasta: string } {
+  const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+  return {
+    desde: `${year}-${month}-01`,
+    hasta: `${year}-${month}-${String(lastDay).padStart(2, '0')}`,
+  };
+}
+
 export function FilterBar({
   filters,
   onFilterChange,
@@ -25,22 +54,47 @@ export function FilterBar({
   asesores,
   connectionStatus,
 }: FilterBarProps) {
+  const { month, year } = getMonthFromDate(filters.desde);
+  const currentYear = new Date().getFullYear();
+  const years = [currentYear - 1, currentYear, currentYear + 1];
+
+  const handleMonthChange = (newMonth: string) => {
+    const newYear = year || String(currentYear);
+    const dates = setMonth(newMonth, newYear);
+    onFilterChange('desde', dates.desde);
+    onFilterChange('hasta', dates.hasta);
+  };
+
+  const handleYearChange = (newYear: string) => {
+    const newMonth = month || String(new Date().getMonth() + 1).padStart(2, '0');
+    const dates = setMonth(newMonth, newYear);
+    onFilterChange('desde', dates.desde);
+    onFilterChange('hasta', dates.hasta);
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-4 py-4 px-6 border-b border-[#EEEEEC]">
       <div className="flex items-center gap-2">
-        <input
-          type="date"
-          value={filters.desde}
-          onChange={(e) => onFilterChange('desde', e.target.value)}
-          className="text-sm text-[#35325B] bg-transparent outline-none border-none cursor-pointer"
-        />
-        <span className="text-[#B5B5AE]">—</span>
-        <input
-          type="date"
-          value={filters.hasta}
-          onChange={(e) => onFilterChange('hasta', e.target.value)}
-          className="text-sm text-[#35325B] bg-transparent outline-none border-none cursor-pointer"
-        />
+        <select
+          value={month}
+          onChange={(e) => handleMonthChange(e.target.value)}
+          className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+        >
+          <option value="">Mes</option>
+          {MONTHS.map((m) => (
+            <option key={m.value} value={m.value}>{m.label}</option>
+          ))}
+        </select>
+
+        <select
+          value={year}
+          onChange={(e) => handleYearChange(e.target.value)}
+          className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+        >
+          {years.map((y) => (
+            <option key={y} value={String(y)}>{y}</option>
+          ))}
+        </select>
       </div>
 
       <select
@@ -70,12 +124,6 @@ export function FilterBar({
           className="text-sm text-[#B5B5AE] hover:text-[#35325B] transition-colors px-3 py-1.5"
         >
           Limpiar
-        </button>
-        <button
-          onClick={onFiltrar}
-          className="text-sm bg-[#1F1D3D] text-[#F5F5ED] px-4 py-1.5 rounded-md hover:bg-[#35325B] transition-colors"
-        >
-          Filtrar
         </button>
       </div>
 

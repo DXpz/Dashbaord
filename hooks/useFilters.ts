@@ -34,6 +34,7 @@ export function useFilters() {
   const handleLimpiar = useCallback(() => {
     const defaults = getDefaultDates();
     setFilters({ ...defaults, pais: '', asesor: '' });
+    window.location.reload();
   }, []);
 
   return { filters, handleFilterChange, handleFiltrar, handleLimpiar };
