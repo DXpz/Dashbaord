@@ -124,10 +124,14 @@ export default function ReunionesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="cursor-pointer select-none" onClick={() => setSortDesc(d => !d)}>
-                  <span className="flex items-center gap-1">
-                    Lead # {sortDesc ? '↓' : '↑'}
-                  </span>
+                <TableHead className="cursor-pointer select-none w-24">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSortDesc(d => !d); }}
+                    className="flex items-center gap-1 hover:text-[#1F1D3D] text-[#B5B5AE] transition-colors"
+                  >
+                    <span>Lead #</span>
+                    <span className="text-xs font-mono ml-1">{sortDesc ? '↓' : '↑'}</span>
+                  </button>
                 </TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Teléfono</TableHead>
