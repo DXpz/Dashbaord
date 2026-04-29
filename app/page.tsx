@@ -27,46 +27,51 @@ export default function HomePage() {
   const leadsPorStage = data?.leads_por_stage || [];
 
   const totalLeads = resumen.total_auditorias ?? 0;
-
   const liderLeads = resumen.atendidos_por_lider ?? 0;
   const gerenteLeads = resumen.atendidos_por_gerente ?? 0;
 
   const stageData = useMemo(() => {
-    if (stagesFromApi.length === 0 || leadsPorStage.length === 0) return [];
+    if (stagesFromApi.length === 0) return [];
 
-    const totalEntry = leadsPorStage.find((l: any) => l.is_total_visual);
-    const total = totalEntry?.total ?? 0;
+    return stagesFromApi.map((s: any) => {
+      const matching = leadsPorStage.filter((l: any) => l.stage === s.id);
+      const hasSubStages = matching.length > 1 || matching.some((l: any) => (l as any).sub_stage);
 
-    const rows: { label: string; value: number; subStage?: string; isTotal?: boolean }[] = [];
-
-    leadsPorStage.forEach((l: any) => {
-      if (l.is_total_visual) {
-        rows.push({ label: l.stage_label, value: l.total, isTotal: true });
-      } else if (l.sub_stage) {
-        rows.push({ label: l.stage_label, value: l.total, subStage: l.sub_stage });
-      } else {
-        const stageDef = stagesFromApi.find((s: any) => s.id === l.stage);
-        rows.push({ label: stageDef?.label || l.stage_label, value: l.total });
+      if (hasSubStages) {
+        const subRows = matching.map((l: any) => ({
+          label: l.stage_label,
+          value: l.total,
+        }));
+        const sum = subRows.reduce((a: number, b: any) => a + b.value, 0);
+        return { label: s.label, value: sum, subs: subRows };
       }
-    });
 
-    return rows;
+      const entry = matching[0];
+      return { label: s.label, value: entry?.total || 0 };
+    });
   }, [stagesFromApi, leadsPorStage]);
 
+  const flatData = useMemo(() => {
+    return stageData.flatMap((s: any) => {
+      if (s.subs) return s.subs;
+      return [{ label: s.label, value: s.value }];
+    });
+  }, [stageData]);
+
   const chartData = useMemo(() => {
-    const values = stageData.map((s: any) => s.value);
+    const values = flatData.map((s: any) => s.value);
     const total = values.reduce((a: number, b: number) => a + b, 0) || 1;
     return {
-      labels: stageData.map((s: any) => s.label),
+      labels: flatData.map((s: any) => s.label),
       datasets: [{
         data: values,
-        backgroundColor: STAGE_COLORS.slice(0, stageData.length),
+        backgroundColor: STAGE_COLORS.slice(0, flatData.length),
         borderRadius: 6,
         borderSkipped: false,
       }],
       total,
     };
-  }, [stageData]);
+  }, [flatData]);
 
   if (loading) {
     return (
@@ -83,7 +88,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
           </div>
-          <Skeleton className="h-[420px]" />
+          <Skeleton className="h-[280px]" />
         </div>
       </Shell>
     );
@@ -159,10 +164,10 @@ export default function HomePage() {
             <ChartWrapper
               type="bar"
               data={{
-                labels: stageData.map((s: any) => s.label),
+                labels: flatData.map((s: any) => s.label),
                 datasets: [{
-                  data: stageData.map((s: any) => s.value),
-                  backgroundColor: STAGE_COLORS.slice(0, stageData.length),
+                  data: flatData.map((s: any) => s.value),
+                  backgroundColor: STAGE_COLORS.slice(0, flatData.length),
                   borderRadius: 6,
                   borderSkipped: false,
                 }],
