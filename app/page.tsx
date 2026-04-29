@@ -146,13 +146,13 @@ export default function HomePage() {
         <div className="flex gap-4">
           <div className="w-44 flex flex-col gap-3">
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
-              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead Calificado</p>
-              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead No Agendado</p>
+              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
-              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead No Agendado</p>
-              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead Calificado</p>
+              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
