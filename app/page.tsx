@@ -147,47 +147,58 @@ export default function HomePage() {
             <p className="text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
           </div>
 
-          <div className="flex gap-12">
-            <div className="w-[320px] h-[320px] flex-shrink-0">
-              <ChartWrapper
-                type="doughnut"
-                data={chartData}
-                height="320px"
-              />
-            </div>
-
-            {stageData.length === 0 && (
+          {stageData.length === 0 && (
             <div className="flex items-center justify-center py-12">
               <p className="text-sm text-[#B5B5AE]">Sin datos de etapas disponibles</p>
             </div>
           )}
           {stageData.length > 0 && (
-            <div className="flex-1 flex flex-col justify-center gap-5">
-              {stageData.map((stage: any, i: number) => {
-                const pct = Math.round((stage.value / chartData.total) * 100);
-                return (
-                  <div key={stage.label} className="flex items-center gap-4">
-                    <div
-                      className="w-4 h-4 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: STAGE_COLORS[i] }}
-                    />
-                    <span className="text-sm text-[#35325B] w-28">{stage.label}</span>
-                    <div className="flex-1 h-2 bg-[#EEEEEC] rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%`, backgroundColor: STAGE_COLORS[i] }}
-                      />
-                    </div>
-                    <div className="w-20 text-right">
-                      <span className="text-base font-semibold text-[#1F1D3D]">{stage.value}</span>
-                      <span className="text-xs text-[#B5B5AE] ml-1">({pct}%)</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <ChartWrapper
+              type="bar"
+              data={{
+                labels: stageData.map((s: any) => s.label),
+                datasets: [{
+                  data: stageData.map((s: any) => s.value),
+                  backgroundColor: STAGE_COLORS.slice(0, stageData.length),
+                  borderRadius: 6,
+                  borderSkipped: false,
+                }],
+              }}
+              height="280px"
+              options={{
+                indexAxis: 'y' as const,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx: any) => {
+                        const total = chartData.total;
+                        const val = ctx.raw;
+                        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                        return ` ${val} leads (${pct}%)`;
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    grid: { color: 'rgba(0,0,0,0.04)' },
+                    ticks: {
+                      font: { size: 11, family: 'Inter' },
+                      color: '#B5B5AE',
+                    },
+                  },
+                  y: {
+                    grid: { display: false },
+                    ticks: {
+                      font: { size: 12, family: 'Inter', weight: '500' },
+                      color: '#35325B',
+                    },
+                  },
+                },
+              }}
+            />
           )}
-          </div>
         </div>
       </div>
     </Shell>
