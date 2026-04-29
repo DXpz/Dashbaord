@@ -229,8 +229,11 @@ export const API = {
     return get('/api/metrics/decisiones', { desde, hasta, ...extra });
   },
 
-  roundRobin(pais?: string) {
-    return get('/api/advisors/round-robin', pais ? { pais: normPaisQuery(pais) } : {});
+  roundRobin(pais?: string, incluirInactivos = false) {
+    return get('/api/advisors/round-robin', {
+      ...(pais ? { pais: normPaisQuery(pais) } : {}),
+      ...(incluirInactivos ? { incluir_inactivos: true } : {}),
+    });
   },
 
   advisorsList(opts: boolean | { activo?: boolean; pais?: string } = true) {
