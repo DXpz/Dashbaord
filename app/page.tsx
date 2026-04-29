@@ -34,6 +34,9 @@ export default function HomePage() {
     if (stagesFromApi.length === 0) return [];
 
     return stagesFromApi.map((s: any) => {
+      if (s.id === 1) {
+        return { label: s.label, value: resumen.leads_aceptados ?? 0 };
+      }
       const matching = leadsPorStage.filter((l: any) => l.stage === s.id);
       const hasSubStages = matching.length > 1 || matching.some((l: any) => (l as any).sub_stage);
 
@@ -49,7 +52,7 @@ export default function HomePage() {
       const entry = matching[0];
       return { label: s.label, value: entry?.total || 0 };
     });
-  }, [stagesFromApi, leadsPorStage]);
+  }, [stagesFromApi, leadsPorStage, resumen]);
 
   const flatData = useMemo(() => {
     const seen = new Set<string>();
