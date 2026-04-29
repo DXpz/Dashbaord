@@ -131,22 +131,24 @@ export default function HomePage() {
               <p className="text-xs text-[#B5B5AE] mt-1">leads cerrados</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-5">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Calificados</p>
-              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">leads aceptados</p>
-            </div>
+            <div className="col-span-3 flex flex-col gap-4">
+              <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
+                <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Calificados</p>
+                <p className="text-xl font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
+                <p className="text-xs text-[#B5B5AE] mt-1">leads aceptados</p>
+              </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-5">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">No Agendados</p>
-              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">pendientes</p>
-            </div>
+              <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
+                <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">No Agendados</p>
+                <p className="text-xl font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
+                <p className="text-xs text-[#B5B5AE] mt-1">pendientes</p>
+              </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-5">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Total Leads</p>
-              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.total_leads_general ?? totalLeads}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">auditorías</p>
+              <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
+                <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Total Leads</p>
+                <p className="text-xl font-bold text-[#1F1D3D]">{resumen.total_leads_general ?? totalLeads}</p>
+                <p className="text-xs text-[#B5B5AE] mt-1">auditorías</p>
+              </div>
             </div>
           </div>
 
