@@ -86,11 +86,11 @@ export default function HomePage() {
       >
         <div className="space-y-8">
           <div className="flex gap-4">
-            <div className="w-48 flex flex-col gap-4">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-28" />)}
+            <div className="w-44 flex flex-col gap-3">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-20" />)}
             </div>
-            <div className="flex-1 flex gap-4">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 flex-1" />)}
+            <div className="flex-1 flex gap-3">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 flex-1" />)}
             </div>
           </div>
           <Skeleton className="h-[280px]" />
@@ -129,43 +129,43 @@ export default function HomePage() {
     >
       <div className="space-y-8">
         <div className="flex gap-4">
-          <div className="w-48 flex flex-col gap-4">
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Lead Calificado</p>
-              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">aceptados</p>
+          <div className="w-44 flex flex-col gap-3">
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead Calificado</p>
+              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
+              <p className="text-[10px] text-[#B5B5AE] mt-0.5">aceptados</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Lead No Agendado</p>
-              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">pendientes</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead No Agendado</p>
+              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
+              <p className="text-[10px] text-[#B5B5AE] mt-0.5">pendientes</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Total Leads</p>
-              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.total_leads_general ?? totalLeads}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">auditorías</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Total Leads</p>
+              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.total_leads_general ?? totalLeads}</p>
+              <p className="text-[10px] text-[#B5B5AE] mt-0.5">auditorías</p>
             </div>
           </div>
 
-          <div className="flex-1 flex gap-4">
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-6 flex-1 flex flex-col justify-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Total Comercial</p>
-              <p className="text-4xl font-bold text-[#1F1D3D]">{resumen.atendidos_por_asesor ?? 0}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">leads cerrados</p>
+          <div className="flex-1 flex gap-3">
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Total Comercial</p>
+              <p className="text-3xl font-bold text-[#1F1D3D]">{resumen.atendidos_por_asesor ?? 0}</p>
+              <p className="text-[10px] text-[#B5B5AE] mt-0.5">leads cerrados</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-6 flex-1 flex flex-col justify-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Líder de Ventas</p>
-              <p className="text-4xl font-bold text-[#1F1D3D]">{liderLeads}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">leads escalados</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Líder de Ventas</p>
+              <p className="text-3xl font-bold text-[#1F1D3D]">{liderLeads}</p>
+              <p className="text-[10px] text-[#B5B5AE] mt-0.5">leads escalados</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-6 flex-1 flex flex-col justify-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Gerencial</p>
-              <p className="text-4xl font-bold text-[#1F1D3D]">{gerenteLeads}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">leads escalados</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Gerencial</p>
+              <p className="text-3xl font-bold text-[#1F1D3D]">{gerenteLeads}</p>
+              <p className="text-[10px] text-[#B5B5AE] mt-0.5">leads escalados</p>
             </div>
           </div>
         </div>
