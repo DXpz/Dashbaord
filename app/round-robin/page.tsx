@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { API } from '@/services/api';
+import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFilters } from '@/hooks';
 import { useConnectionStatus } from '@/hooks/useDashboard';
-import { ChevronRight } from 'lucide-react';
 
 interface Advisor {
   id: number;
@@ -29,6 +29,22 @@ interface RoundRobinData {
   inactivos_round_robin: Advisor[];
 }
 
+function SectionCard({ title, children, badge, badgeColor = 'emerald' }: { title: string; children: React.ReactNode; badge?: number; badgeColor?: 'emerald' | 'red' }) {
+  return (
+    <div className="bg-white border border-[#EEEEEC] rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#EEEEEC] flex items-center justify-between">
+        <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider">{title}</h3>
+        {badge !== undefined && (
+          <span className={`text-xs font-bold px-2 py-0.5 rounded ${badgeColor === 'emerald' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+            {badge}
+          </span>
+        )}
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
 function AdvisorRow({ advisor, showEmail = false }: { advisor: Advisor; showEmail?: boolean }) {
   return (
     <div className="flex items-center justify-between py-2 px-3 border-b border-[#EEEEEC] last:border-0 hover:bg-[#F5F5ED] transition-colors">
@@ -43,26 +59,7 @@ function AdvisorRow({ advisor, showEmail = false }: { advisor: Advisor; showEmai
           {showEmail && <p className="text-xs text-[#B5B5AE]">{advisor.correo_vendedor}</p>}
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-[#B5B5AE]">#{advisor.assignment_sequence}</span>
-        <ChevronRight className="h-4 w-4 text-[#B5B5AE]" />
-      </div>
-    </div>
-  );
-}
-
-function SectionCard({ title, children, badge, badgeColor = 'emerald' }: { title: string; children: React.ReactNode; badge?: number; badgeColor?: 'emerald' | 'red' }) {
-  return (
-    <div className="bg-white border border-[#EEEEEC] rounded-xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-[#EEEEEC] flex items-center justify-between">
-        <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider">{title}</h3>
-        {badge !== undefined && (
-          <span className={`text-xs font-bold px-2 py-0.5 rounded ${badgeColor === 'emerald' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
-            {badge}
-          </span>
-        )}
-      </div>
-      <div>{children}</div>
+      <span className="text-xs text-[#B5B5AE]">#{advisor.assignment_sequence}</span>
     </div>
   );
 }
@@ -91,6 +88,23 @@ export default function RoundRobinPage() {
     fetchData();
   }, []);
 
+  const chartData = useMemo(() => {
+    if (!data) return null;
+    const COLORS = ['#1F1D3D', '#2d2a4a', '#3f3c6d', '#4f4d8f', '#6c6aad', '#8a88c4', '#a5a3d4'];
+    const labels = data.advisors.map(a => a.nombre_vendedor.split(' ')[0]);
+    const values = data.advisors.map(a => a.id === data.siguiente.id ? 2 : 1);
+    return {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: data.advisors.map((a, i) =>
+          a.id === data.siguiente.id ? '#10B981' : COLORS[i % COLORS.length]
+        ),
+        borderWidth: 0,
+      }],
+    };
+  }, [data]);
+
   const AdvisorsOptions = [{ value: '', label: 'Todos' }];
 
   return (
@@ -105,9 +119,9 @@ export default function RoundRobinPage() {
     >
       {loading ? (
         <div className="grid grid-cols-3 gap-4">
-          <Skeleton className="h-48 rounded-xl" />
-          <Skeleton className="h-48 rounded-xl" />
-          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
         </div>
       ) : error ? (
         <div className="flex items-center justify-center h-64">
@@ -116,22 +130,17 @@ export default function RoundRobinPage() {
       ) : data ? (
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-4">
-            <SectionCard title="Siguiente" badge={data.total_activos} badgeColor="emerald">
-              <div className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <span className="text-emerald-700 text-sm font-bold uppercase">
-                      {data.siguiente.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-base font-bold text-[#1F1D3D]">{data.siguiente.nombre_vendedor}</p>
-                    <p className="text-xs text-[#B5B5AE]">{data.siguiente.correo_vendedor}</p>
-                  </div>
+            <SectionCard title="Siguiente">
+              <div className="p-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <span className="text-emerald-700 text-sm font-bold uppercase">
+                    {data.siguiente.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </span>
                 </div>
-                <div className="flex gap-2 text-xs text-[#B5B5AE]">
-                  <span className="bg-[#F5F5ED] px-2 py-1 rounded">#{data.siguiente.assignment_sequence}</span>
-                  <span className="bg-[#F5F5ED] px-2 py-1 rounded">{data.siguiente.pais}</span>
+                <div>
+                  <p className="text-base font-bold text-[#1F1D3D]">{data.siguiente.nombre_vendedor}</p>
+                  <p className="text-xs text-[#B5B5AE]">{data.siguiente.correo_vendedor}</p>
+                  <p className="text-xs text-[#B5B5AE] mt-0.5">#{data.siguiente.assignment_sequence} · {data.siguiente.pais}</p>
                 </div>
               </div>
             </SectionCard>
@@ -157,11 +166,28 @@ export default function RoundRobinPage() {
             </SectionCard>
           </div>
 
-          <SectionCard title="Lista Total de Asesores" badge={data.advisors.length} badgeColor="emerald">
-            <div className="divide-y divide-[#EEEEEC]">
-              {[...data.advisors].sort((a, b) => a.assignment_sequence - b.assignment_sequence).map((a) => (
-                <AdvisorRow key={a.id} advisor={a} />
-              ))}
+          <SectionCard title="Distribución" badge={data.total_activos} badgeColor="emerald">
+            <div className="p-4">
+              {chartData && (
+                <ChartWrapper
+                  type="doughnut"
+                  data={chartData}
+                  height="280px"
+                  options={{
+                    cutout: '60%',
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                        labels: {
+                          font: { size: 11, family: 'Inter' },
+                          color: '#35325B',
+                          padding: 12,
+                        },
+                      },
+                    },
+                  }}
+                />
+              )}
             </div>
           </SectionCard>
 
