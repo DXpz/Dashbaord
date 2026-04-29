@@ -26,22 +26,12 @@ export default function HomePage() {
   const stagesFromApi = data?.stages || [];
   const leadsPorStage = data?.leads_por_stage || [];
 
-  const totalLeads = useMemo(() => {
-    return (resumen.leads_aceptados || 0) +
-      (resumen.leads_rechazados || 0) +
-      (resumen.leads_pendientes_decision || 0);
-  }, [resumen]);
+  const totalLeads = (resumen.atendidos_por_asesor || 0) +
+    (resumen.atendidos_por_lider || 0) +
+    (resumen.atendidos_por_gerente || 0);
 
-  const topAsesor = useMemo(() => {
-    const asesoresData = data?.asesores || [];
-    if (!asesoresData.length) return { nombre: '—', leads: 0 };
-    const sorted = [...asesoresData].sort((a: any, b: any) => (b.leads_aceptados || 0) - (a.leads_aceptados || 0));
-    const best = sorted[0] || {};
-    return {
-      nombre: best.asesor || best.nombre || best.nombre_vendedor || '—',
-      leads: best.leads_aceptados || 0,
-    };
-  }, [data]);
+  const liderLeads = resumen.atendidos_por_lider ?? 0;
+  const gerenteLeads = resumen.atendidos_por_gerente ?? 0;
 
   const stageData = useMemo(() => {
     if (stagesFromApi.length > 0) {
@@ -124,27 +114,33 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
             <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Total Comercial</p>
-            <p className="text-4xl font-bold text-[#1F1D3D]">{totalLeads}</p>
-            <p className="text-xs text-[#B5B5AE] mt-1">leads en seguimiento</p>
+            <p className="text-4xl font-bold text-[#1F1D3D]">{resumen.atendidos_por_asesor ?? 0}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">leads por asesores</p>
           </div>
 
           <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
             <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Líder de Ventas</p>
-            <p className="text-2xl font-semibold text-[#1F1D3D] truncate">{topAsesor.nombre}</p>
-            <p className="text-xs text-[#B5B5AE] mt-1">{topAsesor.leads} leads cerrados</p>
+            <p className="text-4xl font-bold text-[#1F1D3D]">{liderLeads}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">leads escalados</p>
           </div>
 
           <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
             <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Gerencial</p>
-            <p className="text-4xl font-bold text-[#1F1D3D]">{resumen.ventas_cerradas ?? 0}</p>
-            <p className="text-xs text-[#B5B5AE] mt-1">ventas cerradas</p>
+            <p className="text-4xl font-bold text-[#1F1D3D]">{gerenteLeads}</p>
+            <p className="text-xs text-[#B5B5AE] mt-1">leads escalados</p>
           </div>
         </div>
 
-        <div className="bg-white border border-[#EEEEEC] rounded-xl p-8">
-          <div className="mb-6">
-            <h2 className="text-base font-semibold text-[#1F1D3D]">Pipeline de Ventas</h2>
-            <p className="text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
+        <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-semibold text-[#1F1D3D]">Pipeline de Ventas</h2>
+              <p className="text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-bold text-[#1F1D3D]">{totalLeads}</span>
+              <p className="text-xs text-[#B5B5AE]">Total leads</p>
+            </div>
           </div>
 
           {stageData.length === 0 && (
