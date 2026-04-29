@@ -127,7 +127,7 @@ export default function ReunionesPage() {
                 <TableHead className="w-24">
                   <button
                     type="button"
-                    onClick={() => setSortDesc(!sortDesc)}
+                    onClick={() => { setSortDesc(!sortDesc); setCurrentPage(1); }}
                     className="flex items-center gap-1 hover:text-[#1F1D3D] text-[#B5B5AE] transition-colors cursor-pointer"
                   >
                     <span className="text-xs font-medium uppercase tracking-wider">Lead #</span>
