@@ -6,7 +6,7 @@ import { useReuniones, useConnectionStatus, useAsesores, useFilters } from '@/ho
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
@@ -124,13 +124,16 @@ export default function ReunionesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="cursor-pointer select-none w-24">
+                <TableHead className="w-24">
                   <button
-                    onClick={(e) => { e.stopPropagation(); setSortDesc(d => !d); }}
-                    className="flex items-center gap-1 hover:text-[#1F1D3D] text-[#B5B5AE] transition-colors"
+                    onClick={() => setSortDesc(d => !d)}
+                    className="flex items-center gap-1 hover:text-[#1F1D3D] text-[#B5B5AE] transition-colors cursor-pointer"
                   >
-                    <span>Lead #</span>
-                    <span className="text-xs font-mono ml-1">{sortDesc ? '↓' : '↑'}</span>
+                    <span className="text-xs font-medium uppercase tracking-wider">Lead #</span>
+                    {sortDesc
+                      ? <ArrowDown className="h-3 w-3" />
+                      : <ArrowUp className="h-3 w-3" />
+                    }
                   </button>
                 </TableHead>
                 <TableHead>Cliente</TableHead>
