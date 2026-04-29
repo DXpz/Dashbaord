@@ -46,20 +46,17 @@ export default function HomePage() {
           value: l.total,
         }));
         const sum = subRows.reduce((a: number, b: any) => a + b.value, 0);
-        if (sum === 0) return null;
         return { label: s.label, value: sum, subs: subRows };
       }
 
       const entry = matching[0];
-      if (!entry || entry.total === 0) return null;
       return { label: s.label, value: entry?.total || 0 };
-    }).filter(Boolean);
+    });
   }, [stagesFromApi, leadsPorStage, resumen]);
 
   const flatData = useMemo(() => {
     const seen = new Set<string>();
     return stageData.flatMap((s: any) => {
-      if (!s) return [];
       if (s.subs) {
         return s.subs.filter((sub: any) => {
           if (seen.has(sub.label)) return false;
