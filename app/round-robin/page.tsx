@@ -6,6 +6,7 @@ import { API } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFilters } from '@/hooks';
 import { useConnectionStatus } from '@/hooks/useDashboard';
+import { ChevronRight } from 'lucide-react';
 
 interface Advisor {
   id: number;
@@ -28,25 +29,40 @@ interface RoundRobinData {
   inactivos_round_robin: Advisor[];
 }
 
-function AdvisorList({ advisors, variant = 'default' }: { advisors: Advisor[]; variant?: 'default' | 'inactive' }) {
-  if (advisors.length === 0) return null;
+function AdvisorRow({ advisor, showEmail = false }: { advisor: Advisor; showEmail?: boolean }) {
   return (
-    <div className="space-y-2">
-      {advisors.map((a) => (
-        <div key={a.id} className="flex items-center justify-between text-sm py-1 border-b border-[#EEEEEC] last:border-0">
-          <div>
-            <p className={`font-medium ${variant === 'inactive' ? 'text-[#B5B5AE]' : 'text-[#35325B]'}`}>
-              {a.nombre_vendedor}
-            </p>
-            {variant === 'inactive' && (
-              <p className="text-xs text-[#B5B5AE]">{a.correo_vendedor}</p>
-            )}
-          </div>
-          <span className={`text-xs px-2 py-0.5 rounded ${variant === 'inactive' ? 'bg-red-50 text-red-400' : 'bg-emerald-50 text-emerald-600'}`}>
-            #{a.assignment_sequence}
+    <div className="flex items-center justify-between py-2 px-3 border-b border-[#EEEEEC] last:border-0 hover:bg-[#F5F5ED] transition-colors">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-[#1F1D3D] flex items-center justify-center">
+          <span className="text-white text-xs font-bold uppercase">
+            {advisor.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
           </span>
         </div>
-      ))}
+        <div>
+          <p className="text-sm font-medium text-[#1F1D3D]">{advisor.nombre_vendedor}</p>
+          {showEmail && <p className="text-xs text-[#B5B5AE]">{advisor.correo_vendedor}</p>}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-[#B5B5AE]">#{advisor.assignment_sequence}</span>
+        <ChevronRight className="h-4 w-4 text-[#B5B5AE]" />
+      </div>
+    </div>
+  );
+}
+
+function SectionCard({ title, children, badge, badgeColor = 'emerald' }: { title: string; children: React.ReactNode; badge?: number; badgeColor?: 'emerald' | 'red' }) {
+  return (
+    <div className="bg-white border border-[#EEEEEC] rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#EEEEEC] flex items-center justify-between">
+        <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider">{title}</h3>
+        {badge !== undefined && (
+          <span className={`text-xs font-bold px-2 py-0.5 rounded ${badgeColor === 'emerald' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+            {badge}
+          </span>
+        )}
+      </div>
+      <div>{children}</div>
     </div>
   );
 }
@@ -88,109 +104,80 @@ export default function RoundRobinPage() {
       connectionStatus={connectionStatus}
     >
       {loading ? (
-        <div className="flex gap-8">
-          <Skeleton className="w-96 h-96 rounded-xl" />
-          <div className="flex-1 space-y-4">
-            <Skeleton className="h-32 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
-          </div>
+        <div className="grid grid-cols-3 gap-4">
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-48 rounded-xl" />
         </div>
       ) : error ? (
         <div className="flex items-center justify-center h-64">
           <p className="text-sm text-red-500">{error}</p>
         </div>
       ) : data ? (
-        <div className="flex gap-8">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-full max-w-md">
-              <svg viewBox="0 0 320 320" className="w-full drop-shadow-lg">
-                <g transform="translate(160,160)">
-                  {data.advisors.map((advisor, i) => {
-                    const sliceAngle = 360 / data.advisors.length;
-                    const startAngle = i * sliceAngle - 90;
-                    const endAngle = startAngle + sliceAngle;
-                    const startRad = (startAngle * Math.PI) / 180;
-                    const endRad = (endAngle * Math.PI) / 180;
-                    const x1 = 150 * Math.cos(startRad);
-                    const y1 = 150 * Math.sin(startRad);
-                    const x2 = 150 * Math.cos(endRad);
-                    const y2 = 150 * Math.sin(endRad);
-                    const largeArc = sliceAngle > 180 ? 1 : 0;
-                    const isWinner = advisor.id === data.siguiente.id;
-                    const colors = ['#1F1D3D', '#2d2a4a', '#3f3c6d', '#4f4d8f', '#6c6aad', '#8a88c4'];
-                    const color = isWinner ? '#10B981' : colors[i % colors.length];
-
-                    return (
-                      <g key={advisor.id}>
-                        <path
-                          d={`M 0 0 L ${x1} ${y1} A 150 150 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                          fill={color}
-                          stroke="#F5F5ED"
-                          strokeWidth="2"
-                        />
-                        <text
-                          transform={`rotate(${startAngle + sliceAngle / 2}) translate(80, 0) rotate(90)`}
-                          textAnchor="middle"
-                          className="fill-white text-[11px] font-medium uppercase tracking-wider"
-                          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
-                        >
-                          {advisor.nombre_vendedor.split(' ')[0]}
-                        </text>
-                      </g>
-                    );
-                  })}
-                  <circle cx="0" cy="0" r="24" fill="#F5F5ED" stroke="#1F1D3D" strokeWidth="3" />
-                  <text textAnchor="middle" dy="4" className="fill-[#1F1D3D] text-[12px] font-bold uppercase">
-                    ↓
-                  </text>
-                </g>
-              </svg>
-            </div>
-          </div>
-
-          <div className="w-80 space-y-4">
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider">Activos</h3>
-                <span className="text-xs font-bold text-[#1F1D3D] bg-emerald-50 px-2 py-0.5 rounded">{data.total_activos}</span>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-4">
+            <SectionCard title="Siguiente" badge={data.total_activos} badgeColor="emerald">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <span className="text-emerald-700 text-sm font-bold uppercase">
+                      {data.siguiente.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-base font-bold text-[#1F1D3D]">{data.siguiente.nombre_vendedor}</p>
+                    <p className="text-xs text-[#B5B5AE]">{data.siguiente.correo_vendedor}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 text-xs text-[#B5B5AE]">
+                  <span className="bg-[#F5F5ED] px-2 py-1 rounded">#{data.siguiente.assignment_sequence}</span>
+                  <span className="bg-[#F5F5ED] px-2 py-1 rounded">{data.siguiente.pais}</span>
+                </div>
               </div>
-              <AdvisorList advisors={data.advisors} variant="default" />
-            </div>
+            </SectionCard>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider">Siguiente</h3>
-              </div>
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
-                <p className="text-lg font-bold text-[#1F1D3D]">{data.siguiente.nombre_vendedor}</p>
-                <p className="text-xs text-[#B5B5AE] mt-1">{data.siguiente.pais} · #{data.siguiente.assignment_sequence}</p>
-              </div>
-            </div>
-
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider">Últimos</h3>
-              </div>
-              <div className="space-y-2">
+            <SectionCard title="Últimos Asignados">
+              <div className="divide-y divide-[#EEEEEC]">
                 {data.ultimos_asignados.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between text-sm">
-                    <span className="text-[#35325B]">{a.nombre_vendedor}</span>
-                    <span className="text-[#B5B5AE] text-xs">
+                  <div key={a.id} className="flex items-center justify-between px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[#F5F5ED] flex items-center justify-center">
+                        <span className="text-[#35325B] text-[10px] font-bold uppercase">
+                          {a.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </span>
+                      </div>
+                      <span className="text-sm text-[#35325B]">{a.nombre_vendedor}</span>
+                    </div>
+                    <span className="text-xs text-[#B5B5AE]">
                       {new Date(a.ultima_asignacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider">Inactivos</h3>
-                <span className="text-xs font-bold text-[#1F1D3D] bg-red-50 px-2 py-0.5 rounded">{data.total_inactivos}</span>
-              </div>
-              <AdvisorList advisors={data.inactivos_round_robin || []} variant="inactive" />
-            </div>
+            </SectionCard>
           </div>
+
+          <SectionCard title="Lista Total de Asesores" badge={data.advisors.length} badgeColor="emerald">
+            <div className="divide-y divide-[#EEEEEC]">
+              {[...data.advisors].sort((a, b) => a.assignment_sequence - b.assignment_sequence).map((a) => (
+                <AdvisorRow key={a.id} advisor={a} />
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Inactivos" badge={data.total_inactivos} badgeColor="red">
+            {data.inactivos_round_robin.length > 0 ? (
+              <div className="divide-y divide-[#EEEEEC]">
+                {data.inactivos_round_robin.map((a) => (
+                  <AdvisorRow key={a.id} advisor={a} showEmail />
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center">
+                <p className="text-sm text-[#B5B5AE]">Sin asesores inactivos</p>
+              </div>
+            )}
+          </SectionCard>
         </div>
       ) : null}
     </Shell>
