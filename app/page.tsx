@@ -128,7 +128,7 @@ export default function HomePage() {
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
               <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Total Comercial</p>
               <p className="text-4xl font-bold text-[#1F1D3D]">{resumen.atendidos_por_asesor ?? 0}</p>
-              <p className="text-xs text-[#B5B5AE] mt-1">leads por asesores</p>
+              <p className="text-xs text-[#B5B5AE] mt-1">leads cerrados</p>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-5">
@@ -139,13 +139,13 @@ export default function HomePage() {
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-5">
               <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">No Agendados</p>
-              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.leads_pendientes_decision ?? 0}</p>
+              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
               <p className="text-xs text-[#B5B5AE] mt-1">pendientes</p>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-5">
               <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-2">Total Leads</p>
-              <p className="text-2xl font-bold text-[#1F1D3D]">{totalLeads}</p>
+              <p className="text-2xl font-bold text-[#1F1D3D]">{resumen.total_leads_general ?? totalLeads}</p>
               <p className="text-xs text-[#B5B5AE] mt-1">auditorías</p>
             </div>
           </div>
