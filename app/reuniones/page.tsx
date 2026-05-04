@@ -6,7 +6,7 @@ import { useReuniones, useConnectionStatus, useAsesores, useFilters } from '@/ho
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, Search, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, FileText, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
@@ -34,44 +34,65 @@ function StageBadge({ stageLabel, stageNum }: { stageLabel?: string; stageNum?: 
   return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Etapa {stageNum}</span>;
 }
 
-function FeedbackButton({ reunion }: { reunion: any }) {
-  const [open, setOpen] = useState(false);
+function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
   return (
-    <>
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)} className="gap-1 text-xs text-[#35325B] hover:bg-[#F5F5ED]">
-        <FileText className="h-3 w-3" />
-      </Button>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-5 w-96 max-h-80 overflow-y-auto">
-            <h3 className="text-sm font-semibold text-[#1F1D3D] mb-3">Feedback de {reunion.client_name || reunion.cliente}</h3>
-            <div className="space-y-2 text-xs">
-              <p><span className="font-medium text-[#B5B5AE]">Lead:</span> {reunion.client_id || '—'}</p>
-              <p><span className="font-medium text-[#B5B5AE]">Asesor:</span> {reunion.advisor_name || '—'}</p>
-              <p><span className="font-medium text-[#B5B5AE]">Fecha:</span> {reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : 'Sin feedback'}</p>
-              <p><span className="font-medium text-[#B5B5AE]">Min hasta retro:</span> {reunion.minutos_hasta_retro ?? '—'}</p>
-              <p><span className="font-medium text-[#B5B5AE]">Tiene retro:</span> {reunion.tiene_retro ? 'Sí' : 'No'}</p>
-              <p><span className="font-medium text-[#B5B5AE]">Resultado venta:</span> {reunion.resultado_venta || '—'}</p>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <Button size="sm" variant="outline" onClick={() => setOpen(false)}>Cerrar</Button>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl p-5 w-96 max-h-96 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-[#1F1D3D]">Feedback: {reunion.client_name || reunion.cliente}</h3>
+          <button onClick={onClose} className="text-[#B5B5AE] hover:text-[#35325B] transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-[#B5B5AE]">Lead</span>
+            <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#B5B5AE]">Asesor</span>
+            <span className="font-medium text-[#1F1D3D]">{reunion.advisor_name || '—'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#B5B5AE]">Fecha Agendado</span>
+            <span className="font-medium text-[#1F1D3D]">
+              {reunion.start_time ? new Date(reunion.start_time).toLocaleDateString('es-ES') : '—'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#B5B5AE]">Feedback</span>
+            <span className="font-medium text-[#1F1D3D]">
+              {reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : 'Sin feedback'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#B5B5AE]">Min hasta retro</span>
+            <span className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro ?? '—'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#B5B5AE]">Tiene retroalimentación</span>
+            <span className={`font-medium ${reunion.tiene_retro ? 'text-green-600' : 'text-[#B5B5AE]'}`}>
+              {reunion.tiene_retro ? 'Sí' : 'No'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#B5B5AE]">Resultado venta</span>
+            <span className="font-medium text-[#1F1D3D]">{reunion.resultado_venta || '—'}</span>
           </div>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }
 
 export default function ReunionesPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const { reuniones, loading, error } = useReuniones(filters);
-  console.log('[reuniones] render:', { loading, error, count: reuniones?.length });
+  const { reuniones, loading } = useReuniones(filters);
   const connectionStatus = useConnectionStatus();
   const asesoresList = useAsesores(filters);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [feedbackReunion, setFeedbackReunion] = useState<any>(null);
 
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
@@ -114,89 +135,98 @@ export default function ReunionesPage() {
       {loading ? (
         <Skeleton className="h-96 w-full" />
       ) : (
-        <div className="bg-white border border-[#EEEEEC]">
-          <div className="px-5 py-4 flex items-center justify-between gap-4 border-b border-[#EEEEEC]">
-            <div>
-              <h3 className="text-sm font-medium text-[#1F1D3D]">Listado</h3>
-              <p className="text-xs text-[#B5B5AE] mt-0.5">{filteredReuniones.length} reuniones</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B5B5AE]" />
-                <Input
-                  placeholder="Buscar..."
-                  className="pl-9 w-48"
-                  value={searchTerm}
-                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                />
+        <>
+          {feedbackReunion && (
+            <FeedbackModal reunion={feedbackReunion} onClose={() => setFeedbackReunion(null)} />
+          )}
+          <div className="bg-white border border-[#EEEEEC]">
+            <div className="px-5 py-4 flex items-center justify-between gap-4 border-b border-[#EEEEEC]">
+              <div>
+                <h3 className="text-sm font-medium text-[#1F1D3D]">Listado</h3>
+                <p className="text-xs text-[#B5B5AE] mt-0.5">{filteredReuniones.length} reuniones</p>
               </div>
-              <div className="flex items-center gap-1 bg-[#F5F5ED] p-1 rounded">
-                <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 px-2">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm text-[#35325B] px-2 min-w-[60px] text-center">
-                  {currentPage} / {totalPages}
-                </span>
-                <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="h-8 px-2">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B5B5AE]" />
+                  <Input
+                    placeholder="Buscar..."
+                    className="pl-9 w-48"
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                  />
+                </div>
+                <div className="flex items-center gap-1 bg-[#F5F5ED] p-1 rounded">
+                  <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 px-2">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-[#35325B] px-2 min-w-[60px] text-center">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="h-8 px-2">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Lead #</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Fecha Agendado</TableHead>
-                <TableHead>Teléfono</TableHead>
-                <TableHead>Asesor</TableHead>
-                <TableHead>País</TableHead>
-                <TableHead>Etapa</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Prop</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedReuniones.length > 0 ? (
-                paginatedReuniones.map((reunion: any, i: number) => (
-                  <TableRow
-                    key={reunion.id || reunion.opportunityNumber || i}
-                    className={`animate-slide-up delay-${Math.min(i + 1, 8)}`}
-                  >
-                    <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_id || reunion.opportunity_number || reunion.opportunityNumber || '—'}</TableCell>
-                    <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</TableCell>
-                    <TableCell className="text-[#B5B5AE] text-xs">
-                      {reunion.start_time ? new Date(reunion.start_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
-                    </TableCell>
-                    <TableCell className="text-[#B5B5AE]">{reunion.client_phone || reunion.telefono || '—'}</TableCell>
-                    <TableCell className="text-[#35325B]">{reunion.advisor_name || reunion.asesor || '—'}</TableCell>
-                    <TableCell>
-                      <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
-                    </TableCell>
-                    <TableCell><StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} /></TableCell>
-                    <TableCell><StatusBadge status={reunion.reunion_status || reunion.estado || reunion.status} /></TableCell>
-                    <TableCell>
-                      {reunion.propuesta || reunion.has_propuesta ? (
-                        <span className="text-green-600 font-medium text-sm">Sí</span>
-                      ) : (
-                        <span className="text-[#B5B5AE] text-sm">No</span>
-                      )}
-                    </TableCell>
-                    <TableCell><FeedbackButton reunion={reunion} /></TableCell>
-                  </TableRow>
-                ))
-              ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-12 text-[#B5B5AE]">
-                    Sin reuniones
-                  </TableCell>
+                  <TableHead>Lead #</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Fecha Agendado</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>Asesor</TableHead>
+                  <TableHead>País</TableHead>
+                  <TableHead>Etapa</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Prop</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {paginatedReuniones.length > 0 ? (
+                  paginatedReuniones.map((reunion: any, i: number) => (
+                    <TableRow
+                      key={reunion.id || reunion.opportunityNumber || i}
+                      className={`animate-slide-up delay-${Math.min(i + 1, 8)}`}
+                    >
+                      <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_id || reunion.opportunity_number || reunion.opportunityNumber || '—'}</TableCell>
+                      <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</TableCell>
+                      <TableCell className="text-[#B5B5AE] text-xs">
+                        {reunion.start_time ? new Date(reunion.start_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                      </TableCell>
+                      <TableCell className="text-[#B5B5AE]">{reunion.client_phone || reunion.telefono || '—'}</TableCell>
+                      <TableCell className="text-[#35325B]">{reunion.advisor_name || reunion.asesor || '—'}</TableCell>
+                      <TableCell>
+                        <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
+                      </TableCell>
+                      <TableCell><StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} /></TableCell>
+                      <TableCell><StatusBadge status={reunion.reunion_status || reunion.estado || reunion.status} /></TableCell>
+                      <TableCell>
+                        {reunion.propuesta || reunion.has_propuesta ? (
+                          <span className="text-green-600 font-medium text-sm">Sí</span>
+                        ) : (
+                          <span className="text-[#B5B5AE] text-sm">No</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => setFeedbackReunion(reunion)} className="text-[#35325B] hover:bg-[#F5F5ED] p-1">
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center py-12 text-[#B5B5AE]">
+                      Sin reuniones
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
     </Shell>
   );
