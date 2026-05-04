@@ -12,26 +12,16 @@ import { Input } from '@/components/ui/input';
 const PAGE_SIZE = 20;
 
 function StatusBadge({ reunion }: { reunion: any }) {
-  const status = reunion.reunion_status || reunion.estado || '';
-  const seg = reunion.seguimiento_json || {};
-  const resultado = reunion.resultado_venta || seg.resultado_propuesta || '';
+  const status = reunion.status || reunion.reunion_status || '';
+  const resultado = reunion.resultado_venta || '';
   const s = status.toLowerCase();
-  const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
-  const isPerdida = resultado.toLowerCase().includes('perdida');
-  if (isGanada) return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Cerrada (Ganada)</span>;
-  if (isPerdida) return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Perdida</span>;
-  if (s.includes('complet') || s.includes('done') || s.includes('cerrad') || s.includes('exitoso')) {
-    return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Completada</span>;
-  }
-  if (s.includes('cancel') || s.includes('lost')) {
-    return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Cancelada</span>;
-  }
-  if (s.includes('pending') || s.includes('pendiente') || s.includes('precio') || s.includes('presupuesto') || s.includes('cotiz')) {
-    return <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">Presupuesto</span>;
-  }
-  if (s.includes('process') || s.includes('proceso')) {
-    return <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">En Proceso</span>;
-  }
+
+  if (resultado === 'cerrada') return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Cerrada</span>;
+  if (resultado === 'perdida') return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Perdida</span>;
+  if (s === 'pending') return <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">Pendiente</span>;
+  if (s === 'en_proceso') return <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">En Proceso</span>;
+  if (s === 'cerrado') return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Cerrado</span>;
+  if (s === 'alerted') return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Alertado</span>;
   return <span className="text-xs text-gray-500">{status || '—'}</span>;
 }
 
