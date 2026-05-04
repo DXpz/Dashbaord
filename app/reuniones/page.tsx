@@ -47,50 +47,78 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
   const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
   const isPerdida = resultado.toLowerCase().includes('perdida');
 
-  const rows = [
-    { label: 'Lead', value: reunion.client_id || '—' },
-    { label: 'Cliente', value: reunion.client_name || reunion.cliente || '—' },
-    { label: 'Asesor', value: reunion.advisor_name || '—' },
-    { label: 'Fecha Creación', value: reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES') : '—' },
-    { label: 'Resultado', value: isGanada ? 'Cerrada (Ganada)' : isPerdida ? 'Perdida' : resultado || '—', highlight: isGanada ? 'green' : isPerdida ? 'red' : undefined },
-    ...(reunion.categoria_cierre ? [{ label: 'Categoría', value: reunion.categoria_cierre }] : []),
-    ...(seg.motivo_perdida ? [{ label: 'Motivo Pérdida', value: seg.motivo_perdida }] : []),
-    { label: 'Fecha Feedback', value: reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : '—' },
-    { label: 'Min hasta retro', value: reunion.minutos_hasta_retro ?? '—' },
-    { label: 'Tiene retroalimentación', value: reunion.tiene_retro ? 'Sí' : 'No', highlight: reunion.tiene_retro ? 'green' : 'gray' },
-  ];
+  const resultadoColor = isGanada ? 'text-green-600' : isPerdida ? 'text-red-600' : 'text-[#1F1D3D]';
+  const retroalimentacion = reunion.advisor_feedback || 'Sin retroalimentación registrada';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-[30rem] max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#EEEEEC]">
+      <div className="bg-white rounded-xl shadow-2xl w-[32rem] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
           <div>
-            <h3 className="text-sm font-semibold text-[#1F1D3D]">Feedback</h3>
-            <p className="text-xs text-[#B5B5AE] mt-0.5">{reunion.client_name || reunion.cliente}</p>
+            <h3 className="text-sm font-semibold text-[#1F1D3D]">Feedback del Lead</h3>
+            <p className="text-xs text-[#B5B5AE] mt-0.5">{reunion.client_id} · {reunion.client_name || reunion.cliente}</p>
           </div>
-          <button onClick={onClose} className="text-[#B5B5AE] hover:text-[#35325B] transition-colors">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1">
-          <table className="w-full text-sm">
-            <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} className="border-b border-[#EEEEEC] last:border-0">
-                  <td className="px-5 py-3 text-[#B5B5AE] font-medium w-36 align-top">{row.label}</td>
-                  <td className={`px-5 py-3 text-[#1F1D3D] font-medium ${row.highlight === 'green' ? 'text-green-600' : row.highlight === 'red' ? 'text-red-600' : row.highlight === 'gray' ? 'text-[#B5B5AE]' : ''}`}>
-                    {row.value}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+            <div>
+              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Lead</p>
+              <p className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Asesor</p>
+              <p className="font-medium text-[#1F1D3D]">{reunion.advisor_name || '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Fecha Creación</p>
+              <p className="font-medium text-[#1F1D3D]">
+                {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES') : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Fecha Feedback</p>
+              <p className="font-medium text-[#1F1D3D]">
+                {reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Resultado</p>
+              <p className={`font-semibold ${resultadoColor}`}>
+                {isGanada ? 'Cerrada (Ganada)' : isPerdida ? 'Perdida' : resultado || '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Min hasta retro</p>
+              <p className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro ?? '—'}</p>
+            </div>
+            {reunion.categoria_cierre && (
+              <div>
+                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Categoría</p>
+                <p className="font-medium text-[#1F1D3D]">{reunion.categoria_cierre}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Tiene retroalimentación</p>
+              <p className={`font-medium ${reunion.tiene_retro ? 'text-green-600' : 'text-[#B5B5AE]'}`}>
+                {reunion.tiene_retro ? 'Sí' : 'No'}
+              </p>
+            </div>
+            {seg.motivo_perdida && (
+              <div className="col-span-2">
+                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Motivo Pérdida</p>
+                <p className="font-medium text-[#1F1D3D]">{seg.motivo_perdida}</p>
+              </div>
+            )}
+          </div>
 
-          <div className="px-5 py-4 border-t border-[#EEEEEC]">
-            <label className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider block mb-2">Retroalimentación</label>
-            <div className="bg-[#F5F5ED] rounded-lg p-4 text-sm text-[#35325B] leading-relaxed">
-              {reunion.advisor_feedback || 'Sin retroalimentación registrada'}
+          <div className="pt-4 border-t border-[#EEEEEC]">
+            <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-2">Retroalimentación</p>
+            <div className="bg-[#F5F5ED] rounded-lg p-4 text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
+              {retroalimentacion}
             </div>
           </div>
         </div>
