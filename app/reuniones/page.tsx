@@ -35,6 +35,11 @@ function StageBadge({ stageLabel, stageNum }: { stageLabel?: string; stageNum?: 
 }
 
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
+  const seg = reunion.seguimiento_json || {};
+  const resultado = reunion.resultado_venta || seg.resultado_propuesta || seg.resultado_cierre || '';
+  const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
+  const isPerdida = resultado.toLowerCase().includes('perdida');
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-2xl p-5 w-[28rem] max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -60,6 +65,24 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </span>
           </div>
           <div className="flex justify-between">
+            <span className="text-[#B5B5AE]">Resultado</span>
+            {isGanada && <span className="font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">Cerrada (Ganada)</span>}
+            {isPerdida && <span className="font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded">Perdida</span>}
+            {!isGanada && !isPerdida && <span className="font-medium text-[#1F1D3D]">{resultado || '—'}</span>}
+          </div>
+          {seg.categoria_cierre && (
+            <div className="flex justify-between">
+              <span className="text-[#B5B5AE]">Categoría</span>
+              <span className="font-medium text-[#1F1D3D]">{seg.categoria_cierre}</span>
+            </div>
+          )}
+          {seg.motivo_perdida && (
+            <div className="flex justify-between">
+              <span className="text-[#B5B5AE]">Motivo</span>
+              <span className="font-medium text-[#1F1D3D]">{seg.motivo_perdida}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
             <span className="text-[#B5B5AE]">Feedback</span>
             <span className="font-medium text-[#1F1D3D]">
               {reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : 'Sin feedback'}
@@ -74,10 +97,6 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             <span className={`font-medium ${reunion.tiene_retro ? 'text-green-600' : 'text-[#B5B5AE]'}`}>
               {reunion.tiene_retro ? 'Sí' : 'No'}
             </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#B5B5AE]">Resultado venta</span>
-            <span className="font-medium text-[#1F1D3D]">{reunion.resultado_venta || '—'}</span>
           </div>
           <div className="mt-4">
             <label className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider block mb-1.5">Retroalimentación</label>
