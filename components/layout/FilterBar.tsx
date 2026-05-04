@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface FilterBarProps {
@@ -55,8 +54,7 @@ export function FilterBar({
   asesores,
   connectionStatus,
 }: FilterBarProps) {
-  const pathname = usePathname();
-  const storageKey = `dashboard_filters_${pathname}`;
+  const storageKey = 'dashboard_filters';
   const { month, year } = getMonthFromDate(filters.desde);
   const currentYear = new Date().getFullYear();
   const years = [currentYear - 1, currentYear, currentYear + 1];
@@ -72,7 +70,7 @@ export function FilterBar({
         if (parsed.asesor) onFilterChange('asesor', parsed.asesor);
       } catch {}
     }
-  }, [pathname]);
+  }, []);
 
   const persistFilters = (key: string, value: string) => {
     onFilterChange(key, value);
