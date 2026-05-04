@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface FilterBarProps {
@@ -54,22 +55,43 @@ export function FilterBar({
   asesores,
   connectionStatus,
 }: FilterBarProps) {
+  const pathname = usePathname();
+  const storageKey = `dashboard_filters_${pathname}`;
   const { month, year } = getMonthFromDate(filters.desde);
   const currentYear = new Date().getFullYear();
   const years = [currentYear - 1, currentYear, currentYear + 1];
 
+  React.useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.desde) onFilterChange('desde', parsed.desde);
+        if (parsed.hasta) onFilterChange('hasta', parsed.hasta);
+        if (parsed.pais) onFilterChange('pais', parsed.pais);
+        if (parsed.asesor) onFilterChange('asesor', parsed.asesor);
+      } catch {}
+    }
+  }, [pathname]);
+
+  const persistFilters = (key: string, value: string) => {
+    onFilterChange(key, value);
+    const current = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    localStorage.setItem(storageKey, JSON.stringify({ ...current, [key]: value }));
+  };
+
   const handleMonthChange = (newMonth: string) => {
     const newYear = year || String(currentYear);
     const dates = setMonth(newMonth, newYear);
-    onFilterChange('desde', dates.desde);
-    onFilterChange('hasta', dates.hasta);
+    persistFilters('desde', dates.desde);
+    persistFilters('hasta', dates.hasta);
   };
 
   const handleYearChange = (newYear: string) => {
     const newMonth = month || String(new Date().getMonth() + 1).padStart(2, '0');
     const dates = setMonth(newMonth, newYear);
-    onFilterChange('desde', dates.desde);
-    onFilterChange('hasta', dates.hasta);
+    persistFilters('desde', dates.desde);
+    persistFilters('hasta', dates.hasta);
   };
 
   return (
@@ -99,7 +121,7 @@ export function FilterBar({
 
       <select
         value={filters.pais}
-        onChange={(e) => onFilterChange('pais', e.target.value)}
+        onChange={(e) => persistFilters('pais', e.target.value)}
         className="text-sm text-[#35325B] bg-transparent outline-none cursor-pointer"
       >
         <option value="">País</option>
@@ -109,7 +131,7 @@ export function FilterBar({
 
       <select
         value={filters.asesor}
-        onChange={(e) => onFilterChange('asesor', e.target.value)}
+        onChange={(e) => persistFilters('asesor', e.target.value)}
         className="text-sm text-[#35325B] bg-transparent outline-none cursor-pointer"
       >
         <option value="">Asesor</option>
@@ -120,7 +142,10 @@ export function FilterBar({
 
       <div className="flex items-center gap-2 ml-auto">
         <button
-          onClick={onLimpiar}
+          onClick={() => {
+            onLimpiar();
+            localStorage.removeItem(storageKey);
+          }}
           className="text-sm text-[#B5B5AE] hover:text-[#35325B] transition-colors px-3 py-1.5"
         >
           Limpiar
