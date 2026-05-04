@@ -127,6 +127,29 @@ export function useAsesores(filters: FilterState) {
   return asesores;
 }
 
+export function useListaAsesores(filters: FilterState) {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const result = await API.listaAsesores(filters.desde, filters.hasta, undefined, filters.pais || undefined);
+        setData(Array.isArray(result) ? result : []);
+      } catch (err) {
+        console.error('Error fetching lista-asesores:', err);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, [filters.desde, filters.hasta, filters.pais]);
+
+  return { data, loading };
+}
+
 export function useReuniones(filters: FilterState) {
   const [reuniones, setReuniones] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
