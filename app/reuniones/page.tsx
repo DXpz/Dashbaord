@@ -6,27 +6,21 @@ import { useReuniones, useConnectionStatus, useAsesores, useFilters } from '@/ho
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
 
-const COLORS = {
-  dark: '#1F1D3D',
-  medium: '#35325B',
-  light: '#B5B5AE',
-};
-
 function StatusBadge({ status }: { status: string }) {
   const s = status?.toLowerCase() || '';
-  if (s.includes('complet') || s.includes('done') || s.includes('cerrad')) {
-    return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Completada</span>;
+  if (s.includes('complet') || s.includes('done') || s.includes('cerrad') || s.includes('exitoso') || s.includes('ganado')) {
+    return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Exitoso</span>;
   }
-  if (s.includes('cancel') || s.includes('lost')) {
-    return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Cancelada</span>;
+  if (s.includes('cancel') || s.includes('lost') || s.includes('no contest')) {
+    return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">No Contestó</span>;
   }
-  if (s.includes('pending') || s.includes('pendiente')) {
-    return <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">Pendiente</span>;
+  if (s.includes('pending') || s.includes('pendiente') || s.includes('precio') || s.includes('presupuesto') || s.includes('cotiz')) {
+    return <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">Presupuesto</span>;
   }
   if (s.includes('process') || s.includes('proceso')) {
     return <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">En Proceso</span>;
@@ -38,6 +32,35 @@ function StageBadge({ stageLabel, stageNum }: { stageLabel?: string; stageNum?: 
   if (stageLabel) return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{stageLabel}</span>;
   if (stageNum == null) return <span className="text-gray-400">—</span>;
   return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Etapa {stageNum}</span>;
+}
+
+function FeedbackButton({ reunion }: { reunion: any }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)} className="gap-1 text-xs text-[#35325B] hover:bg-[#F5F5ED]">
+        <FileText className="h-3 w-3" />
+      </Button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-5 w-96 max-h-80 overflow-y-auto">
+            <h3 className="text-sm font-semibold text-[#1F1D3D] mb-3">Feedback de {reunion.client_name || reunion.cliente}</h3>
+            <div className="space-y-2 text-xs">
+              <p><span className="font-medium text-[#B5B5AE]">Lead:</span> {reunion.client_id || '—'}</p>
+              <p><span className="font-medium text-[#B5B5AE]">Asesor:</span> {reunion.advisor_name || '—'}</p>
+              <p><span className="font-medium text-[#B5B5AE]">Fecha:</span> {reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : 'Sin feedback'}</p>
+              <p><span className="font-medium text-[#B5B5AE]">Min hasta retro:</span> {reunion.minutos_hasta_retro ?? '—'}</p>
+              <p><span className="font-medium text-[#B5B5AE]">Tiene retro:</span> {reunion.tiene_retro ? 'Sí' : 'No'}</p>
+              <p><span className="font-medium text-[#B5B5AE]">Resultado venta:</span> {reunion.resultado_venta || '—'}</p>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button size="sm" variant="outline" onClick={() => setOpen(false)}>Cerrar</Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default function ReunionesPage() {
@@ -125,12 +148,14 @@ export default function ReunionesPage() {
               <TableRow>
                 <TableHead>Lead #</TableHead>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Fecha Agendado</TableHead>
                 <TableHead>Teléfono</TableHead>
                 <TableHead>Asesor</TableHead>
                 <TableHead>País</TableHead>
                 <TableHead>Etapa</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Prop</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -142,6 +167,9 @@ export default function ReunionesPage() {
                   >
                     <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_id || reunion.opportunity_number || reunion.opportunityNumber || '—'}</TableCell>
                     <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</TableCell>
+                    <TableCell className="text-[#B5B5AE] text-xs">
+                      {reunion.start_time ? new Date(reunion.start_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                    </TableCell>
                     <TableCell className="text-[#B5B5AE]">{reunion.client_phone || reunion.telefono || '—'}</TableCell>
                     <TableCell className="text-[#35325B]">{reunion.advisor_name || reunion.asesor || '—'}</TableCell>
                     <TableCell>
@@ -156,11 +184,12 @@ export default function ReunionesPage() {
                         <span className="text-[#B5B5AE] text-sm">No</span>
                       )}
                     </TableCell>
+                    <TableCell><FeedbackButton reunion={reunion} /></TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-[#B5B5AE]">
+                  <TableCell colSpan={10} className="text-center py-12 text-[#B5B5AE]">
                     Sin reuniones
                   </TableCell>
                 </TableRow>
