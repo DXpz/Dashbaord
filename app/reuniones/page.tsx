@@ -11,13 +11,20 @@ import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
 
-function StatusBadge({ status }: { status: string }) {
-  const s = status?.toLowerCase() || '';
-  if (s.includes('complet') || s.includes('done') || s.includes('cerrad') || s.includes('exitoso') || s.includes('ganado')) {
-    return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Exitoso</span>;
+function StatusBadge({ reunion }: { reunion: any }) {
+  const status = reunion.reunion_status || reunion.estado || '';
+  const seg = reunion.seguimiento_json || {};
+  const resultado = reunion.resultado_venta || seg.resultado_propuesta || '';
+  const s = status.toLowerCase();
+  const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
+  const isPerdida = resultado.toLowerCase().includes('perdida');
+  if (isGanada) return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Cerrada (Ganada)</span>;
+  if (isPerdida) return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Perdida</span>;
+  if (s.includes('complet') || s.includes('done') || s.includes('cerrad') || s.includes('exitoso')) {
+    return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Completada</span>;
   }
-  if (s.includes('cancel') || s.includes('lost') || s.includes('no contest')) {
-    return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">No Contestó</span>;
+  if (s.includes('cancel') || s.includes('lost')) {
+    return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Cancelada</span>;
   }
   if (s.includes('pending') || s.includes('pendiente') || s.includes('precio') || s.includes('presupuesto') || s.includes('cotiz')) {
     return <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">Presupuesto</span>;
@@ -70,10 +77,10 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             {isPerdida && <span className="font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded">Perdida</span>}
             {!isGanada && !isPerdida && <span className="font-medium text-[#1F1D3D]">{resultado || '—'}</span>}
           </div>
-          {seg.categoria_cierre && (
+          {reunion.categoria_cierre && (
             <div className="flex justify-between">
               <span className="text-[#B5B5AE]">Categoría</span>
-              <span className="font-medium text-[#1F1D3D]">{seg.categoria_cierre}</span>
+              <span className="font-medium text-[#1F1D3D]">{reunion.categoria_cierre}</span>
             </div>
           )}
           {seg.motivo_perdida && (
@@ -85,7 +92,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
           <div className="flex justify-between">
             <span className="text-[#B5B5AE]">Feedback</span>
             <span className="font-medium text-[#1F1D3D]">
-              {reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : 'Sin feedback'}
+              {reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : '—'}
             </span>
           </div>
           <div className="flex justify-between">
@@ -101,7 +108,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
           <div className="mt-4">
             <label className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider block mb-1.5">Retroalimentación</label>
             <div className="bg-[#F5F5ED] rounded-lg p-3 text-sm text-[#35325B] min-h-[60px]">
-              {reunion.retroalimentacion || reunion.feedback_text || reunion.advisor_notes || reunion.notas || 'Sin retroalimentación registrada'}
+              {reunion.advisor_feedback || 'Sin retroalimentación registrada'}
             </div>
           </div>
         </div>
@@ -226,7 +233,7 @@ export default function ReunionesPage() {
                         <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
                       </TableCell>
                       <TableCell><StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} /></TableCell>
-                      <TableCell><StatusBadge status={reunion.reunion_status || reunion.estado || reunion.status} /></TableCell>
+                      <TableCell><StatusBadge reunion={reunion} /></TableCell>
                       <TableCell>
                         {reunion.propuesta || reunion.has_propuesta ? (
                           <span className="text-green-600 font-medium text-sm">Sí</span>
