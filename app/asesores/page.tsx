@@ -26,7 +26,7 @@ export default function AsesoresPage() {
 
   const AsesoresOptions = useMemo(() => {
     const names = (listaData || []).map((a: any) => a.asesor || a.nombre_vendedor).filter(Boolean);
-    const unique = [...new Set(names)];
+    const unique = Array.from(new Set(names));
     return unique.map((v: string) => ({ value: v, label: v }));
   }, [listaData]);
 
