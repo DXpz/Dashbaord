@@ -109,31 +109,33 @@ async function getHealth() {
 }
 
 async function apiRoot(method: string, path: string, body?: any) {
-  const base = getBase();
-  const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
-  const opts: RequestInit = { method, headers: authHeaders() };
-  if (body !== undefined && body !== null) {
-    opts.headers = { ...opts.headers as Record<string, string>, 'Content-Type': 'application/json' };
-    opts.body = JSON.stringify(body);
-  }
-  const ctrl = new AbortController();
-  const id = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { ...opts, signal: ctrl.signal });
-    if (!res.ok) {
-      const t = await res.text().catch(() => '');
-      throw new Error(`HTTP ${res.status}: ${t || res.statusText}`);
+    const base = getBase();
+    const targetPath = path.startsWith('/') ? path : `/${path}`;
+    const useProxy = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const url = useProxy ? `/api/proxy?_path=${encodeURIComponent(targetPath.slice(5))}` : `${base}${targetPath}`;
+    const opts: RequestInit = { method, headers: authHeaders() };
+    if (body !== undefined && body !== null) {
+      opts.headers = { ...opts.headers as Record<string, string>, 'Content-Type': 'application/json' };
+      opts.body = JSON.stringify(body);
     }
-    const ct = res.headers.get('content-type') || '';
-    if (ct.includes('application/json')) return await res.json();
-    return {};
-  } catch (e: any) {
-    if (e?.name === 'AbortError') throw timeoutError(FETCH_TIMEOUT_MS);
-    throw e;
-  } finally {
-    clearTimeout(id);
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { ...opts, signal: ctrl.signal });
+      if (!res.ok) {
+        const t = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}: ${t || res.statusText}`);
+      }
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) return await res.json();
+      return {};
+    } catch (e: any) {
+      if (e?.name === 'AbortError') throw timeoutError(FETCH_TIMEOUT_MS);
+      throw e;
+    } finally {
+      clearTimeout(id);
+    }
   }
-}
 
 async function getJsonPath(pathWithQuery: string) {
   const base = getBase();
