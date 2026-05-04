@@ -136,7 +136,8 @@ export function useListaAsesores(filters: FilterState) {
       setLoading(true);
       try {
         const result = await API.listaAsesores(filters.desde, filters.hasta, undefined, filters.pais || undefined);
-        setData(Array.isArray(result) ? result : []);
+        const arr = Array.isArray(result) ? result : (result?.asesores || result?.items || []);
+        setData(arr);
       } catch (err) {
         console.error('Error fetching lista-asesores:', err);
         setData([]);
