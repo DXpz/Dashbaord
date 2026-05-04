@@ -193,7 +193,7 @@ export default function ReunionesPage() {
                       <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_id || reunion.opportunity_number || reunion.opportunityNumber || '—'}</TableCell>
                       <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</TableCell>
                       <TableCell className="text-[#B5B5AE] text-xs">
-                        {reunion.start_time ? new Date(reunion.start_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                        {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
                       </TableCell>
                       <TableCell className="text-[#B5B5AE]">{reunion.client_phone || reunion.telefono || '—'}</TableCell>
                       <TableCell className="text-[#35325B]">{reunion.advisor_name || reunion.asesor || '—'}</TableCell>
