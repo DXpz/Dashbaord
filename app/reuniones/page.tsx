@@ -37,7 +37,7 @@ function StageBadge({ stageLabel, stageNum }: { stageLabel?: string; stageNum?: 
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl p-5 w-96 max-h-96 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-2xl p-5 w-[28rem] max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-[#1F1D3D]">Feedback: {reunion.client_name || reunion.cliente}</h3>
           <button onClick={onClose} className="text-[#B5B5AE] hover:text-[#35325B] transition-colors">
@@ -54,9 +54,9 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             <span className="font-medium text-[#1F1D3D]">{reunion.advisor_name || '—'}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#B5B5AE]">Fecha Agendado</span>
+            <span className="text-[#B5B5AE]">Fecha Creación</span>
             <span className="font-medium text-[#1F1D3D]">
-              {reunion.start_time ? new Date(reunion.start_time).toLocaleDateString('es-ES') : '—'}
+              {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES') : '—'}
             </span>
           </div>
           <div className="flex justify-between">
@@ -78,6 +78,12 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
           <div className="flex justify-between">
             <span className="text-[#B5B5AE]">Resultado venta</span>
             <span className="font-medium text-[#1F1D3D]">{reunion.resultado_venta || '—'}</span>
+          </div>
+          <div className="mt-4">
+            <label className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider block mb-1.5">Retroalimentación</label>
+            <div className="bg-[#F5F5ED] rounded-lg p-3 text-sm text-[#35325B] min-h-[60px]">
+              {reunion.retroalimentacion || reunion.feedback_text || reunion.advisor_notes || reunion.notas || 'Sin retroalimentación registrada'}
+            </div>
           </div>
         </div>
       </div>
