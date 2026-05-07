@@ -253,8 +253,8 @@ export const API = {
     return apiRoot('POST', '/api/advisors', body);
   },
 
-  advisorsPatch(id: string, body: any) {
-    return apiRoot('PATCH', `/api/advisors/${encodeURIComponent(String(id))}`, body);
+  auditPatch(clientId: string, body: any) {
+    return apiRoot('PATCH', `/api/audit/client/${encodeURIComponent(clientId)}`, body);
   },
 
   advisorsDelete(id: string) {

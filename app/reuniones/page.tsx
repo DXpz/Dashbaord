@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { useReuniones, useConnectionStatus, useAsesores, useFilters, useAdvisorsForEdit, useStages } from '@/hooks';
+import { API } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -126,6 +127,8 @@ export default function ReunionesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [feedbackReunion, setFeedbackReunion] = useState<any>(null);
   const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editedRows, setEditedRows] = useState<Record<string, any>>({});
   const editAdvisors = useAdvisorsForEdit(filters);
   const stages = useStages();
 
@@ -160,6 +163,43 @@ export default function ReunionesPage() {
     currentPage * PAGE_SIZE
   );
 
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const clientIds = Object.keys(editedRows);
+      for (const clientId of clientIds) {
+        const changes = editedRows[clientId];
+        if (Object.keys(changes).length === 0) continue;
+        const body: any = {};
+        if (changes.client_name !== undefined) body.client_name = changes.client_name;
+        if (changes.client_phone !== undefined) body.client_phone = changes.client_phone;
+        if (changes.opportunity_stage !== undefined) body.opportunity_stage = parseInt(changes.opportunity_stage);
+        if (changes.advisor_name !== undefined) body.advisor_name = changes.advisor_name;
+        if (changes.country !== undefined) body.country = changes.country;
+        if (changes.status !== undefined) body.status = changes.status;
+        await API.auditPatch(clientId, body);
+      }
+      setEditedRows({});
+      setEditMode(false);
+    } catch (err) {
+      console.error('Error saving edits:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFieldChange = (clientId: string, field: string, value: any) => {
+    setEditedRows(prev => ({
+      ...prev,
+      [clientId]: { ...prev[clientId], [field]: value }
+    }));
+  };
+
+  const getEditedValue = (clientId: string, field: string, original: any) => {
+    if (editedRows[clientId] && editedRows[clientId][field] !== undefined) return editedRows[clientId][field];
+    return original;
+  };
+
   return (
     <Shell
       pageTitle="Reuniones"
@@ -193,10 +233,15 @@ export default function ReunionesPage() {
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                   />
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setEditMode(!editMode)} className={`gap-1.5 text-xs h-8 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED] ${editMode ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : ''}`}>
+                <Button variant="outline" size="sm" onClick={() => { if (editMode) handleSave(); else setEditMode(true); }} disabled={saving} className={`gap-1.5 text-xs h-8 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED] ${editMode ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : ''}`}>
                   <Pencil className="h-3.5 w-3.5" />
-                  {editMode ? 'Guardar' : 'Editar'}
+                  {saving ? 'Guardando...' : editMode ? 'Guardar' : 'Editar'}
                 </Button>
+                {editMode && (
+                  <Button variant="ghost" size="sm" onClick={() => { setEditMode(false); setEditedRows({}); }} className="gap-1.5 text-xs h-8 text-[#B5B5AE] hover:text-[#35325B]">
+                    Cancelar
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={() => window.open('https://front-leads-xi.vercel.app/', '_blank')} className="gap-1.5 text-xs h-8 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                   Formulario
@@ -236,10 +281,9 @@ export default function ReunionesPage() {
                       key={reunion.id || reunion.opportunityNumber || i}
                       className={`animate-slide-up delay-${Math.min(i + 1, 8)}`}
                     >
-                      <TableCell className="font-medium text-[#1F1D3D]">{reunion.client_id || reunion.opportunity_number || reunion.opportunityNumber || '—'}</TableCell>
                       <TableCell>
                         {editMode ? (
-                          <input type="text" defaultValue={reunion.client_name || ''} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
+                          <input type="text" value={getEditedValue(reunion.client_id, 'client_name', reunion.client_name || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_name', e.target.value)} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
                         ) : (
                           <span className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</span>
                         )}
@@ -249,14 +293,15 @@ export default function ReunionesPage() {
                       </TableCell>
                       <TableCell>
                         {editMode ? (
-                          <input type="text" defaultValue={reunion.client_phone || ''} className="w-full text-sm text-[#B5B5AE] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
+                          <input type="text" value={getEditedValue(reunion.client_id, 'client_phone', reunion.client_phone || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_phone', e.target.value)} className="w-full text-sm text-[#B5B5AE] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
                         ) : (
                           <span>{reunion.client_phone || reunion.telefono || '—'}</span>
                         )}
                       </TableCell>
                       <TableCell>
                         {editMode ? (
-                          <select defaultValue={reunion.advisor_name || ''} className="w-full text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                          <select value={getEditedValue(reunion.client_id, 'advisor_name', reunion.advisor_name || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'advisor_name', e.target.value)} className="w-full text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                            <option value="">—</option>
                             {AsesoresOptions.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
                           </select>
                         ) : (
@@ -265,7 +310,7 @@ export default function ReunionesPage() {
                       </TableCell>
                       <TableCell>
                         {editMode ? (
-                          <select defaultValue={reunion.country || reunion.pais || ''} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                          <select value={getEditedValue(reunion.client_id, 'country', reunion.country || reunion.pais || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'country', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
                             <option value="SV">SV</option>
                             <option value="GT">GT</option>
                           </select>
@@ -275,7 +320,7 @@ export default function ReunionesPage() {
                       </TableCell>
                       <TableCell>
                         {editMode ? (
-                          <select defaultValue={reunion.opportunity_stage || ''} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                          <select value={getEditedValue(reunion.client_id, 'opportunity_stage', String(reunion.opportunity_stage || ''))} onChange={(e) => handleFieldChange(reunion.client_id, 'opportunity_stage', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
                             {stages.map(s => <option key={s.id} value={String(s.id)}>{s.label}</option>)}
                           </select>
                         ) : (
@@ -284,7 +329,7 @@ export default function ReunionesPage() {
                       </TableCell>
                       <TableCell>
                         {editMode ? (
-                          <select defaultValue={reunion.status || ''} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                          <select value={getEditedValue(reunion.client_id, 'status', reunion.status || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'status', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
                             <option value="pending">Pendiente</option>
                             <option value="en_proceso">En Proceso</option>
                             <option value="cerrado">Cerrado</option>
