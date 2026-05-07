@@ -180,7 +180,7 @@ export function useStages() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const d = await API.dashboard('2024-01-01', '2026-12-31', 30, 40, {});
+        const d = await API.dashboard('', '', 30, 40, {});
         const s = d?.stages || [];
         setStages(s);
       } catch (err) {
