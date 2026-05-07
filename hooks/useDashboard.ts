@@ -156,14 +156,15 @@ export function useAdvisorsForEdit(filters: FilterState) {
 
   useEffect(() => {
     let cancelled = false;
-    const fetch = async () => {
+    const fetchAdvisors = async () => {
       try {
-        const upstream = 'http://200.35.189.139';
-        const res = await fetch(`${upstream}/api/advisors/round-robin`, {
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const path = encodeURIComponent('advisors/round-robin');
+        const url = isHttps ? `/api/proxy?_path=${path}` : `http://200.35.189.139/api/advisors/round-robin`;
+        const res = await fetch(url, {
           headers: {
-            'X-API-Key': 'RedApi_2026_SuperSegura_9XK2',
-            'ngrok-skip-browser-warning': 'true',
-            'Origin': 'https://dashbaord-tan.vercel.app'
+            'x-api-key': 'RedApi_2026_SuperSegura_9XK2',
+            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
           }
         });
         const data = await res.json();
@@ -179,7 +180,7 @@ export function useAdvisorsForEdit(filters: FilterState) {
         console.error('Error fetching advisors list:', err);
       }
     };
-    fetch();
+    fetchAdvisors();
     return () => { cancelled = true; };
   }, []);
 
