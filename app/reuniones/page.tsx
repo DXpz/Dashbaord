@@ -151,9 +151,12 @@ export default function ReunionesPage() {
       );
     }
     return [...result].sort((a: any, b: any) => {
-      const aNum = parseInt(a.client_id || a.opportunity_number || a.opportunityNumber || '0', 10);
-      const bNum = parseInt(b.client_id || b.opportunity_number || b.opportunityNumber || '0', 10);
-      return aNum - bNum;
+      const aId = a.client_id || a.opportunity_number || a.opportunityNumber || '';
+      const bId = b.client_id || b.opportunity_number || b.opportunityNumber || '';
+      const aNum = parseInt(aId.replace(/\D/g, '') || '0', 10);
+      const bNum = parseInt(bId.replace(/\D/g, '') || '0', 10);
+      if (aNum !== bNum) return aNum - bNum;
+      return aId.localeCompare(bId);
     });
   }, [reuniones, searchTerm]);
 
@@ -281,6 +284,13 @@ export default function ReunionesPage() {
                       key={reunion.id || reunion.opportunityNumber || i}
                       className={`animate-slide-up delay-${Math.min(i + 1, 8)}`}
                     >
+                      <TableCell>
+                        {editMode ? (
+                          <input type="text" value={getEditedValue(reunion.client_id, 'client_name', reunion.client_name || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_name', e.target.value)} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
+                        ) : (
+                          <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {editMode ? (
                           <input type="text" value={getEditedValue(reunion.client_id, 'client_name', reunion.client_name || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_name', e.target.value)} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
