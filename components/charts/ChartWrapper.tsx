@@ -37,15 +37,18 @@ function DoughnutCenterLabel({ chart }: { chart: Chart }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!chart?.canvas) return;
+    const canvas = chart.canvas;
     const listener = () => {
       const activeElements = chart.getActiveElements();
       setActiveIndex(activeElements.length > 0 ? activeElements[0].index : null);
     };
-    chart.canvas.addEventListener('mouseout', listener);
-    chart.canvas.addEventListener('mousemove', listener);
+    canvas.addEventListener('mouseout', listener);
+    canvas.addEventListener('mousemove', listener);
     return () => {
-      chart.canvas.removeEventListener('mouseout', listener);
-      chart.canvas.removeEventListener('mousemove', listener);
+      if (!canvas) return;
+      canvas.removeEventListener('mouseout', listener);
+      canvas.removeEventListener('mousemove', listener);
     };
   }, [chart]);
 
@@ -191,7 +194,7 @@ export function ChartWrapper({ type, data, options, className, height = '100%' }
 
       <canvas ref={canvasRef} className={!hasChartData ? 'invisible' : ''} />
 
-      {hasChartData && isDoughnut && chartRef.current && (
+      {hasChartData && isDoughnut && chartRef.current && chartRef.current.canvas && (
         <DoughnutCenterLabel chart={chartRef.current} />
       )}
     </div>
