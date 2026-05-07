@@ -161,8 +161,8 @@ export function useAdvisorsForEdit(filters: FilterState) {
         const data = await API.advisorsList({ activo: undefined });
         if (cancelled) return;
         const list = Array.isArray(data) ? data : data?.advisors || [];
-        const names = list.map((a: any) => a.nombre_vendedor || a.nombre || '').filter(Boolean);
-        setAdvisors([...new Set(names)].sort());
+        const names: string[] = list.map((a: any) => a.nombre_vendedor || a.nombre || '').filter(Boolean) as string[];
+        setAdvisors(Array.from(new Set(names)).sort());
       } catch (err) {
         console.error('Error fetching advisors list:', err);
       }
