@@ -158,24 +158,11 @@ export function useAdvisorsForEdit(filters: FilterState) {
     let cancelled = false;
     const fetchAdvisors = async () => {
       try {
-        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-        const path = encodeURIComponent('advisors/round-robin');
-        const url = isHttps ? `/api/proxy?_path=${path}` : `http://200.35.189.139/api/advisors/round-robin`;
-        const res = await fetch(url, {
-          headers: {
-            'x-api-key': 'RedApi_2026_SuperSegura_9XK2',
-            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
-          }
-        });
-        const data = await res.json();
+        const data = await API.advisorsList({ activo: undefined });
         if (cancelled) return;
-        if (data?.advisors && Array.isArray(data.advisors)) {
-          const names = data.advisors.map((a: any) => a.nombre_vendedor || a.nombre || '');
-          setAdvisors([...new Set(names)].filter(Boolean).sort());
-        } else if (data?.items && Array.isArray(data.items)) {
-          const names = data.items.map((a: any) => a.nombre_vendedor || a.nombre || '');
-          setAdvisors([...new Set(names)].filter(Boolean).sort());
-        }
+        const list = Array.isArray(data) ? data : data?.advisors || [];
+        const names = list.map((a: any) => a.nombre_vendedor || a.nombre || '').filter(Boolean);
+        setAdvisors([...new Set(names)].sort());
       } catch (err) {
         console.error('Error fetching advisors list:', err);
       }
