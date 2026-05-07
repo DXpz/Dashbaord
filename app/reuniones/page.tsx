@@ -133,7 +133,7 @@ export default function ReunionesPage() {
   const stages = useStages();
 
   const AsesoresOptions = useMemo(() => {
-    const combined = [...new Set([...asesoresList, ...editAdvisors])];
+    const combined = Array.from(new Set([...asesoresList, ...editAdvisors]));
     return combined.map((a) => ({ value: a, label: a }));
   }, [asesoresList, editAdvisors]);
 
