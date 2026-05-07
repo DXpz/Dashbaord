@@ -157,9 +157,12 @@ export function useAdvisorsForEdit(filters: FilterState) {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const result = await API.roundRobin(undefined, false);
-        if (result?.advisors) {
-          const names = result.advisors.map((a: any) => a.nombre_vendedor || a.nombre || '');
+        const base = typeof window !== 'undefined' ? localStorage.getItem('dashboard_api_base') || 'http://200.35.189.139' : 'http://200.35.189.139';
+        const url = `${base}/api/advisors/round-robin`;
+        const res = await fetch(url, { headers: { 'x-api-key': 'RedApi_2026_SuperSegura_9XK2', 'ngrok-skip-browser-warning': 'true' } });
+        const data = await res.json();
+        if (data?.advisors) {
+          const names = data.advisors.map((a: any) => a.nombre_vendedor || a.nombre || '');
           setAdvisors([...new Set(names)].filter(Boolean).sort());
         }
       } catch (err) {
