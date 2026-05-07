@@ -158,13 +158,12 @@ export function useAdvisorsForEdit(filters: FilterState) {
     let cancelled = false;
     const fetch = async () => {
       try {
-        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
         const upstream = 'http://200.35.189.139';
-        const url = isHttps ? `${upstream}/api/advisors/round-robin` : `${upstream}/api/advisors/round-robin`;
-        const res = await fetch(url, {
+        const res = await fetch(`${upstream}/api/advisors/round-robin`, {
           headers: {
             'X-API-Key': 'RedApi_2026_SuperSegura_9XK2',
-            'ngrok-skip-browser-warning': 'true'
+            'ngrok-skip-browser-warning': 'true',
+            'Origin': 'https://dashbaord-tan.vercel.app'
           }
         });
         const data = await res.json();
