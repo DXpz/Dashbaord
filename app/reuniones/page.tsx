@@ -7,7 +7,7 @@ import { API } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, Search, FileText, X, Pencil, Check, Slash } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, FileText, X, Pencil, Check, Slash, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
@@ -129,6 +129,7 @@ export default function ReunionesPage() {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editedRows, setEditedRows] = useState<Record<string, any>>({});
+  const [sortAsc, setSortAsc] = useState(true);
   const editAdvisors = useAdvisorsForEdit(filters);
   const stages = useStages();
 
@@ -155,10 +156,10 @@ export default function ReunionesPage() {
       const bId = b.client_id || b.opportunity_number || b.opportunityNumber || '';
       const aNum = parseInt(aId.replace(/\D/g, '') || '0', 10);
       const bNum = parseInt(bId.replace(/\D/g, '') || '0', 10);
-      if (aNum !== bNum) return aNum - bNum;
-      return aId.localeCompare(bId);
+      if (aNum !== bNum) return sortAsc ? aNum - bNum : bNum - aNum;
+      return sortAsc ? aId.localeCompare(bId) : bId.localeCompare(aId);
     });
-  }, [reuniones, searchTerm]);
+  }, [reuniones, searchTerm, sortAsc]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReuniones.length / PAGE_SIZE));
   const paginatedReuniones = filteredReuniones.slice(
@@ -227,6 +228,26 @@ export default function ReunionesPage() {
                 <p className="text-xs text-[#B5B5AE] mt-0.5">{filteredReuniones.length} reuniones</p>
               </div>
               <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortAsc(true)}
+                    className={`gap-1.5 text-xs h-8 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED] ${sortAsc ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : ''}`}
+                  >
+                    <ArrowUp className="h-3.5 w-3.5" />
+                    LD ↑
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortAsc(false)}
+                    className={`gap-1.5 text-xs h-8 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED] ${!sortAsc ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : ''}`}
+                  >
+                    <ArrowDown className="h-3.5 w-3.5" />
+                    LD ↓
+                  </Button>
+                </div>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B5B5AE]" />
                   <Input
