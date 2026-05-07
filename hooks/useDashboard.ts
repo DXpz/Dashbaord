@@ -155,19 +155,25 @@ export function useAdvisorsForEdit(filters: FilterState) {
   const [advisors, setAdvisors] = useState<string[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
     const fetch = async () => {
       try {
         const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-        const url = isHttps ? '/api/proxy?_path=advisors/round-robin' : 'http://200.35.189.139/api/advisors/round-robin';
+        const upstream = 'http://200.35.189.139';
+        const url = isHttps ? `${upstream}/api/advisors/round-robin` : `${upstream}/api/advisors/round-robin`;
         const res = await fetch(url, {
           headers: {
-            'x-api-key': 'RedApi_2026_SuperSegura_9XK2',
-            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
+            'X-API-Key': 'RedApi_2026_SuperSegura_9XK2',
+            'ngrok-skip-browser-warning': 'true'
           }
         });
         const data = await res.json();
-        if (data?.advisors) {
+        if (cancelled) return;
+        if (data?.advisors && Array.isArray(data.advisors)) {
           const names = data.advisors.map((a: any) => a.nombre_vendedor || a.nombre || '');
+          setAdvisors([...new Set(names)].filter(Boolean).sort());
+        } else if (data?.items && Array.isArray(data.items)) {
+          const names = data.items.map((a: any) => a.nombre_vendedor || a.nombre || '');
           setAdvisors([...new Set(names)].filter(Boolean).sort());
         }
       } catch (err) {
@@ -175,6 +181,7 @@ export function useAdvisorsForEdit(filters: FilterState) {
       }
     };
     fetch();
+    return () => { cancelled = true; };
   }, []);
 
   return advisors;
