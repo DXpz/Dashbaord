@@ -129,7 +129,7 @@ export default function ReunionesPage() {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editedRows, setEditedRows] = useState<Record<string, any>>({});
-  const [sortAsc, setSortAsc] = useState(true);
+  const [sortAsc, setSortAsc] = useState(false);
   const editAdvisors = useAdvisorsForEdit(filters);
   const stages = useStages();
 
