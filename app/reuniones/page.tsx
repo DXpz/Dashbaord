@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { useReuniones, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
+import { useReuniones, useConnectionStatus, useAsesores, useFilters, useAdvisorsForEdit, useStages } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -126,8 +126,13 @@ export default function ReunionesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [feedbackReunion, setFeedbackReunion] = useState<any>(null);
   const [editMode, setEditMode] = useState(false);
+  const editAdvisors = useAdvisorsForEdit(filters);
+  const stages = useStages();
 
-  const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
+  const AsesoresOptions = useMemo(() => {
+    const combined = [...new Set([...asesoresList, ...editAdvisors])];
+    return combined.map((a) => ({ value: a, label: a }));
+  }, [asesoresList, editAdvisors]);
 
   const filteredReuniones = useMemo(() => {
     if (!Array.isArray(reuniones)) return [];
@@ -251,8 +256,8 @@ export default function ReunionesPage() {
                       </TableCell>
                       <TableCell>
                         {editMode ? (
-                          <select defaultValue={reunion.advisor_name || ''} className="w-full text-sm text-[#35325B] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none">
-                            {AsesoresOptions.map(a => <option key={a.value} value={a.label}>{a.label}</option>)}
+                          <select defaultValue={reunion.advisor_name || ''} className="w-full text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                            {AsesoresOptions.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
                           </select>
                         ) : (
                           <span className="text-[#35325B]">{reunion.advisor_name || reunion.asesor || '—'}</span>
@@ -268,7 +273,15 @@ export default function ReunionesPage() {
                           <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
                         )}
                       </TableCell>
-                      <TableCell><StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} /></TableCell>
+                      <TableCell>
+                        {editMode ? (
+                          <select defaultValue={reunion.opportunity_stage || ''} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                            {stages.map(s => <option key={s.id} value={String(s.id)}>{s.label}</option>)}
+                          </select>
+                        ) : (
+                          <StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} />
+                        )}
+                      </TableCell>
                       <TableCell>
                         {editMode ? (
                           <select defaultValue={reunion.status || ''} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">

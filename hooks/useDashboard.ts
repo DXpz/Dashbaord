@@ -151,6 +151,46 @@ export function useListaAsesores(filters: FilterState) {
   return { data, loading };
 }
 
+export function useAdvisorsForEdit(filters: FilterState) {
+  const [advisors, setAdvisors] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const result = await API.roundRobin(undefined, false);
+        if (result?.advisors) {
+          const names = result.advisors.map((a: any) => a.nombre_vendedor || a.nombre || '');
+          setAdvisors([...new Set(names)].filter(Boolean).sort());
+        }
+      } catch (err) {
+        console.error('Error fetching advisors list:', err);
+      }
+    };
+    fetch();
+  }, []);
+
+  return advisors;
+}
+
+export function useStages() {
+  const [stages, setStages] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const d = await API.dashboard('2024-01-01', '2026-12-31', 30, 40, {});
+        const s = d?.stages || [];
+        setStages(s);
+      } catch (err) {
+        console.error('Error fetching stages:', err);
+      }
+    };
+    fetch();
+  }, []);
+
+  return stages;
+}
+
 export function useReuniones(filters: FilterState) {
   const [reuniones, setReuniones] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
