@@ -1,13 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { KPICard } from '@/components/kpi/KPICard';
-import { useDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
+import { useDashboard, useConnectionStatus, useAsesores, useFilters, useMotivosPerdida } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, TrendingDown, Target, PieChart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const COLORS = {
   dark: '#1F1D3D',
@@ -20,6 +22,8 @@ const COLORS = {
 export default function PropuestasPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading, error } = useDashboard(filters);
+  const { motivos, categorias, loading: motivosLoading } = useMotivosPerdida(filters);
+  const [normalizadas, setNormalizadas] = useState(false);
   const connectionStatus = useConnectionStatus();
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
 
@@ -30,7 +34,7 @@ export default function PropuestasPage() {
   const decisiones = data?.decisiones || {};
   const decGlobal = decisiones?.global || {};
 
-  const motivosItems = motivosPerdida?.items || [];
+  const motivosItems = normalizadas ? categorias : motivos;
   const negociacionGlobal = negociacion?.global || {};
   const porRubroNeg = negociacion?.por_rubro || [];
 
@@ -61,12 +65,12 @@ export default function PropuestasPage() {
     };
   }, [data]);
 
-  const motivosChartData = useMemo(() => {
+const motivosChartData = useMemo(() => {
     if (!motivosItems.length) return null;
     const sorted = [...motivosItems].sort((a: any, b: any) => (b.veces || 0) - (a.veces || 0)).slice(0, 15);
     return {
-      labels: sorted.map((m: any) => (m.motivo_perdida || m.texto || '—').substring(0, 30)),
-      values: sorted.map((m: any) => m.veces || m.count || 0),
+      labels: sorted.map((m: any) => (m.categoria || m.motivo_perdida || m.texto || '—').substring(0, 30)),
+      values: sorted.map((m: any) => m.veces || 0),
     };
   }, [motivosItems]);
 
@@ -149,7 +153,30 @@ export default function PropuestasPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ChartCard title="Motivos de Pérdida" subtitle="Top 15">
+            <ChartCard
+              title="Motivos de Pérdida"
+              subtitle="Top 15"
+              actions={
+                <div className="flex gap-1">
+                  <Button
+                    variant={normalizadas ? 'outline' : 'default'}
+                    size="sm"
+                    onClick={() => setNormalizadas(false)}
+                    className={`h-7 px-2 text-xs ${!normalizadas ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : 'border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]'}`}
+                  >
+                    Por Asesor
+                  </Button>
+                  <Button
+                    variant={normalizadas ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setNormalizadas(true)}
+                    className={`h-7 px-2 text-xs ${normalizadas ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : 'border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]'}`}
+                  >
+                    Normalizados
+                  </Button>
+                </div>
+              }
+            >
               <ChartWrapper type="bar" data={{
                 labels: motivosChartData?.labels || [],
                 datasets: [{

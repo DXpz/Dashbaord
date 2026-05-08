@@ -249,3 +249,35 @@ export function useFuentes(filters: FilterState) {
 
   return { fuentes, loading };
 }
+
+export function useMotivosPerdida(filters: FilterState) {
+  const [data, setData] = useState<{ motivos: any[]; categorias: any[] }>({ motivos: [], categorias: [] });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchMotivos = async () => {
+      setLoading(true);
+      try {
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const url = isHttps ? `/api/proxy?_path=metrics%2Fmotivos-perdida` : `http://200.35.189.139/api/metrics/motivos-perdida`;
+        const res = await window.fetch(url, {
+          headers: {
+            'x-api-key': 'RedApi_2026_SuperSegura_9XK2',
+            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
+          }
+        });
+        const json = await res.json();
+        const motivos = Array.isArray(json.motivos) ? json.motivos : [];
+        const categorias = Array.isArray(json.categorias_normalizadas) ? json.categorias_normalizadas : [];
+        setData({ motivos, categorias });
+      } catch (err) {
+        console.error('Error fetching motivos:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMotivos();
+  }, []);
+
+  return { motivos: data.motivos, categorias: data.categorias, loading };
+}
