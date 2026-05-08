@@ -49,7 +49,7 @@ export default function PropuestasPage() {
     if (!arr.length) return null;
     return {
       labels: arr.map((r: any) => r.rubro || '—'),
-      values: arr.map((r: any) => r.cantidad || 0),
+      values: arr.map((r: any) => r.propuestas || r.cantidad || 0),
     };
   }, [data]);
 
@@ -58,16 +58,16 @@ export default function PropuestasPage() {
     if (!arr.length) return null;
     return {
       labels: arr.map((r: any) => r.rubro || '—'),
-      values: arr.map((r: any) => r.tasa || 0),
+      values: arr.map((r: any) => r.tasa_cierre_pct || r.tasa || 0),
     };
   }, [data]);
 
   const motivosChartData = useMemo(() => {
     if (!motivosItems.length) return null;
-    const sorted = [...motivosItems].sort((a: any, b: any) => (b.count || 0) - (a.count || 0)).slice(0, 15);
+    const sorted = [...motivosItems].sort((a: any, b: any) => (b.veces || 0) - (a.veces || 0)).slice(0, 15);
     return {
-      labels: sorted.map((m: any) => (m.texto || '—').substring(0, 30)),
-      values: sorted.map((m: any) => m.count || 0),
+      labels: sorted.map((m: any) => (m.motivo_perdida || m.texto || '—').substring(0, 30)),
+      values: sorted.map((m: any) => m.veces || m.count || 0),
     };
   }, [motivosItems]);
 
@@ -82,14 +82,14 @@ export default function PropuestasPage() {
   }, [negociacionGlobal]);
 
   const decisionesChartData = useMemo(() => {
-    const aceptados = decGlobal.aceptados_total ?? 0;
-    const rechazados = decGlobal.rechazados_total ?? 0;
+    const aceptados = negociacionGlobal.negociaron || 0;
+    const rechazados = (negociacionGlobal.segui_mientos_con_resumen || 0) - aceptados;
     if (aceptados === 0 && rechazados === 0) return null;
     return {
-      labels: ['Aceptados', 'Rechazados'],
+      labels: ['Con Resumen', 'En Negociación'],
       values: [aceptados, rechazados],
     };
-  }, [decGlobal]);
+  }, [negociacionGlobal]);
 
   return (
     <Shell
