@@ -261,12 +261,16 @@ export function useMotivosPerdida(filters: FilterState) {
       try {
         const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
         const params = new URLSearchParams();
-        if (filters.desde) params.set('desde', filters.desde);
-        if (filters.hasta) params.set('hasta', filters.hasta);
+        if (filters.desde) params.set('desde', `${filters.desde}T00:00:00`);
+        if (filters.hasta) params.set('hasta', `${filters.hasta}T23:59:59.999`);
         if (filters.pais) params.set('pais', filters.pais);
         const qs = params.toString();
         const suffix = qs ? `&${qs}` : '';
-        const url = isHttps ? `/api/proxy?_path=metrics%2Fmotivos-perdida${suffix}` : `http://200.35.189.139/api/metrics/motivos-perdida${qs ? '?' + qs : ''}`;
+        const targetPath = 'metrics/motivos-perdida';
+        const url = isHttps
+          ? `/api/proxy?_path=${encodeURIComponent(targetPath)}${suffix}`
+          : `http://200.35.189.139/api/${targetPath}${qs ? '?' + qs : ''}`;
+        console.log('[useMotivosPerdida] fetching:', url);
         const res = await window.fetch(url, {
           headers: {
             'x-api-key': 'RedApi_2026_SuperSegura_9XK2',
@@ -275,6 +279,7 @@ export function useMotivosPerdida(filters: FilterState) {
         });
         const json = await res.json();
         if (cancelled) return;
+        console.log('[useMotivosPerdida] got', json.motivos?.length, 'motivos,', json.categorias_normalizadas?.length, 'cats');
         const motivos = Array.isArray(json.motivos) ? json.motivos : [];
         const categorias = Array.isArray(json.categorias_normalizadas) ? json.categorias_normalizadas : [];
         setData({ motivos, categorias });
