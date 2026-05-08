@@ -13,13 +13,10 @@ const COLORS = {
   dark: '#1F1D3D',
   medium: '#35325B',
   light: '#B5B5AE',
-  blue: '#145478',
-  green: '#22c55e',
-  orange: '#f97316',
-  purple: '#7c3aed',
+  accent: '#EEEEEC',
 };
 
-const CANAL_COLORS = [COLORS.blue, COLORS.dark, COLORS.medium, COLORS.green, COLORS.orange, COLORS.purple];
+const CANAL_COLORS = [COLORS.dark, COLORS.medium, COLORS.light, COLORS.dark, COLORS.medium, COLORS.dark];
 
 export default function OrigenLeadsPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();

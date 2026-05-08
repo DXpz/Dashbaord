@@ -8,11 +8,9 @@ import { ChartWrapper } from '@/components/charts/ChartWrapper';
 
 const STAGE_COLORS = [
   '#1F1D3D',
-  '#2d2a4a',
-  '#3f3c6d',
-  '#4f4d8f',
-  '#6c6aad',
+  '#35325B',
   '#B5B5AE',
+  '#EEEEEC',
 ];
 
 export default function HomePage() {

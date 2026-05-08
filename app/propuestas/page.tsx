@@ -13,9 +13,8 @@ const COLORS = {
   dark: '#1F1D3D',
   medium: '#35325B',
   light: '#B5B5AE',
-  red: '#c8151b',
-  blue: '#145478',
-  green: '#22c55e',
+  accent: '#EEEEEC',
+  primary: '#1F1D3D',
 };
 
 export default function PropuestasPage() {
@@ -130,7 +129,7 @@ export default function PropuestasPage() {
                 labels: rubroChartData?.labels || [],
                 datasets: [{
                   data: rubroChartData?.values || [],
-                  backgroundColor: COLORS.blue,
+                  backgroundColor: COLORS.primary,
                   borderRadius: 4,
                   borderSkipped: false,
                 }],
@@ -141,7 +140,7 @@ export default function PropuestasPage() {
                 labels: tasaChartData?.labels || [],
                 datasets: [{
                   data: tasaChartData?.values || [],
-                  backgroundColor: COLORS.red,
+                  backgroundColor: COLORS.primary,
                   borderRadius: 4,
                   borderSkipped: false,
                 }],
@@ -155,7 +154,7 @@ export default function PropuestasPage() {
                 labels: motivosChartData?.labels || [],
                 datasets: [{
                   data: motivosChartData?.values || [],
-                  backgroundColor: COLORS.red,
+                  backgroundColor: COLORS.primary,
                   borderRadius: 4,
                   borderSkipped: false,
                 }],
@@ -166,7 +165,7 @@ export default function PropuestasPage() {
                 labels: decisionesChartData?.labels || [],
                 datasets: [{
                   data: decisionesChartData?.values || [],
-                  backgroundColor: [COLORS.green, COLORS.red],
+                  backgroundColor: [COLORS.medium, COLORS.dark],
                   borderWidth: 0,
                 }],
               }} height="240px" />

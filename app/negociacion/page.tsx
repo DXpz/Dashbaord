@@ -13,10 +13,8 @@ const COLORS = {
   dark: '#1F1D3D',
   medium: '#35325B',
   light: '#B5B5AE',
-  green: '#22c55e',
-  red: '#c8151b',
-  blue: '#145478',
-  orange: '#f97316',
+  accent: '#EEEEEC',
+  primary: '#1F1D3D',
 };
 
 export default function NegociacionPage() {
@@ -31,21 +29,21 @@ export default function NegociacionPage() {
   const decGlobal = decisiones?.global || {};
   const porRubroNeg = negociacion?.por_rubro || [];
 
+  const globalStats = negociacion?.global || {};
+
   const kpis = useMemo(() => ({
     seguimientos: resumen.seguimientos_registrados ?? 0,
     propuestas: resumen.propuestas_registradas ?? 0,
-    aceptados: decGlobal.aceptados_total ?? 0,
-    rechazados: decGlobal.rechazados_total ?? 0,
-    tasaAceptacion: decGlobal.tasa_aceptacion_pct ?? '—',
-  }), [resumen, decGlobal]);
-
-  const globalStats = negociacion?.global || {};
+    aceptados: globalStats.negociaron ?? 0,
+    rechazados: (globalStats.seguimientos_con_resumen ?? 0) - (globalStats.negociaron ?? 0),
+    tasaAceptacion: globalStats.pct_negociaron_sobre_con_flag ?? '—',
+  }), [resumen, globalStats]);
 
   const porRubroChartData = useMemo(() => {
     if (!porRubroNeg.length) return null;
     return {
       labels: porRubroNeg.map((r: any) => r.rubro || '—'),
-      values: porRubroNeg.map((r: any) => r.veces || 0),
+      values: porRubroNeg.map((r: any) => r.casos || r.veces || 0),
     };
   }, [porRubroNeg]);
 
@@ -95,7 +93,7 @@ export default function NegociacionPage() {
                 labels: porRubroChartData?.labels || [],
                 datasets: [{
                   data: porRubroChartData?.values || [],
-                  backgroundColor: COLORS.blue,
+                  backgroundColor: COLORS.primary,
                   borderRadius: 4,
                   borderSkipped: false,
                 }],
@@ -106,7 +104,7 @@ export default function NegociacionPage() {
                 labels: conversionChartData?.labels || [],
                 datasets: [{
                   data: conversionChartData?.values || [],
-                  backgroundColor: [COLORS.green, COLORS.red],
+                  backgroundColor: [COLORS.medium, COLORS.dark],
                   borderWidth: 0,
                 }],
               }} height="280px" />
