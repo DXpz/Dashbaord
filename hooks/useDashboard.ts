@@ -48,13 +48,13 @@ export interface DashboardData {
   fuente_data?: any;
 }
 
-export function useDashboard(filters: FilterState) {
+export function useDashboard(filters: FilterState | null) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!filters.asesor) return;
+    if (!filters || !filters.asesor) return;
     setLoading(true);
     setError(null);
     try {
@@ -74,7 +74,7 @@ export function useDashboard(filters: FilterState) {
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
+  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor]);
 
   useEffect(() => {
     fetchData();

@@ -64,11 +64,13 @@ export default function VendedorDashboard() {
   const [pais, setPais] = useState('');
   const [desde, setDesde] = useState(defaultDates.desde);
   const [hasta, setHasta] = useState(defaultDates.hasta);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (user?.full_name) {
       setAsesor(user.full_name);
       setPais(user.country_code || '');
+      setReady(true);
     }
   }, [user]);
 
@@ -79,7 +81,7 @@ export default function VendedorDashboard() {
     asesor,
   }), [desde, hasta, pais, asesor]);
 
-  const { data, loading } = useDashboard(filters);
+  const { data, loading } = useDashboard(ready ? filters : null);
 
   const handleMonthChange = (newMonth: string) => {
     const { year } = getMonthFromDate(desde);
