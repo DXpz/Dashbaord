@@ -37,7 +37,7 @@ export default function VendedorDashboard() {
         filters.hasta || '',
         30,
         40,
-        { pais: filters.pais || undefined, nombre: filters.asesor || user?.advisorName || undefined }
+        { pais: filters.pais || undefined, asesor: filters.asesor || user?.advisorName || undefined }
       );
       setData(result);
     } catch (err) {
