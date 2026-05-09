@@ -65,7 +65,7 @@ export async function callAuthApi(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-API-KEY': 'RedApi_2026_SuperSegura_9XK2',
+    'X-API-KEY': process.env.API_KEY || '',
     ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' }),
   };
 

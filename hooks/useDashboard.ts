@@ -271,7 +271,7 @@ export function useMotivosPerdida(filters: FilterState) {
         console.log('[useMotivosPerdida] fetching:', url);
         const res = await window.fetch(url, {
           headers: {
-            'x-api-key': 'RedApi_2026_SuperSegura_9XK2',
+            'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
             ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
           }
         });

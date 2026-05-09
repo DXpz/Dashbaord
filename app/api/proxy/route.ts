@@ -36,7 +36,7 @@ async function handleRequest(req: NextRequest) {
   const target = `${base}/api${suffix}${queryString ? `?${queryString}` : ''}`;
 
   const upstreamHeaders: Record<string, string> = {
-    'X-API-KEY': process.env.API_KEY || 'RedApi_2026_SuperSegura_9XK2',
+    'X-API-KEY': process.env.API_KEY || '',
     'ngrok-skip-browser-warning': 'true',
     'Authorization': `Bearer ${token}`,
   };

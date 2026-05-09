@@ -5,7 +5,7 @@
  */
 
 const DEFAULT_UPSTREAM = 'http://200.35.189.139';
-const API_KEY = 'RedApi_2026_SuperSegura_9XK2';
+const API_KEY = process.env.API_KEY || '';
 
 const FETCH_TIMEOUT_MS = 25000;
 

@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': process.env.API_KEY || 'RedApi_2026_SuperSegura_9XK2',
+        'X-API-KEY': process.env.API_KEY || '',
         'ngrok-skip-browser-warning': 'true',
       },
       body: JSON.stringify({ email, password }),
