@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { VendedorFiltersProvider, useVendedorFilters } from '@/lib/vendedor-filters';
-import { LayoutDashboard, Calendar, FileText, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, LogOut, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -57,7 +57,7 @@ function FilterBar() {
 
 export default function VendedorLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -175,10 +175,13 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
           </nav>
 
           <div className="p-4 border-t border-[#EEEEEC]">
-            <div className="flex items-center gap-2 px-3 py-2">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-xs text-[#35325B]">Sistema activo</span>
-            </div>
+            <button
+              onClick={logout}
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded text-sm font-medium text-[#B5B5AE] hover:text-[#c8151b] hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar sesión
+            </button>
           </div>
         </aside>
 
