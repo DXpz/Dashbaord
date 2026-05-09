@@ -63,8 +63,9 @@ export default function VendedorDashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    console.log('[VendedorDashboard] fetchData called, filters.asesor:', filters.asesor);
     if (!filters.asesor) return;
-    console.log('[VendedorDashboard] fetchData START, filters:', filters);
+    console.log('[VendedorDashboard] fetchData START');
     setLoading(true);
     try {
       const result = await API.dashboard(
