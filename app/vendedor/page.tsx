@@ -32,23 +32,20 @@ export default function VendedorDashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      API.invalidateCache();
-      const result = await API.dashboard(
-        filters.desde || '',
-        filters.hasta || '',
-        30,
-        40,
-        { pais: filters.pais || undefined, asesor: filters.asesor || undefined }
-      );
+      const result = filters.asesor
+        ? await API.asesor(filters.asesor, filters.desde || '', filters.hasta || '', filters.pais || undefined)
+        : await API.dashboard(filters.desde || '', filters.hasta || '', 30, 40, { pais: filters.pais || undefined });
+      console.log('[VendedorDashboard] data loaded, resumen:', result?.resumen);
       setData(result);
     } catch (err) {
       console.error('Error:', err);
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
 
   useEffect(() => {
+    console.log('[VendedorDashboard] filters.asesor:', filters.asesor, 'user.full_name:', user?.full_name);
     fetchData();
   }, [fetchData]);
 
