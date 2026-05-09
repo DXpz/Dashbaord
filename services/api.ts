@@ -72,6 +72,11 @@ function nombreParam(nombre: string | undefined) {
   return { nombre: String(nombre).trim() };
 }
 
+function asesorParam(asesor: string | undefined) {
+  if (!asesor || !String(asesor).trim()) return {};
+  return { asesor: String(asesor).trim() };
+}
+
 function timeoutError(ms: number): Error {
   return new Error(`Tiempo de espera agotado (${Math.round(ms / 1000)} s). Compruebe la conexión.`);
 }
@@ -163,15 +168,14 @@ export const API = {
   ) {
     const group_by_asesores = opts.group_by_asesores ?? 'asesor';
     const group_by_propuestas = opts.group_by_propuestas ?? 'rubro';
-    const nombre = opts.nombre && String(opts.nombre).trim() ? String(opts.nombre).trim() : '';
     const paisCode = normPaisQuery(opts.pais);
     const base = getBase();
-    const key = `${base}|${getApiKey()}|${desde || ''}|${hasta || ''}|${limite_motivos}|${limite_reuniones_muestra}|${group_by_asesores}|${group_by_propuestas}|${nombre}|${paisCode}`;
+    const key = `${base}|${getApiKey()}|${desde || ''}|${hasta || ''}|${limite_motivos}|${limite_reuniones_muestra}|${group_by_asesores}|${group_by_propuestas}|${opts.asesor || opts.nombre || ''}|${paisCode}`;
     if (_cache && _cacheKey === key) return _cache;
     const data = await get('/api/metrics/dashboard', {
       desde, hasta, limite_motivos, limite_reuniones_muestra,
       group_by_asesores, group_by_propuestas,
-      ...nombreParam(nombre),
+      ...(opts.asesor ? asesorParam(opts.asesor) : nombreParam(opts.nombre)),
       ...paisParam(paisCode)
     });
     _cache = data;

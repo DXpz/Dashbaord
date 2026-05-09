@@ -24,7 +24,7 @@ export default function VendedorDashboard() {
     desde: '',
     hasta: '',
     pais: user?.country_code || '',
-    asesor: user?.advisorName || user?.full_name || '',
+    asesor: user?.full_name || '',
   });
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,7 @@ export default function VendedorDashboard() {
         filters.hasta || '',
         30,
         40,
-        { pais: filters.pais || undefined, asesor: filters.asesor || user?.advisorName || undefined }
+        { pais: filters.pais || undefined, asesor: filters.asesor || undefined }
       );
       setData(result);
     } catch (err) {
