@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useDashboard } from '@/hooks/useDashboard';
 import { KPICard } from '@/components/kpi/KPICard';
@@ -32,6 +32,16 @@ const MONTHS = [
   { value: '12', label: 'Diciembre' },
 ];
 
+function getDefaultDates() {
+  const currentYear = new Date().getFullYear();
+  const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+  const lastDay = new Date(currentYear, parseInt(currentMonth) - 1, 0).getDate();
+  return {
+    desde: `${currentYear}-${currentMonth}-01`,
+    hasta: `${currentYear}-${currentMonth}-${String(lastDay).padStart(2, '0')}`,
+  };
+}
+
 function getMonthFromDate(dateStr: string): { month: string; year: string } {
   if (!dateStr) return { month: '', year: '' };
   const [year, month] = dateStr.split('-');
@@ -46,24 +56,58 @@ function setMonth(month: string, year: string): { desde: string; hasta: string }
   };
 }
 
-function getDefaultDates() {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-  return setMonth(currentMonth, String(currentYear));
-}
-
 export default function VendedorDashboard() {
   const { user } = useAuth();
   const defaultDates = getDefaultDates();
 
+  const [asesor, setAsesor] = useState('');
+  const [pais, setPais] = useState('');
+  const [desde, setDesde] = useState(defaultDates.desde);
+  const [hasta, setHasta] = useState(defaultDates.hasta);
+
+  useEffect(() => {
+    if (user?.full_name) {
+      setAsesor(user.full_name);
+      setPais(user.country_code || '');
+    }
+  }, [user]);
+
   const filters = useMemo(() => ({
-    desde: defaultDates.desde,
-    hasta: defaultDates.hasta,
-    pais: user?.country_code || '',
-    asesor: user?.full_name || '',
-  }), [user]);
+    desde,
+    hasta,
+    pais,
+    asesor,
+  }), [desde, hasta, pais, asesor]);
 
   const { data, loading } = useDashboard(filters);
+
+  const handleMonthChange = (newMonth: string) => {
+    const { year } = getMonthFromDate(desde);
+    const dates = setMonth(newMonth, year || String(new Date().getFullYear()));
+    setDesde(dates.desde);
+    setHasta(dates.hasta);
+  };
+
+  const handleYearChange = (newYear: string) => {
+    const { month } = getMonthFromDate(desde);
+    const dates = setMonth(month || '01', newYear);
+    setDesde(dates.desde);
+    setHasta(dates.hasta);
+  };
+
+  const handleFiltrar = () => {
+    setDesde(desde);
+    setHasta(hasta);
+  };
+
+  const handleLimpiar = () => {
+    const d = getDefaultDates();
+    setDesde(d.desde);
+    setHasta(d.hasta);
+  };
+
+  const { month, year } = getMonthFromDate(desde);
+  const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
 
   const resumen = data?.resumen || {};
   const leadsPorStage = data?.leads_por_stage || [];
@@ -102,11 +146,39 @@ export default function VendedorDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4 pb-4 border-b border-[#EEEEEC]">
-        <div className="flex items-center gap-2 text-sm text-[#35325B]">
-          <span>{user?.full_name || ''}</span>
-          <span className="text-[#B5B5AE]">•</span>
-          <span>{user?.country_code || ''}</span>
+        <div className="flex items-center gap-2">
+          <select
+            value={month}
+            onChange={(e) => handleMonthChange(e.target.value)}
+            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+          >
+            <option value="">Mes</option>
+            {MONTHS.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+          <select
+            value={year}
+            onChange={(e) => handleYearChange(e.target.value)}
+            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+          >
+            {years.map((y) => (
+              <option key={y} value={String(y)}>{y}</option>
+            ))}
+          </select>
         </div>
+        <button
+          onClick={handleFiltrar}
+          className="px-3 py-1.5 text-xs font-medium bg-[#1F1D3D] text-white rounded hover:bg-[#35325B] transition-colors"
+        >
+          Filtrar
+        </button>
+        <button
+          onClick={handleLimpiar}
+          className="px-3 py-1.5 text-xs font-medium text-[#35325B] border border-[#EEEEEC] rounded hover:bg-[#EEEEEC] transition-colors"
+        >
+          Limpiar
+        </button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
