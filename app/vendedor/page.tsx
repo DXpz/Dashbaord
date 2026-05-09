@@ -38,7 +38,7 @@ export default function VendedorDashboard() {
       const result = useAsesor
         ? await API.asesor(filters.asesor, filters.desde || '', filters.hasta || '', filters.pais || undefined)
         : await API.dashboard(filters.desde || '', filters.hasta || '', 30, 40, { pais: filters.pais || undefined });
-      console.log('[VendedorDashboard] data loaded, resumen:', result?.resumen);
+      console.log('[VendedorDashboard] data loaded, keys:', Object.keys(result || {}));
       setData(result);
     } catch (err) {
       console.error('Error:', err);

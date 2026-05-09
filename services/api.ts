@@ -194,7 +194,9 @@ export const API = {
 
   asesor(nombre: string, desde: string, hasta: string, pais?: string) {
     console.log('[API.asesor] calling with nombre:', nombre, 'desde:', desde, 'hasta:', hasta, 'pais:', pais);
-    return get('/api/metrics/asesor', { nombre, desde, hasta, ...paisParam(pais) });
+    const promise = get('/api/metrics/asesor', { nombre, desde, hasta, ...paisParam(pais) });
+    promise.then((data: any) => console.log('[API.asesor] response keys:', Object.keys(data || {})));
+    return promise;
   },
 
   propuestasPorRubro(desde: string, hasta: string, group_by = 'rubro', nombre?: string, pais?: string) {
