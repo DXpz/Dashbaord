@@ -189,7 +189,10 @@ export const API = {
   },
 
   reuniones(desde: string, hasta: string, limite = 200, offset = 0, extra: Record<string, any> = {}) {
-    return get('/metrics/reuniones', { desde, hasta, limite, offset, ...extra });
+    const params: Record<string, any> = { desde, hasta, limite, offset };
+    if (extra.nombre) params.advisor_name = extra.nombre;
+    if (extra.pais) params.pais = extra.pais;
+    return get('/metrics/reuniones', params);
   },
 
   listaAsesores(desde: string, hasta: string, nombre?: string, pais?: string) {

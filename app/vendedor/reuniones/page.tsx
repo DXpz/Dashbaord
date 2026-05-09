@@ -117,7 +117,13 @@ export default function VendedorReunionesPage() {
     if (!user?.full_name) return;
     setLoading(true);
     try {
-      const result = await API.reuniones('', '', 200, 0, { nombre: user.full_name });
+      const currentYear = new Date().getFullYear();
+      const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+      const lastDay = new Date(currentYear, parseInt(currentMonth) - 1, 0).getDate();
+      const desde = `${currentYear}-${currentMonth}-01`;
+      const hasta = `${currentYear}-${currentMonth}-${String(lastDay).padStart(2, '0')}`;
+
+      const result = await API.reuniones(desde, hasta, 200, 0, { nombre: user.full_name });
       const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
       setReuniones(list);
     } catch (err) {
