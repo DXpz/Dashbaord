@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { useDashboard } from '@/hooks/useDashboard';
+import { API } from '@/services/api';
 import { KPICard } from '@/components/kpi/KPICard';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
@@ -18,18 +18,12 @@ const COLORS = {
 };
 
 const MONTHS = [
-  { value: '01', label: 'Enero' },
-  { value: '02', label: 'Febrero' },
-  { value: '03', label: 'Marzo' },
-  { value: '04', label: 'Abril' },
-  { value: '05', label: 'Mayo' },
-  { value: '06', label: 'Junio' },
-  { value: '07', label: 'Julio' },
-  { value: '08', label: 'Agosto' },
-  { value: '09', label: 'Septiembre' },
-  { value: '10', label: 'Octubre' },
-  { value: '11', label: 'Noviembre' },
-  { value: '12', label: 'Diciembre' },
+  { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' },
+  { value: '03', label: 'Marzo' }, { value: '04', label: 'Abril' },
+  { value: '05', label: 'Mayo' }, { value: '06', label: 'Junio' },
+  { value: '07', label: 'Julio' }, { value: '08', label: 'Agosto' },
+  { value: '09', label: 'Septiembre' }, { value: '10', label: 'Octubre' },
+  { value: '11', label: 'Noviembre' }, { value: '12', label: 'Diciembre' },
 ];
 
 function getDefaultDates() {
@@ -59,29 +53,42 @@ function setMonth(month: string, year: string): { desde: string; hasta: string }
 export default function VendedorDashboard() {
   const { user } = useAuth();
   const defaultDates = getDefaultDates();
+  const keyRef = useRef(0);
 
   const [asesor, setAsesor] = useState('');
   const [pais, setPais] = useState('');
   const [desde, setDesde] = useState(defaultDates.desde);
   const [hasta, setHasta] = useState(defaultDates.hasta);
-  const [ready, setReady] = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user?.full_name) {
       setAsesor(user.full_name);
       setPais(user.country_code || '');
-      setReady(true);
+      keyRef.current += 1;
     }
   }, [user]);
 
-  const filters = useMemo(() => ({
-    desde,
-    hasta,
-    pais,
-    asesor,
-  }), [desde, hasta, pais, asesor]);
+  const fetchData = async () => {
+    if (!asesor) return;
+    setLoading(true);
+    try {
+      const result = await API.dashboard(
+        desde, hasta, 30, 40,
+        { pais: pais || undefined, asesor }
+      );
+      setData(result);
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const { data, loading } = useDashboard(ready ? filters : null);
+  useEffect(() => {
+    if (asesor) fetchData();
+  }, [asesor, desde, hasta, pais]);
 
   const handleMonthChange = (newMonth: string) => {
     const { year } = getMonthFromDate(desde);
@@ -97,11 +104,7 @@ export default function VendedorDashboard() {
     setHasta(dates.hasta);
   };
 
-  const handleFiltrar = () => {
-    setDesde(desde);
-    setHasta(hasta);
-  };
-
+  const handleFiltrar = () => { fetchData(); };
   const handleLimpiar = () => {
     const d = getDefaultDates();
     setDesde(d.desde);
@@ -146,39 +149,25 @@ export default function VendedorDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key={keyRef.current}>
       <div className="flex flex-wrap items-center gap-4 pb-4 border-b border-[#EEEEEC]">
         <div className="flex items-center gap-2">
-          <select
-            value={month}
-            onChange={(e) => handleMonthChange(e.target.value)}
-            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
-          >
+          <select value={month} onChange={(e) => handleMonthChange(e.target.value)}
+            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer">
             <option value="">Mes</option>
-            {MONTHS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
+            {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
           </select>
-          <select
-            value={year}
-            onChange={(e) => handleYearChange(e.target.value)}
-            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
-          >
-            {years.map((y) => (
-              <option key={y} value={String(y)}>{y}</option>
-            ))}
+          <select value={year} onChange={(e) => handleYearChange(e.target.value)}
+            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer">
+            {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
           </select>
         </div>
-        <button
-          onClick={handleFiltrar}
-          className="px-3 py-1.5 text-xs font-medium bg-[#1F1D3D] text-white rounded hover:bg-[#35325B] transition-colors"
-        >
+        <button onClick={handleFiltrar}
+          className="px-3 py-1.5 text-xs font-medium bg-[#1F1D3D] text-white rounded hover:bg-[#35325B] transition-colors">
           Filtrar
         </button>
-        <button
-          onClick={handleLimpiar}
-          className="px-3 py-1.5 text-xs font-medium text-[#35325B] border border-[#EEEEEC] rounded hover:bg-[#EEEEEC] transition-colors"
-        >
+        <button onClick={handleLimpiar}
+          className="px-3 py-1.5 text-xs font-medium text-[#35325B] border border-[#EEEEEC] rounded hover:bg-[#EEEEEC] transition-colors">
           Limpiar
         </button>
       </div>
@@ -195,12 +184,7 @@ export default function VendedorDashboard() {
         <ChartCard title="Mis Leads por Etapa" subtitle="Pipeline actual">
           <ChartWrapper type="bar" data={{
             labels: stagesChartData.labels,
-            datasets: [{
-              data: stagesChartData.values,
-              backgroundColor: COLORS.primary,
-              borderRadius: 4,
-              borderSkipped: false,
-            }],
+            datasets: [{ data: stagesChartData.values, backgroundColor: COLORS.primary, borderRadius: 4, borderSkipped: false }],
           }} height="280px" />
         </ChartCard>
       )}
@@ -208,22 +192,10 @@ export default function VendedorDashboard() {
       <div className="bg-white border border-[#EEEEEC] p-5">
         <h3 className="text-sm font-medium text-[#1F1D3D] mb-4">Resumen de Desempeño</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="text-[#B5B5AE]">Reuniones con Retro</span>
-            <p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesConRetro}</p>
-          </div>
-          <div>
-            <span className="text-[#B5B5AE]">Reuniones Sin Retro</span>
-            <p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesSinRetro}</p>
-          </div>
-          <div>
-            <span className="text-[#B5B5AE]">Propuestas Registradas</span>
-            <p className="text-lg font-semibold text-[#1F1D3D]">{kpis.propuestas}</p>
-          </div>
-          <div>
-            <span className="text-[#B5B5AE]">Seguimientos</span>
-            <p className="text-lg font-semibold text-[#1F1D3D]">{kpis.seguimientos}</p>
-          </div>
+          <div><span className="text-[#B5B5AE]">Reuniones con Retro</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesConRetro}</p></div>
+          <div><span className="text-[#B5B5AE]">Reuniones Sin Retro</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesSinRetro}</p></div>
+          <div><span className="text-[#B5B5AE]">Propuestas Registradas</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.propuestas}</p></div>
+          <div><span className="text-[#B5B5AE]">Seguimientos</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.seguimientos}</p></div>
         </div>
       </div>
     </div>
