@@ -3,19 +3,27 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LoginBackground } from '@/components/LoginBackground';
+import { useAuth } from '@/lib/auth-context';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+    const result = await login(email, password);
+    if (result.ok) {
       router.push('/');
-    }, 800);
+    } else {
+      setError(result.error || 'Error al iniciar sesión');
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,6 +70,12 @@ export default function LoginPage() {
                   required
                 />
               </div>
+
+              {error && (
+                <div className="bg-red-50 text-red-600 text-xs px-3 py-2 rounded border border-red-200">
+                  {error}
+                </div>
+              )}
 
               <div className="flex items-center justify-between text-xs">
                 <label className="flex items-center gap-2 cursor-pointer">
