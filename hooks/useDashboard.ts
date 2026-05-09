@@ -54,6 +54,7 @@ export function useDashboard(filters: FilterState) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (!filters.asesor) return;
     setLoading(true);
     setError(null);
     try {

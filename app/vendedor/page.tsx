@@ -79,7 +79,8 @@ export default function VendedorDashboard() {
     asesor,
   }), [desde, hasta, pais, asesor]);
 
-  const { data, loading } = useDashboard(filters);
+  const shouldFetch = asesor !== '';
+  const { data, loading } = useDashboard(shouldFetch ? filters : { desde: '', hasta: '', pais: '', asesor: '' });
 
   const handleMonthChange = (newMonth: string) => {
     const { year } = getMonthFromDate(desde);
