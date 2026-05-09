@@ -64,16 +64,18 @@ export default function VendedorDashboard() {
   const desdeRef = useRef(defaultDates.desde);
   const hastaRef = useRef(defaultDates.hasta);
 
+  const [asesorReady, setAsesorReady] = useState(false);
+
   useEffect(() => {
     if (user && user.full_name) {
       asesorRef.current = user.full_name;
       paisRef.current = user.country_code || '';
+      setAsesorReady(true);
     }
   }, [user]);
 
   const fetchData = useCallback(async () => {
-    const currentAsesor = asesorRef.current;
-    if (!currentAsesor) return;
+    if (!asesorRef.current) return;
     setLoading(true);
     try {
       const result = await API.dashboard(
@@ -81,7 +83,7 @@ export default function VendedorDashboard() {
         hastaRef.current || '',
         30,
         40,
-        { pais: paisRef.current || undefined, asesor: currentAsesor }
+        { pais: paisRef.current || undefined, asesor: asesorRef.current }
       );
       setData(result);
     } catch (err) {
@@ -92,8 +94,8 @@ export default function VendedorDashboard() {
   }, []);
 
   useEffect(() => {
-    if (asesorRef.current) fetchData();
-  }, [fetchData]);
+    if (asesorReady) fetchData();
+  }, [asesorReady, fetchData]);
 
   const handleMonthChange = (newMonth: string) => {
     const { month, year } = getMonthFromDate(desdeRef.current);
@@ -144,7 +146,7 @@ export default function VendedorDashboard() {
     };
   }, [leadsPorStage]);
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
