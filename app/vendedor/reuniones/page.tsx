@@ -2,11 +2,12 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useVendedorFilters } from '@/lib/vendedor-filters';
 import { API } from '@/services/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, ChevronLeft, ChevronRight, Search, X, Pencil, Check, ArrowUp, ArrowDown } from 'lucide-react';
+import { FileText, ChevronLeft, ChevronRight, Search, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
@@ -106,6 +107,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
 export default function VendedorReunionesPage() {
   const { user } = useAuth();
+  const { desde, hasta } = useVendedorFilters();
   const [reuniones, setReuniones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -117,12 +119,6 @@ export default function VendedorReunionesPage() {
     if (!user?.full_name) return;
     setLoading(true);
     try {
-      const currentYear = new Date().getFullYear();
-      const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-      const lastDay = new Date(currentYear, parseInt(currentMonth) - 1, 0).getDate();
-      const desde = `${currentYear}-${currentMonth}-01`;
-      const hasta = `${currentYear}-${currentMonth}-${String(lastDay).padStart(2, '0')}`;
-
       const result = await API.reuniones(desde, hasta, 200, 0, { nombre: user.full_name });
       const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
       setReuniones(list);
@@ -131,7 +127,7 @@ export default function VendedorReunionesPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.full_name]);
+  }, [user?.full_name, desde, hasta]);
 
   useEffect(() => {
     fetchReuniones();

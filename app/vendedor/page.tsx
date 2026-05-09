@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useVendedorFilters } from '@/lib/vendedor-filters';
 import { API } from '@/services/api';
 import { KPICard } from '@/components/kpi/KPICard';
 import { ChartCard } from '@/components/charts/ChartCard';
@@ -17,45 +18,10 @@ const COLORS = {
   primary: '#1F1D3D',
 };
 
-const MONTHS = [
-  { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' },
-  { value: '03', label: 'Marzo' }, { value: '04', label: 'Abril' },
-  { value: '05', label: 'Mayo' }, { value: '06', label: 'Junio' },
-  { value: '07', label: 'Julio' }, { value: '08', label: 'Agosto' },
-  { value: '09', label: 'Septiembre' }, { value: '10', label: 'Octubre' },
-  { value: '11', label: 'Noviembre' }, { value: '12', label: 'Diciembre' },
-];
-
-function getDefaultDates() {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-  const lastDay = new Date(currentYear, parseInt(currentMonth) - 1, 0).getDate();
-  return {
-    desde: `${currentYear}-${currentMonth}-01`,
-    hasta: `${currentYear}-${currentMonth}-${String(lastDay).padStart(2, '0')}`,
-  };
-}
-
-function getMonthFromDate(dateStr: string): { month: string; year: string } {
-  if (!dateStr) return { month: '', year: '' };
-  const [year, month] = dateStr.split('-');
-  return { month, year };
-}
-
-function setMonthFn(month: string, year: string): { desde: string; hasta: string } {
-  const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-  return {
-    desde: `${year}-${month}-01`,
-    hasta: `${year}-${month}-${String(lastDay).padStart(2, '0')}`,
-  };
-}
-
 export default function VendedorDashboard() {
   const { user, loading: authLoading } = useAuth();
-  const defaultDates = getDefaultDates();
+  const { desde, hasta } = useVendedorFilters();
 
-  const [desde, setDesde] = useState(defaultDates.desde);
-  const [hasta, setHasta] = useState(defaultDates.hasta);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,44 +39,6 @@ export default function VendedorDashboard() {
       setLoading(false);
     });
   }, [user, desde, hasta]);
-
-  const handleMonthChange = (newMonth: string) => {
-    const { year } = getMonthFromDate(desde);
-    const dates = setMonthFn(newMonth, year || String(new Date().getFullYear()));
-    setDesde(dates.desde);
-    setHasta(dates.hasta);
-  };
-
-  const handleYearChange = (newYear: string) => {
-    const { month } = getMonthFromDate(desde);
-    const dates = setMonthFn(month || '01', newYear);
-    setDesde(dates.desde);
-    setHasta(dates.hasta);
-  };
-
-  const handleFiltrar = () => {
-    if (!user) return;
-    setLoading(true);
-    API.dashboard(
-      desde, hasta, 30, 40,
-      { pais: user.country_code || undefined, asesor: user.full_name }
-    ).then(result => {
-      setData(result);
-      setLoading(false);
-    }).catch(err => {
-      console.error('Error:', err);
-      setLoading(false);
-    });
-  };
-
-  const handleLimpiar = () => {
-    const d = getDefaultDates();
-    setDesde(d.desde);
-    setHasta(d.hasta);
-  };
-
-  const { month, year } = getMonthFromDate(desde);
-  const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
 
   const resumen = data?.resumen || {};
   const leadsPorStage = data?.leads_por_stage || [];
@@ -148,28 +76,6 @@ export default function VendedorDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4 pb-4 border-b border-[#EEEEEC]">
-        <div className="flex items-center gap-2">
-          <select value={month} onChange={(e) => handleMonthChange(e.target.value)}
-            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer">
-            <option value="">Mes</option>
-            {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-          <select value={year} onChange={(e) => handleYearChange(e.target.value)}
-            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer">
-            {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
-          </select>
-        </div>
-        <button onClick={handleFiltrar}
-          className="px-3 py-1.5 text-xs font-medium bg-[#1F1D3D] text-white rounded hover:bg-[#35325B] transition-colors">
-          Filtrar
-        </button>
-        <button onClick={handleLimpiar}
-          className="px-3 py-1.5 text-xs font-medium text-[#35325B] border border-[#EEEEEC] rounded hover:bg-[#EEEEEC] transition-colors">
-          Limpiar
-        </button>
-      </div>
-
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="Leads Aceptados" value={kpis.leads} icon={Users} className="delay-1" />
         <KPICard label="Cerrados Ganados" value={kpis.cerradosGanados} icon={CheckCircle} className="delay-2" />
