@@ -29,20 +29,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
+      .then(r => {
+        if (r.status === 401) return null;
+        return r.ok ? r.json() : null;
+      })
       .then(data => {
-        if (data) {
-          const u: ApiUser = {
-            id: data.id,
-            email: data.email,
-            full_name: data.full_name,
-            role: data.role,
-            country_code: data.country_code,
-            is_active: data.is_active,
-            advisorName: data.full_name,
-          };
-          setUser(u);
+        if (!data) {
+          router.push('/login');
+          return;
         }
+        const u: ApiUser = {
+          id: data.id,
+          email: data.email,
+          full_name: data.full_name,
+          role: data.role,
+          country_code: data.country_code,
+          is_active: data.is_active,
+          advisorName: data.full_name,
+        };
+        setUser(u);
         setLoading(false);
       })
       .catch(() => {
