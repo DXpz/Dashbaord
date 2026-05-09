@@ -1,57 +1,87 @@
 import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
 
-const COOKIE_NAME = 'session';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'dashboard-secret-key-2026';
+const COOKIE_NAME = 'access_token';
+const UPSTREAM = process.env.API_UPSTREAM || 'http://200.35.189.139';
 
-export type UserRole = 'admin' | 'vendedor';
-
-export interface User {
-  id: string;
+export interface ApiUser {
+  id: number;
   email: string;
-  name: string;
-  role: UserRole;
-  advisorName?: string;
-  pais?: string;
+  full_name: string;
+  role: string;
+  country_code: string;
+  is_active: boolean;
 }
 
-const DEMO_USERS: Array<User & { password: string }> = [
-  { id: '1', email: 'admin@dashboard.com', password: 'admin123', name: 'Administrador', role: 'admin' },
-  { id: '2', email: 'esau@vendedor.com', password: 'vendedor123', name: 'Esau Vides', role: 'vendedor', advisorName: 'Esau Vides', pais: 'SV' },
-  { id: '3', email: 'erick@vendedor.com', password: 'vendedor123', name: 'Erick Revelo', role: 'vendedor', advisorName: 'Erick Revelo', pais: 'SV' },
-  { id: '4', email: 'mario@vendedor.com', password: 'vendedor123', name: 'Mario Ceron', role: 'vendedor', advisorName: 'Mario Ceron', pais: 'SV' },
-];
-
-function encodeSession(user: User): string {
-  const payload = { ...user, exp: Date.now() + 1000 * 60 * 60 * 24 };
-  return Buffer.from(JSON.stringify(payload)).toString('base64');
-}
-
-function decodeSession(token: string): User | null {
+function parseJwtPayload(token: string): any | null {
   try {
-    const payload = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
-    if (Date.now() > payload.exp) return null;
-    return { id: payload.id, email: payload.email, name: payload.name, role: payload.role, advisorName: payload.advisorName, pais: payload.pais };
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64').toString('utf-8');
+    return JSON.parse(payload);
   } catch {
     return null;
   }
 }
 
-export async function getSession(): Promise<User | null> {
+export function getTokenFromRequest(req: NextRequest): string | null {
+  const cookieToken = req.cookies.get(COOKIE_NAME)?.value;
+  if (cookieToken) return cookieToken;
+  const authHeader = req.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.slice(7);
+  }
+  return null;
+}
+
+export async function getSessionFromCookie(): Promise<ApiUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
-  return decodeSession(token);
+  const payload = parseJwtPayload(token);
+  if (!payload) return null;
+  if (Date.now() / 1000 > payload.exp) return null;
+  return {
+    id: payload.sub,
+    email: payload.email,
+    full_name: payload.full_name || '',
+    role: payload.role,
+    country_code: payload.country_code || '',
+    is_active: true,
+  };
 }
 
-export async function createSession(user: User): Promise<string> {
-  return encodeSession(user);
+export async function callAuthApi(
+  path: string,
+  method: string,
+  body?: Record<string, any>,
+  req?: Request
+) {
+  const upstreamPath = `/api/auth${path}`;
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const url = isHttps
+    ? `/api/proxy?_path=${encodeURIComponent(upstreamPath.slice(1))}`
+    : `${UPSTREAM}${upstreamPath}`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-API-KEY': 'RedApi_2026_SuperSegura_9XK2',
+    ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' }),
+  };
+
+  const token = req ? getTokenFromRequest(new NextRequest(req.url)) : null;
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(url, {
+    method,
+    headers,
+    credentials: 'include',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  return res;
 }
 
-export function validateCredentials(email: string, password: string): User | null {
-  const found = DEMO_USERS.find(u => u.email === email && u.password === password);
-  if (!found) return null;
-  const { password: _, ...user } = found;
-  return user;
+export function isApiError(data: any): data is { detail: string } {
+  return data && typeof data === 'object' && 'detail' in data;
 }
-
-export const DEMO_CREDENTIALS = DEMO_USERS.map(u => ({ email: u.email, role: u.role, name: u.name }));

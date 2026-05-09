@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
 
 const PUBLIC_PATHS = ['/login', '/api/auth'];
+
+function parseJwtPayload(token: string): any | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    return JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -10,25 +19,28 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const cookieStore = req.cookies;
-  const token = cookieStore.get('session')?.value;
-  let user = null;
+  const token = req.cookies.get('access_token')?.value;
+  let userRole = null;
+
   if (token) {
-    const payload = Buffer.from(token, 'base64').toString('utf-8');
-    try {
-      user = JSON.parse(payload);
-    } catch { /* invalid */ }
+    const payload = parseJwtPayload(token);
+    if (payload && Date.now() / 1000 < payload.exp) {
+      userRole = payload.role;
+    }
   }
 
-  if (!user) {
+  if (!userRole) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  if (pathname.startsWith('/vendedor') && user.role !== 'vendedor') {
-    return NextResponse.redirect(new URL('/', req.url));
+  if (pathname.startsWith('/vendedor')) {
+    if (userRole !== 'advisor') {
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+    return NextResponse.next();
   }
 
-  if ((pathname === '/' || pathname.startsWith('/asesores') || pathname.startsWith('/propuestas') || pathname.startsWith('/negociacion') || pathname.startsWith('/reuniones') || pathname.startsWith('/origen-leads') || pathname.startsWith('/gestion-asesores') || pathname.startsWith('/round-robin')) && user.role === 'vendedor') {
+  if ((pathname === '/' || pathname.startsWith('/asesores') || pathname.startsWith('/propuestas') || pathname.startsWith('/negociacion') || pathname.startsWith('/reuniones') || pathname.startsWith('/origen-leads') || pathname.startsWith('/gestion-asesores') || pathname.startsWith('/round-robin')) && userRole === 'advisor') {
     return NextResponse.redirect(new URL('/vendedor', req.url));
   }
 

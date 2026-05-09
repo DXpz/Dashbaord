@@ -20,10 +20,10 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
         <div className="p-4 border-b border-[#EEEEEC]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-[#1F1D3D] rounded-lg flex items-center justify-center">
-              <span className="text-white text-xs font-bold">{user?.name?.[0] ?? 'V'}</span>
+              <span className="text-white text-xs font-bold">{user?.full_name?.[0] ?? 'V'}</span>
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#1F1D3D]">{user?.name}</p>
+              <p className="text-sm font-semibold text-[#1F1D3D]">{user?.full_name}</p>
               <p className="text-xs text-[#B5B5AE] capitalize">{user?.role}</p>
             </div>
           </div>

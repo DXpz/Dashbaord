@@ -20,7 +20,12 @@ const COLORS = {
 
 export default function VendedorDashboard() {
   const { user } = useAuth();
-  const [filters, setFilters] = useState<FiltersState>({ desde: '', hasta: '', pais: user?.pais || '', asesor: user?.advisorName || '' });
+  const [filters, setFilters] = useState<FiltersState>({
+    desde: '',
+    hasta: '',
+    pais: user?.country_code || '',
+    asesor: user?.advisorName || user?.full_name || '',
+  });
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +45,7 @@ export default function VendedorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.advisorName, user?.pais]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.advisorName, user?.country_code]);
 
   useEffect(() => {
     fetchData();
