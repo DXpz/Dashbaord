@@ -89,6 +89,7 @@ export default function VendedorDashboard() {
 
   useEffect(() => {
     if (!user || !filters.asesor) return;
+    console.log('[VendedorDashboard] running effect, user:', user.full_name, 'asesor:', filters.asesor);
     fetchData();
   }, [fetchData, user, filters.asesor]);
 
