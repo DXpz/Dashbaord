@@ -1,15 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
-  const upstreamUrl = `http://200.35.189.139/api/auth/login`;
 
   try {
-    const upstream = await fetch(upstreamUrl, {
+    const upstream = await fetch('http://200.35.189.139/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': 'RedApi_2026_SuperSegura_9XK2',
+        'X-API-KEY': process.env.API_KEY || 'RedApi_2026_SuperSegura_9XK2',
         'ngrok-skip-browser-warning': 'true',
       },
       body: JSON.stringify({ email, password }),
@@ -21,7 +20,17 @@ export async function POST(req: Request) {
       return NextResponse.json(data, { status: upstream.status });
     }
 
-    return NextResponse.json(data);
+    const cookieOptions = `Path=/; HttpOnly; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+    const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+
+    return NextResponse.json(
+      { user: data.user },
+      {
+        headers: {
+          'Set-Cookie': `api_token=${data.access_token}; ${cookieOptions}${secureFlag}`,
+        },
+      }
+    );
   } catch (err) {
     console.error('[login route] error:', err);
     return NextResponse.json({ error: 'No se pudo conectar al servidor de autenticación' }, { status: 502 });

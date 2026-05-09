@@ -1,14 +1,13 @@
 /**
- * API Service - Migrated from vanilla JS api.js
- * Preserves all original logic with TypeScript types
- * Uses /api proxy in production (HTTPS), direct call in development (HTTP)
+ * API Service
+ * Browser calls backend directly in development (HTTP)
+ * Uses /api/proxy in production (HTTPS/Vercel) to avoid CORS
  */
 
-const STORAGE_KEY = 'dashboard_api_base';
 const DEFAULT_UPSTREAM = 'http://200.35.189.139';
+const API_KEY = 'RedApi_2026_SuperSegura_9XK2';
 
 const FETCH_TIMEOUT_MS = 25000;
-const HEALTH_TIMEOUT_MS = 90000;
 
 let _cache: any = null;
 let _cacheKey = '';
@@ -19,34 +18,16 @@ function isProduction(): boolean {
 }
 
 function getBase(): string {
-  const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-  if (stored && stored.trim()) return stored.trim().replace(/\/+$/, '');
   return DEFAULT_UPSTREAM;
 }
 
-function getApiKey(): string {
-  return 'RedApi_2026_SuperSegura_9XK2';
+function getProxyEndpoint(path: string, params: Record<string, any>): string {
+  const qs = buildQuery(params);
+  return `/api/proxy?endpoint=${encodeURIComponent(path)}${qs}`;
 }
 
-export function setBase(url: string): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, url.replace(/\/+$/, ''));
-  }
-  _cache = null;
-  _cacheKey = '';
-}
-
-export function isConfigured(): boolean {
-  return !!getBase();
-}
-
-function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
-  const h: Record<string, string> = { 'ngrok-skip-browser-warning': 'true', ...extra };
-  const key = getApiKey();
-  if (key) h['X-API-Key'] = key;
-  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-  if (token) h['Authorization'] = `Bearer ${token}`;
-  return h;
+function timeoutError(ms: number): Error {
+  return new Error(`Tiempo de espera agotado (${Math.round(ms / 1000)} s). Compruebe la conexión.`);
 }
 
 function buildQuery(params: Record<string, any> = {}): string {
@@ -55,7 +36,7 @@ function buildQuery(params: Record<string, any> = {}): string {
     if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
   });
   const str = qs.toString();
-  return str ? `?${str}` : '';
+  return str ? `&${str}` : '';
 }
 
 function normPaisQuery(p: string | null | undefined): string {
@@ -79,16 +60,16 @@ function asesorParam(asesor: string | undefined) {
   return { asesor: String(asesor).trim() };
 }
 
-function timeoutError(ms: number): Error {
-  return new Error(`Tiempo de espera agotado (${Math.round(ms / 1000)} s). Compruebe la conexión.`);
-}
-
 async function fetchJson(url: string, init: RequestInit = {}, ms: number = FETCH_TIMEOUT_MS): Promise<any> {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
   try {
-    const headers = authHeaders(init.headers && typeof init.headers === 'object' ? init.headers as Record<string, string> : {});
-    const res = await fetch(url, { ...init, signal: ctrl.signal, headers });
+    const headers: Record<string, string> = {
+      'X-API-Key': API_KEY,
+      'ngrok-skip-browser-warning': 'true',
+      ...(init.headers as Record<string, string>),
+    };
+    const res = await fetch(url, { ...init, signal: ctrl.signal, headers, credentials: 'include' });
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     return await res.json();
   } catch (e: any) {
@@ -99,66 +80,60 @@ async function fetchJson(url: string, init: RequestInit = {}, ms: number = FETCH
   }
 }
 
+function makeUrl(path: string, params: Record<string, any>): string {
+  if (isProduction()) {
+    return getProxyEndpoint(path, params);
+  }
+  const base = getBase();
+  const qs = buildQuery(params).replace(/^&/, '?');
+  return `${base}/api${path}${qs}`;
+}
+
 async function get(path: string, params: Record<string, any>) {
-  const base = getBase();
-  const qs = buildQuery(params);
-
-  if (isProduction()) {
-    const url = `${path}${qs}`;
-    return fetchJson(url);
-  }
-  const url = `${base}${path}${qs}`;
+  const url = makeUrl(path, params);
   return fetchJson(url);
 }
 
-async function getHealth() {
-  return get('/api/health', {});
+async function post(path: string, body?: any) {
+  let url: string;
+  if (isProduction()) {
+    url = `/api/proxy?endpoint=${encodeURIComponent(path)}`;
+  } else {
+    url = `${getBase()}/api${path}`;
+  }
+  return fetchJson(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
 }
 
-async function apiRoot(method: string, path: string, body?: any) {
-    const base = getBase();
-    const targetPath = path.startsWith('/') ? path : `/${path}`;
-    const useProxy = typeof window !== 'undefined' && window.location.protocol === 'https:';
-    const url = useProxy ? `/api/proxy?_path=${encodeURIComponent(targetPath.slice(5))}` : `${base}${targetPath}`;
-    const opts: RequestInit = { method, headers: authHeaders() };
-    if (body !== undefined && body !== null) {
-      opts.headers = { ...opts.headers as Record<string, string>, 'Content-Type': 'application/json' };
-      opts.body = JSON.stringify(body);
-    }
-    const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-    try {
-      const res = await fetch(url, { ...opts, signal: ctrl.signal });
-      if (!res.ok) {
-        const t = await res.text().catch(() => '');
-        throw new Error(`HTTP ${res.status}: ${t || res.statusText}`);
-      }
-      const ct = res.headers.get('content-type') || '';
-      if (ct.includes('application/json')) return await res.json();
-      return {};
-    } catch (e: any) {
-      if (e?.name === 'AbortError') throw timeoutError(FETCH_TIMEOUT_MS);
-      throw e;
-    } finally {
-      clearTimeout(id);
-    }
-  }
-
-async function getJsonPath(pathWithQuery: string) {
-  const base = getBase();
-  const path = pathWithQuery.startsWith('/') ? pathWithQuery : `/${pathWithQuery}`;
+async function patch(path: string, body?: any) {
+  let url: string;
   if (isProduction()) {
-    return fetchJson(path);
+    url = `/api/proxy?endpoint=${encodeURIComponent(path)}`;
+  } else {
+    url = `${getBase()}/api${path}`;
   }
-  const url = `${base}${path}`;
-  return fetchJson(url);
+  return fetchJson(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+async function del(path: string) {
+  let url: string;
+  if (isProduction()) {
+    url = `/api/proxy?endpoint=${encodeURIComponent(path)}`;
+  } else {
+    url = `${getBase()}/api${path}`;
+  }
+  return fetchJson(url, { method: 'DELETE' });
 }
 
 export const API = {
   getBase,
-  setBase,
-  get apiKey() { return getApiKey(); },
-  isConfigured,
   invalidateCache() { _cache = null; _cacheKey = ''; },
 
   async dashboard(
@@ -171,78 +146,74 @@ export const API = {
     const group_by_asesores = opts.group_by_asesores ?? 'asesor';
     const group_by_propuestas = opts.group_by_propuestas ?? 'rubro';
     const paisCode = normPaisQuery(opts.pais);
-    const base = getBase();
-    const key = `${base}|${getApiKey()}|${desde || ''}|${hasta || ''}|${limite_motivos}|${limite_reuniones_muestra}|${group_by_asesores}|${group_by_propuestas}|${opts.asesor || opts.nombre || ''}|${paisCode}`;
+    const key = `dashboard|${desde}|${hasta}|${limite_motivos}|${limite_reuniones_muestra}|${group_by_asesores}|${group_by_propuestas}|${opts.asesor || opts.nombre || ''}|${paisCode}`;
     if (_cache && _cacheKey === key) return _cache;
-    console.log('[API.dashboard] making request, opts:', opts);
-    const data = await get('/api/metrics/dashboard', {
+    const params = {
       desde, hasta, limite_motivos, limite_reuniones_muestra,
       group_by_asesores, group_by_propuestas,
       ...(opts.asesor ? asesorParam(opts.asesor) : nombreParam(opts.nombre)),
       ...paisParam(paisCode)
-    });
+    };
+    const data = await get('/metrics/dashboard', params);
     _cache = data;
     _cacheKey = key;
     return data;
   },
 
   resumen(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/api/metrics/resumen', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/metrics/resumen', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   asesores(desde: string, hasta: string, group_by = 'asesor', nombre?: string, pais?: string) {
-    return get('/api/metrics/asesores', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/metrics/asesores', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   asesor(nombre: string, desde: string, hasta: string, pais?: string) {
-    console.log('[API.asesor] calling with nombre:', nombre, 'desde:', desde, 'hasta:', hasta, 'pais:', pais);
-    const promise = get('/api/metrics/asesor', { nombre, desde, hasta, ...paisParam(pais) });
-    promise.then((data: any) => console.log('[API.asesor] response keys:', Object.keys(data || {})));
-    return promise;
+    return get('/metrics/asesor', { nombre, desde, hasta, ...paisParam(pais) });
   },
 
   propuestasPorRubro(desde: string, hasta: string, group_by = 'rubro', nombre?: string, pais?: string) {
-    return get('/api/metrics/propuestas-por-rubro', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/metrics/propuestas-por-rubro', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   negociacion(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/api/metrics/negociacion', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/metrics/negociacion', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   motivosPerdida(desde: string, hasta: string, limite = 50, nombre?: string, pais?: string) {
-    return get('/api/metrics/motivos-perdida', { desde, hasta, limite, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/metrics/motivos-perdida', { desde, hasta, limite, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   motivosPerdidaAgrupados(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/api/metrics/motivos-perdida/agrupados', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/metrics/motivos-perdida/agrupados', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   reuniones(desde: string, hasta: string, limite = 200, offset = 0, extra: Record<string, any> = {}) {
-    return get('/api/metrics/reuniones', { desde, hasta, limite, offset, ...extra });
+    return get('/metrics/reuniones', { desde, hasta, limite, offset, ...extra });
   },
 
   listaAsesores(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/api/metrics/lista-asesores', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+    return get('/metrics/lista-asesores', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
   fuentes(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/api/metrics/fuentes', { desde, hasta, ...extra });
+    return get('/metrics/fuentes', { desde, hasta, ...extra });
   },
 
   tiempoRespuesta(desde: string, hasta: string, groupBy = 'asesor', extra: Record<string, any> = {}) {
-    return get('/api/metrics/tiempo-respuesta', { desde, hasta, group_by: groupBy, ...extra });
+    return get('/metrics/tiempo-respuesta', { desde, hasta, group_by: groupBy, ...extra });
   },
 
   nivelesEscalacion(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/api/metrics/niveles-escalacion', { desde, hasta, ...extra });
+    return get('/metrics/niveles-escalacion', { desde, hasta, ...extra });
   },
 
   decisiones(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/api/metrics/decisiones', { desde, hasta, ...extra });
+    return get('/metrics/decisiones', { desde, hasta, ...extra });
   },
 
   roundRobin(pais?: string, incluirInactivos = false) {
-    return get('/api/advisors/round-robin', {
+    return get('/advisors/round-robin', {
       ...(pais ? { pais: normPaisQuery(pais) } : {}),
       ...(incluirInactivos ? { incluir_inactivos: true } : {}),
     });
@@ -256,57 +227,59 @@ export const API = {
       if (o.activo === true || o.activo === false) params.activo = o.activo;
       if (o.pais != null && String(o.pais).trim() !== '') params.pais = normPaisQuery(o.pais);
     }
-    return getJsonPath(`/api/advisors${buildQuery(params)}`);
+    return get('/advisors', params);
   },
 
   advisorsCreate(body: any) {
-    return apiRoot('POST', '/api/advisors', body);
+    return post('/advisors', body);
   },
 
   advisorsPatch(id: string, body: any) {
-    return apiRoot('PATCH', `/api/advisors/${encodeURIComponent(String(id))}`, body);
+    return patch(`/advisors/${encodeURIComponent(String(id))}`, body);
   },
 
   auditPatch(clientId: string, body: any) {
-    return apiRoot('PATCH', `/api/audit/client/${encodeURIComponent(clientId)}`, body);
+    return patch(`/audit/client/${encodeURIComponent(clientId)}`, body);
   },
 
   advisorsDelete(id: string) {
-    return apiRoot('DELETE', `/api/advisors/${encodeURIComponent(String(id))}`);
+    return del(`/advisors/${encodeURIComponent(String(id))}`);
   },
 
-  health: () => getHealth(),
-
   opportunityStages() {
-    return getJsonPath('/api/opportunity-stages');
+    return get('/opportunity-stages', {});
   },
 
   async leadHistory(opportunityNumber: string, mergeAudit = true) {
     const id = opportunityNumber?.trim();
     if (!id) throw new Error('opportunityNumber requerido');
-    return get('/api/history', { opportunityNumber: id, mergeAudit: mergeAudit ? 1 : 0 });
+    return get('/history', { opportunityNumber: id, mergeAudit: mergeAudit ? 1 : 0 });
   },
 
   async propuestaHistory(auditId: string) {
     const id = auditId?.trim();
     if (!id) throw new Error('audit_id requerido');
-    return get(`/api/audit/${encodeURIComponent(id)}/propuesta/history`, {});
+    return get(`/audit/${encodeURIComponent(id)}/propuesta/history`, {});
   },
 
   async propuestaHistoryByClient(clientId: string) {
     const id = clientId?.trim();
     if (!id) throw new Error('client_id requerido');
-    return get(`/api/audit/client/${encodeURIComponent(id)}/propuesta/history`, {});
+    return get(`/audit/client/${encodeURIComponent(clientId)}/propuesta/history`, {});
   },
 
   async auditByClient(clientId: string) {
     const id = clientId?.trim();
     if (!id) throw new Error('client_id requerido');
-    return get(`/api/audit/by-client/${encodeURIComponent(id)}`, {});
+    return get(`/audit/by-client/${encodeURIComponent(id)}`, {});
+  },
+
+  health() {
+    return get('/health', {});
   },
 
   async ping() {
-    try { await getHealth(); return true; }
+    try { await get('/health', {}); return true; }
     catch { return false; }
   }
 };

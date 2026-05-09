@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get('access_token')?.value;
+  const token = req.cookies.get('api_token')?.value;
   let userRole = null;
 
   if (token) {

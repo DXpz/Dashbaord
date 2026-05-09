@@ -1,26 +1,30 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST() {
-  const cookieStore = await cookies();
-  const refreshToken = cookieStore.get('refresh_token')?.value;
+export async function POST(req: NextRequest) {
+  const token = req.cookies.get('api_token')?.value;
 
-  if (refreshToken) {
+  if (token) {
     try {
-      await fetch(`http://200.35.189.139/api/auth/logout`, {
+      await fetch('http://200.35.189.139/api/auth/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-KEY': 'RedApi_2026_SuperSegura_9XK2',
+          'X-API-KEY': process.env.API_KEY || 'RedApi_2026_SuperSegura_9XK2',
           'ngrok-skip-browser-warning': 'true',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ refresh_token: refreshToken }),
       });
     } catch { /* ignore */ }
   }
 
-  const res = NextResponse.json({ ok: true, message: 'Sesión cerrada' });
-  res.cookies.set('access_token', '', { maxAge: 0, path: '/' });
-  res.cookies.set('refresh_token', '', { maxAge: 0, path: '/' });
-  return res;
+  const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+
+  return NextResponse.json(
+    { ok: true, message: 'Sesión cerrada' },
+    {
+      headers: {
+        'Set-Cookie': `api_token=; Path=/; Max-Age=0; SameSite=Lax${secureFlag}`,
+      },
+    }
+  );
 }
