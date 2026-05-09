@@ -53,6 +53,7 @@ function setMonthFn(month: string, year: string): { desde: string; hasta: string
 export default function VendedorDashboard() {
   const { user } = useAuth();
   const defaultDates = getDefaultDates();
+  console.log('[VendedorDashboard] render, user:', user?.full_name, 'loading:', loading, 'data:', !!data);
 
   const [asesor, setAsesor] = useState('');
   const [pais, setPais] = useState('');
