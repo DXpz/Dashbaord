@@ -32,6 +32,7 @@ export default function VendedorDashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      API.invalidateCache();
       const result = await API.dashboard(
         filters.desde || '',
         filters.hasta || '',
@@ -45,7 +46,7 @@ export default function VendedorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.advisorName, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.country_code]);
 
   useEffect(() => {
     fetchData();
