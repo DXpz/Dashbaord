@@ -27,20 +27,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#EEEEEC]">
+    <div className="min-h-screen flex items-center justify-center bg-[#EEEEEC]">
       <div className="absolute inset-0 overflow-hidden">
         <LoginBackground />
       </div>
 
-      <div className="relative z-10 w-full max-w-md mx-auto flex items-center justify-center py-12 px-6">
-        <div className="w-full max-w-sm">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-[#EEEEEC] shadow-xl p-8">
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-[#1F1D3D]">Iniciar sesión</h2>
-              <p className="text-sm text-[#B5B5AE] mt-1">Accede a tu dashboard</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="relative z-10 w-full max-w-sm mx-auto px-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-[#EEEEEC] shadow-xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label htmlFor="email" className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
                   Correo electrónico
@@ -102,43 +96,6 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
-
-            <div className="mt-6 pt-6 border-t border-[#EEEEEC] text-center">
-              <p className="text-xs text-[#B5B5AE]">
-                ¿No tienes cuenta?{' '}
-                <a href="#" className="text-[#1F1D3D] hover:text-[#35325B] font-medium transition-colors">
-                  Solicita acceso
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="relative z-10 hidden lg:flex lg:w-[65%] items-center justify-center p-20">
-        <div className="max-w-3xl">
-          <h1 className="leading-none mb-12 select-none">
-            <span className="block text-[88px] font-bold text-[#1F1D3D] tracking-[-0.04em] uppercase">Métricas</span>
-            <span className="block text-[88px] font-light text-[#1F1D3D] tracking-[-0.04em] uppercase">con asistencia</span>
-            <span className="block text-[88px] font-bold text-[#35325B] tracking-[-0.04em] uppercase mt-2">ASISTENTE IA</span>
-          </h1>
-
-          <div className="ml-2 space-y-5">
-            {[
-              'Análisis predictivo de conversiones',
-              'Seguimiento automático de reuniones',
-              'Dashboard inteligente en tiempo real',
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-[#1F1D3D]/10 flex items-center justify-center flex-shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1F1D3D" strokeWidth="2.5">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <span className="text-sm text-[#35325B]">{item}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
