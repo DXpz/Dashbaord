@@ -15,10 +15,6 @@ const COLORS = {
   medium: '#35325B',
   light: '#B5B5AE',
   accent: '#EEEEEC',
-  primary: '#1F1D3D',
-  success: '#22c55e',
-  danger: '#ef4444',
-  warning: '#eab308',
 };
 
 export default function VendedorDashboard() {
@@ -68,7 +64,7 @@ export default function VendedorDashboard() {
 
   const reunionesChartData = useMemo(() => {
     return {
-      labels: ['Con Retroalimentación', 'Sin Retroalimentación'],
+      labels: ['Con Retro', 'Sin Retro'],
       values: [kpis.reunionesConRetro, kpis.reunionesSinRetro],
     };
   }, [kpis.reunionesConRetro, kpis.reunionesSinRetro]);
@@ -112,7 +108,7 @@ export default function VendedorDashboard() {
         <ChartCard title="Mis Leads por Etapa" subtitle="Pipeline actual">
           <ChartWrapper type="bar" data={{
             labels: stagesChartData.labels,
-            datasets: [{ data: stagesChartData.values, backgroundColor: COLORS.primary, borderRadius: 4, borderSkipped: false }],
+            datasets: [{ data: stagesChartData.values, backgroundColor: COLORS.dark, borderRadius: 4, borderSkipped: false }],
           }} height="280px" />
         </ChartCard>
       )}
@@ -123,7 +119,7 @@ export default function VendedorDashboard() {
             labels: reunionesChartData.labels,
             datasets: [{
               data: reunionesChartData.values,
-              backgroundColor: [COLORS.success, COLORS.danger],
+              backgroundColor: [COLORS.dark, COLORS.light],
               borderWidth: 0,
             }],
           }} height="200px" />
@@ -134,7 +130,7 @@ export default function VendedorDashboard() {
             labels: cierreChartData.labels,
             datasets: [{
               data: cierreChartData.values,
-              backgroundColor: [COLORS.success, COLORS.danger],
+              backgroundColor: [COLORS.dark, COLORS.medium],
               borderWidth: 0,
             }],
           }} height="200px" />
@@ -145,11 +141,21 @@ export default function VendedorDashboard() {
             labels: propuestaChartData.labels,
             datasets: [{
               data: propuestaChartData.values,
-              backgroundColor: [COLORS.medium, COLORS.warning],
+              backgroundColor: [COLORS.medium, COLORS.light],
               borderWidth: 0,
             }],
           }} height="200px" />
         </ChartCard>
+      </div>
+
+      <div className="bg-white border border-[#EEEEEC] p-5">
+        <h3 className="text-sm font-medium text-[#1F1D3D] mb-4">Resumen de Desempeño</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+          <div><span className="text-[#B5B5AE]">Reuniones con Retro</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesConRetro}</p></div>
+          <div><span className="text-[#B5B5AE]">Reuniones Sin Retro</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesSinRetro}</p></div>
+          <div><span className="text-[#B5B5AE]">Propuestas Registradas</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.propuestas}</p></div>
+          <div><span className="text-[#B5B5AE]">Seguimientos</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.seguimientos}</p></div>
+        </div>
       </div>
     </div>
   );
