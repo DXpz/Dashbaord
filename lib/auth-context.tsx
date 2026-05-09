@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .then(data => {
         if (!data) {
-          router.push('/login');
+          setLoading(false);
           return;
         }
         const u: ApiUser = {
@@ -53,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         setUser(null);
         setLoading(false);
-        router.push('/login');
       });
   }, []);
 
