@@ -57,16 +57,13 @@ export function useDashboard(filters: FilterState) {
     setLoading(true);
     setError(null);
     try {
-      console.log('[useDashboard] fetching with filters:', filters);
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
         30,
         40,
-        { pais: filters.pais, nombre: filters.asesor }
+        { pais: filters.pais, nombre: filters.asesor, asesor: filters.asesor }
       );
-      console.log('[useDashboard] result keys:', Object.keys(result || {}));
-      console.log('[useDashboard] resumen fields:', Object.keys(result?.resumen || {}));
       setData(result as DashboardData);
     } catch (err: any) {
       const message = err?.message || err?.cause?.message || 'Error al cargar datos';

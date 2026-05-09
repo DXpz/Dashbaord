@@ -22,28 +22,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const USER_STORAGE_KEY = 'dashboard_user';
-
-function getStoredUser(): ApiUser | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const stored = localStorage.getItem(USER_STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return null;
-}
-
-function setStoredUser(user: ApiUser | null) {
-  if (typeof window === 'undefined') return;
-  if (user) {
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(USER_STORAGE_KEY);
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<ApiUser | null>(() => getStoredUser());
+  const [user, setUser] = useState<ApiUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -62,21 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             advisorName: data.full_name,
           };
           setUser(u);
-          setStoredUser(u);
-        } else {
-          setUser(null);
-          setStoredUser(null);
         }
         setLoading(false);
       })
       .catch(() => {
-        const stored = getStoredUser();
-        if (stored) {
-          setUser(stored);
-        } else {
-          setUser(null);
-          setStoredUser(null);
-        }
+        setUser(null);
         setLoading(false);
       });
   }, []);
@@ -103,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         advisorName: data.user.full_name,
       };
       setUser(u);
-      setStoredUser(u);
       return { ok: true };
     } catch {
       return { ok: false, error: 'No se pudo conectar al servidor' };
@@ -113,7 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
-    setStoredUser(null);
     router.push('/login');
   };
 

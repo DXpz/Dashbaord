@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { API } from '@/services/api';
+import { useDashboard } from '@/hooks/useDashboard';
 import { KPICard } from '@/components/kpi/KPICard';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
@@ -56,72 +56,14 @@ export default function VendedorDashboard() {
   const { user } = useAuth();
   const defaultDates = getDefaultDates();
 
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const filters = useMemo(() => ({
+    desde: defaultDates.desde,
+    hasta: defaultDates.hasta,
+    pais: user?.country_code || '',
+    asesor: user?.full_name || '',
+  }), [user]);
 
-  const asesorRef = useRef('');
-  const paisRef = useRef('');
-  const desdeRef = useRef(defaultDates.desde);
-  const hastaRef = useRef(defaultDates.hasta);
-
-  const [asesorReady, setAsesorReady] = useState(false);
-
-  useEffect(() => {
-    if (user && user.full_name) {
-      asesorRef.current = user.full_name;
-      paisRef.current = user.country_code || '';
-      setAsesorReady(true);
-    }
-  }, [user]);
-
-  const fetchData = useCallback(async () => {
-    if (!asesorRef.current) return;
-    setLoading(true);
-    try {
-      const result = await API.dashboard(
-        desdeRef.current || '',
-        hastaRef.current || '',
-        30,
-        40,
-        { pais: paisRef.current || undefined, asesor: asesorRef.current }
-      );
-      setData(result);
-    } catch (err) {
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (asesorReady) fetchData();
-  }, [asesorReady, fetchData]);
-
-  const handleMonthChange = (newMonth: string) => {
-    const { month, year } = getMonthFromDate(desdeRef.current);
-    const dates = setMonth(newMonth, year || String(new Date().getFullYear()));
-    desdeRef.current = dates.desde;
-    hastaRef.current = dates.hasta;
-  };
-
-  const handleYearChange = (newYear: string) => {
-    const { month } = getMonthFromDate(desdeRef.current);
-    const dates = setMonth(month || String(new Date().getMonth() + 1).padStart(2, '0'), newYear);
-    desdeRef.current = dates.desde;
-    hastaRef.current = dates.hasta;
-  };
-
-  const handleFiltrar = () => { fetchData(); };
-
-  const handleLimpiar = () => {
-    const d = getDefaultDates();
-    desdeRef.current = d.desde;
-    hastaRef.current = d.hasta;
-  };
-
-  const currentMonth = getMonthFromDate(desdeRef.current).month;
-  const currentYear = getMonthFromDate(desdeRef.current).year || String(new Date().getFullYear());
-  const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
+  const { data, loading } = useDashboard(filters);
 
   const resumen = data?.resumen || {};
   const leadsPorStage = data?.leads_por_stage || [];
@@ -160,39 +102,11 @@ export default function VendedorDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4 pb-4 border-b border-[#EEEEEC]">
-        <div className="flex items-center gap-2">
-          <select
-            value={currentMonth}
-            onChange={(e) => handleMonthChange(e.target.value)}
-            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
-          >
-            <option value="">Mes</option>
-            {MONTHS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-          <select
-            value={currentYear}
-            onChange={(e) => handleYearChange(e.target.value)}
-            className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
-          >
-            {years.map((y) => (
-              <option key={y} value={String(y)}>{y}</option>
-            ))}
-          </select>
+        <div className="flex items-center gap-2 text-sm text-[#35325B]">
+          <span>{user?.full_name || ''}</span>
+          <span className="text-[#B5B5AE]">•</span>
+          <span>{user?.country_code || ''}</span>
         </div>
-        <button
-          onClick={handleFiltrar}
-          className="px-3 py-1.5 text-xs font-medium bg-[#1F1D3D] text-white rounded hover:bg-[#35325B] transition-colors"
-        >
-          Filtrar
-        </button>
-        <button
-          onClick={handleLimpiar}
-          className="px-3 py-1.5 text-xs font-medium text-[#35325B] border border-[#EEEEEC] rounded hover:bg-[#EEEEEC] transition-colors"
-        >
-          Limpiar
-        </button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
