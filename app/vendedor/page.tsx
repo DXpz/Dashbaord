@@ -69,15 +69,16 @@ export default function VendedorDashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    if (!filters.asesor) return;
     setLoading(true);
     try {
-      const result = await API.asesor(
-        filters.asesor,
+      const result = await API.dashboard(
         filters.desde || '',
         filters.hasta || '',
-        filters.pais || undefined
+        30,
+        40,
+        { pais: filters.pais || undefined, asesor: filters.asesor || undefined }
       );
-      console.log('[VendedorDashboard] result.apisoresor:', JSON.stringify(result?.asesor)?.slice(0, 500));
       setData(result);
     } catch (err) {
       console.error('Error:', err);
@@ -89,7 +90,7 @@ export default function VendedorDashboard() {
   useEffect(() => {
     if (!user || !filters.asesor) return;
     fetchData();
-  }, [fetchData, user]);
+  }, [fetchData, user, filters.asesor]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -116,15 +117,15 @@ export default function VendedorDashboard() {
   const { month, year } = getMonthFromDate(filters.desde);
   const years = [currentYear - 1, currentYear, currentYear + 1];
 
-  const resumen = data?.asesor?.resumen || {};
-  const stages = data?.asesor?.stages || [];
+  const resumen = data?.resumen || {};
+  const leadsPorStage = data?.leads_por_stage || [];
 
   const kpis = useMemo(() => ({
     leads: resumen.leads_aceptados ?? 0,
-    cerradosGanados: resumen.cerrados_ganados ?? 0,
-    cerradosPerdidos: resumen.cerrados_perdidos ?? 0,
-    tasaAceptacion: resumen.tasa_aceptacion ?? 0,
-    tasaCierre: resumen.tasa_cierre_ganado ?? 0,
+    cerradosGanados: resumen.ventas_cerradas ?? 0,
+    cerradosPerdidos: resumen.ventas_perdidas ?? 0,
+    tasaAceptacion: resumen.total_leads_general ? Math.round((resumen.leads_aceptados / resumen.total_leads_general) * 100) : 0,
+    tasaCierre: resumen.cerrados_total ? Math.round((resumen.ventas_cerradas / resumen.cerrados_total) * 100) : 0,
     reunionesConRetro: resumen.reuniones_con_retro ?? 0,
     reunionesSinRetro: resumen.reuniones_sin_retro ?? 0,
     propuestas: resumen.propuestas_registradas ?? 0,
@@ -132,12 +133,12 @@ export default function VendedorDashboard() {
   }), [resumen]);
 
   const stagesChartData = useMemo(() => {
-    if (!stages.length) return null;
+    if (!leadsPorStage.length) return null;
     return {
-      labels: stages.map((s: any) => s.label || s.nombre || '—'),
-      values: stages.map((s: any) => s.leads || 0),
+      labels: leadsPorStage.map((s: any) => s.stage_label || '—'),
+      values: leadsPorStage.map((s: any) => s.total || 0),
     };
-  }, [stages]);
+  }, [leadsPorStage]);
 
   if (loading) {
     return (
