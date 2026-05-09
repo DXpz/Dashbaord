@@ -77,6 +77,7 @@ export default function VendedorDashboard() {
         filters.hasta || '',
         filters.pais || undefined
       );
+      console.log('[VendedorDashboard] result.apisoresor:', JSON.stringify(result?.asesor)?.slice(0, 500));
       setData(result);
     } catch (err) {
       console.error('Error:', err);
