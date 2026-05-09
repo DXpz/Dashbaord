@@ -135,7 +135,7 @@ export default function VendedorDashboard() {
     };
   }, [leadsPorStage]);
 
-  if (loading && !data) {
+  if (loading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
