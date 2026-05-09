@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    fetch('/api/auth/me', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         setUser(null);
         setLoading(false);
+        router.push('/login');
       });
   }, []);
 

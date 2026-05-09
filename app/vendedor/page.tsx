@@ -47,7 +47,7 @@ function setMonth(month: string, year: string): { desde: string; hasta: string }
 }
 
 export default function VendedorDashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const currentYear = new Date().getFullYear();
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
   const currentDates = setMonth(currentMonth, String(currentYear));
@@ -63,9 +63,7 @@ export default function VendedorDashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    console.log('[VendedorDashboard] fetchData called, filters.asesor:', filters.asesor);
     if (!filters.asesor) return;
-    console.log('[VendedorDashboard] fetchData START');
     setLoading(true);
     try {
       const result = await API.dashboard(
@@ -83,21 +81,20 @@ export default function VendedorDashboard() {
     }
   }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
 
-  console.log('[VendedorDashboard] mount', 'user:', user?.full_name, 'asesor:', filters.asesor);
-
   useEffect(() => {
-    console.log('[VendedorDashboard] effect#1 user loaded, user:', user?.full_name, 'asesor:', filters.asesor);
+    if (authLoading) return;
+    if (user === null) return;
     if (!user) return;
     if (!filters.asesor && user.full_name) {
       setFilters(f => ({ ...f, pais: user.country_code || '', asesor: user.full_name }));
     }
-  }, [user, filters.asesor]);
+  }, [user, filters.asesor, authLoading]);
 
   useEffect(() => {
-    console.log('[VendedorDashboard] effect#2 fetch, user:', user?.full_name, 'asesor:', filters.asesor);
+    if (authLoading) return;
     if (!user || !filters.asesor) return;
     fetchData();
-  }, [user, filters.asesor, fetchData]);
+  }, [user, filters.asesor, fetchData, authLoading]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
