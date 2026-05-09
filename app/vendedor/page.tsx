@@ -38,7 +38,7 @@ export default function VendedorDashboard() {
       const result = useAsesor
         ? await API.asesor(filters.asesor, filters.desde || '', filters.hasta || '', filters.pais || undefined)
         : await API.dashboard(filters.desde || '', filters.hasta || '', 30, 40, { pais: filters.pais || undefined });
-      console.log('[VendedorDashboard] data loaded, keys:', Object.keys(result || {}));
+      console.log('[VendedorDashboard] data loaded, keys:', Object.keys(result || {}), 'asesor:', result?.asesor, 'asesor.resumen:', result?.asesor?.resumen);
       setData(result);
     } catch (err) {
       console.error('Error:', err);
@@ -53,7 +53,7 @@ export default function VendedorDashboard() {
     fetchData();
   }, [fetchData]);
 
-  const resumen = data?.resumen || {};
+  const resumen = data?.asesor?.resumen || data?.asesor || {};
 
   const kpis = useMemo(() => ({
     leads: resumen.leads_aceptados ?? 0,
@@ -68,7 +68,7 @@ export default function VendedorDashboard() {
   }), [resumen]);
 
   const stagesChartData = useMemo(() => {
-    const stages = data?.stages || [];
+    const stages = data?.asesor?.stages || [];
     if (!stages.length) return null;
     return {
       labels: stages.map((s: any) => s.label || s.nombre || '—'),
