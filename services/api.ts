@@ -172,6 +172,7 @@ export const API = {
     const base = getBase();
     const key = `${base}|${getApiKey()}|${desde || ''}|${hasta || ''}|${limite_motivos}|${limite_reuniones_muestra}|${group_by_asesores}|${group_by_propuestas}|${opts.asesor || opts.nombre || ''}|${paisCode}`;
     if (_cache && _cacheKey === key) return _cache;
+    console.log('[API.dashboard] making request, opts:', opts);
     const data = await get('/api/metrics/dashboard', {
       desde, hasta, limite_motivos, limite_reuniones_muestra,
       group_by_asesores, group_by_propuestas,
@@ -192,6 +193,7 @@ export const API = {
   },
 
   asesor(nombre: string, desde: string, hasta: string, pais?: string) {
+    console.log('[API.asesor] calling with nombre:', nombre, 'desde:', desde, 'hasta:', hasta, 'pais:', pais);
     return get('/api/metrics/asesor', { nombre, desde, hasta, ...paisParam(pais) });
   },
 

@@ -32,7 +32,10 @@ export default function VendedorDashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = filters.asesor
+      console.log('[VendedorDashboard] fetchData called, asesor:', filters.asesor);
+      const useAsesor = Boolean(filters.asesor && filters.asesor.trim());
+      console.log('[VendedorDashboard] useAsesor:', useAsesor);
+      const result = useAsesor
         ? await API.asesor(filters.asesor, filters.desde || '', filters.hasta || '', filters.pais || undefined)
         : await API.dashboard(filters.desde || '', filters.hasta || '', 30, 40, { pais: filters.pais || undefined });
       console.log('[VendedorDashboard] data loaded, resumen:', result?.resumen);
