@@ -19,6 +19,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
   const token = req.cookies.get('api_token')?.value;
   let userRole = null;
 
