@@ -69,10 +69,6 @@ export default function VendedorDashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    if (!filters.asesor) {
-      console.log('[VendedorDashboard] fetchData skipped, no asesor');
-      return;
-    }
     console.log('[VendedorDashboard] fetchData START, filters:', filters);
     setLoading(true);
     try {
@@ -93,13 +89,12 @@ export default function VendedorDashboard() {
 
   useEffect(() => {
     console.log('[VendedorDashboard] effect running, user:', user?.full_name, 'asesor:', filters.asesor);
-    if (!user || !filters.asesor) {
-      console.log('[VendedorDashboard] effect early return, user:', user, 'asesor:', filters.asesor);
+    if (!user) {
+      console.log('[VendedorDashboard] effect waiting for user');
       return;
     }
-    console.log('[VendedorDashboard] effect calling fetchData');
     fetchData();
-  }, [fetchData, user, filters.asesor]);
+  }, [fetchData, user]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
