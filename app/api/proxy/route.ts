@@ -33,7 +33,7 @@ async function handleRequest(req: NextRequest) {
     if (key !== 'endpoint') qs.set(key, value);
   });
   const queryString = qs.toString();
-  const target = `${base}/api/${suffix}${queryString ? `?${queryString}` : ''}`;
+  const target = `${base}/api${suffix}${queryString ? `?${queryString}` : ''}`;
 
   const upstreamHeaders: Record<string, string> = {
     'X-API-KEY': process.env.API_KEY || 'RedApi_2026_SuperSegura_9XK2',
