@@ -1,14 +1,96 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/lib/auth-context';
+import { API } from '@/services/api';
+import { useVendedorFilters } from '@/lib/vendedor-filters';
+import { Search, ChevronDown, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface LeadOption {
+  client_id: string;
+  client_name: string;
+  opportunity_stage_label: string;
+}
 
 export default function VendedorFormularioPage() {
-  const [selectedLead, setSelectedLead] = useState('');
+  const { user } = useAuth();
+  const { desde, hasta } = useVendedorFilters();
+  const [leads, setLeads] = useState<LeadOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<LeadOption | null>(null);
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    if (!user?.full_name) return;
+    
+    async function fetchLeads() {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const result = await API.reuniones(desde, hasta, 200, 0, { nombre: user.full_name });
+        const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
+        
+        const leadsWithStage = list
+          .filter((r: any) => {
+            const stage = r.opportunity_stage_label || '';
+            const closed = stage.toLowerCase().includes('cierre') || r.resultado_venta === 'cerrada' || r.resultado_venta === 'perdida';
+            return !closed;
+          })
+          .map((r: any) => {
+            const stage = r.opportunity_stage_label || '';
+            return {
+              client_id: r.client_id || r.opportunity_number || '',
+              client_name: r.client_name || r.cliente || '',
+              opportunity_stage_label: r.opportunity_stage_label || stage || '',
+            };
+          });
+        
+        const uniqueLeads = leadsWithStage.reduce((acc: LeadOption[], lead: LeadOption) => {
+          if (!acc.find(l => l.client_id === lead.client_id)) {
+            acc.push(lead);
+          }
+          return acc;
+        }, []);
+        
+        setLeads(uniqueLeads);
+      } catch (err) {
+        console.error('Error fetching leads:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchLeads();
+  }, [user?.full_name, desde, hasta]);
+
+  const filteredLeads = useMemo(() => {
+    if (!searchTerm) return leads.slice(0, 20);
+    const q = searchTerm.toLowerCase();
+    return leads
+      .filter(l => 
+        l.client_id.toLowerCase().includes(q) || 
+        l.client_name.toLowerCase().includes(q)
+      )
+      .slice(0, 20);
+  }, [leads, searchTerm]);
+
+  const handleSelectLead = (lead: LeadOption) => {
+    setSelectedLead(lead);
+    setSearchTerm(lead.client_id);
+    setShowDropdown(false);
+  };
+
+  const handleOpenForm = () => {
+    if (selectedLead) {
+      setShowForm(true);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -18,31 +100,85 @@ export default function VendedorFormularioPage() {
         <div className="space-y-4">
           <div>
             <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide mb-1.5 block">
-              Ingresa el ID del Lead
+              Selecciona el Lead
             </label>
-            <div className="flex gap-3">
-              <Input
-                placeholder="Ej. LD1234"
-                value={selectedLead}
-                onChange={(e) => setSelectedLead(e.target.value)}
-                className="max-w-xs"
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Search className="h-4 w-4 text-[#B5B5AE]" />
+              </div>
+              <input
+                type="text"
+                placeholder="Busca por LD o nombre..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setShowDropdown(true);
+                  if (!e.target.value) setSelectedLead(null);
+                }}
+                onFocus={() => setShowDropdown(true)}
+                className="w-full max-w-xs pl-9 pr-8 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] transition-colors"
+                disabled={loading}
               />
-              <Button
-                onClick={() => selectedLead.trim() && setShowForm(true)}
-                disabled={!selectedLead.trim()}
-                className="bg-[#1F1D3D] hover:bg-[#35325B] text-white"
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Actualizar Lead
-              </Button>
+              {searchTerm && (
+                <button
+                  onClick={() => { setSearchTerm(''); setSelectedLead(null); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#B5B5AE] hover:text-[#35325B]"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
+
+            {showDropdown && searchTerm && filteredLeads.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full max-w-xs bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                {filteredLeads.map((lead) => (
+                  <button
+                    key={lead.client_id}
+                    onClick={() => handleSelectLead(lead)}
+                    className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</p>
+                      <p className="text-xs text-[#B5B5AE]">{lead.client_name}</p>
+                    </div>
+                    <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">
+                      {lead.opportunity_stage_label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {showDropdown && searchTerm && filteredLeads.length === 0 && !loading && (
+              <div className="absolute z-10 mt-1 w-full max-w-xs bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
+                No se encontraron leads
+              </div>
+            )}
+
+            {loading && (
+              <p className="text-xs text-[#B5B5AE] mt-1">Cargando leads...</p>
+            )}
           </div>
+
+          <Button
+            onClick={handleOpenForm}
+            disabled={!selectedLead}
+            className="bg-[#1F1D3D] hover:bg-[#35325B] text-white"
+          >
+            Actualizar Lead
+          </Button>
+
+          {selectedLead && (
+            <p className="text-xs text-[#B5B5AE]">
+              Lead seleccionado: <span className="font-medium text-[#1F1D3D]">{selectedLead.client_id}</span> - {selectedLead.client_name}
+            </p>
+          )}
         </div>
       </div>
 
       {showForm && selectedLead && (
         <Formulario
-          clientId={selectedLead}
+          clientId={selectedLead.client_id}
           initialStage="REUNION"
           onClose={() => setShowForm(false)}
         />
