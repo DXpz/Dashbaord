@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API } from '@/services/api';
 import { KPICard } from '@/components/kpi/KPICard';
@@ -51,43 +51,28 @@ function setMonthFn(month: string, year: string): { desde: string; hasta: string
 }
 
 export default function VendedorDashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const defaultDates = getDefaultDates();
-  console.log('[VendedorDashboard] render, user:', user?.full_name, 'loading:', loading, 'data:', !!data);
 
-  const [asesor, setAsesor] = useState('');
-  const [pais, setPais] = useState('');
   const [desde, setDesde] = useState(defaultDates.desde);
   const [hasta, setHasta] = useState(defaultDates.hasta);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
-    if (!asesor) return;
+  useEffect(() => {
+    if (!user) return;
     setLoading(true);
-    try {
-      const result = await API.dashboard(
-        desde, hasta, 30, 40,
-        { pais: pais || undefined, asesor }
-      );
+    API.dashboard(
+      desde, hasta, 30, 40,
+      { pais: user.country_code || undefined, asesor: user.full_name }
+    ).then(result => {
       setData(result);
-    } catch (err) {
-      console.error('Error:', err);
-    } finally {
       setLoading(false);
-    }
-  }, [asesor, desde, hasta, pais]);
-
-  useEffect(() => {
-    if (user?.full_name) {
-      setAsesor(user.full_name);
-      setPais(user.country_code || '');
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (asesor) fetchData();
-  }, [asesor, fetchData]);
+    }).catch(err => {
+      console.error('Error:', err);
+      setLoading(false);
+    });
+  }, [user, desde, hasta]);
 
   const handleMonthChange = (newMonth: string) => {
     const { year } = getMonthFromDate(desde);
@@ -103,7 +88,21 @@ export default function VendedorDashboard() {
     setHasta(dates.hasta);
   };
 
-  const handleFiltrar = () => { fetchData(); };
+  const handleFiltrar = () => {
+    if (!user) return;
+    setLoading(true);
+    API.dashboard(
+      desde, hasta, 30, 40,
+      { pais: user.country_code || undefined, asesor: user.full_name }
+    ).then(result => {
+      setData(result);
+      setLoading(false);
+    }).catch(err => {
+      console.error('Error:', err);
+      setLoading(false);
+    });
+  };
+
   const handleLimpiar = () => {
     const d = getDefaultDates();
     setDesde(d.desde);
@@ -136,7 +135,7 @@ export default function VendedorDashboard() {
     };
   }, [leadsPorStage]);
 
-  if (loading) {
+  if (authLoading || (loading && !data)) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

@@ -44,6 +44,8 @@ function authHeaders(extra: Record<string, string> = {}): Record<string, string>
   const h: Record<string, string> = { 'ngrok-skip-browser-warning': 'true', ...extra };
   const key = getApiKey();
   if (key) h['X-API-Key'] = key;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+  if (token) h['Authorization'] = `Bearer ${token}`;
   return h;
 }
 

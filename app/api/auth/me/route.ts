@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get('Authorization');
+  const cookieToken = req.cookies.get('access_token')?.value;
+  const token = authHeader?.replace('Bearer ', '') || cookieToken;
 
   if (!token) {
     return NextResponse.json({ error: 'No autenticado' }, { status: 401 });

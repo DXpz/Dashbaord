@@ -10,7 +10,6 @@ export interface ApiUser {
   role: string;
   country_code: string;
   is_active: boolean;
-  advisorName?: string;
 }
 
 interface AuthContextType {
@@ -22,57 +21,60 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+const API_KEY = 'RedApi_2026_SuperSegura_9XK2';
+
+function getHeaders() {
+  const token = localStorage.getItem('access_token');
+  const headers: Record<string, string> = { 'X-API-KEY': API_KEY };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+export async function getMe() {
+  const res = await fetch('/api/auth/me', { headers: getHeaders() });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<ApiUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data) {
-          const u: ApiUser = {
-            id: data.id,
-            email: data.email,
-            full_name: data.full_name,
-            role: data.role,
-            country_code: data.country_code,
-            is_active: data.is_active,
-            advisorName: data.full_name,
-          };
-          setUser(u);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {}
+    }
+    getMe().then(u => {
+      if (u) {
+        setUser(u);
+        localStorage.setItem('user', JSON.stringify(u));
+      } else {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
         setUser(null);
-        setLoading(false);
-      });
+      }
+      setLoading(false);
+    });
   }, []);
 
   const login = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-API-KEY': API_KEY },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        return { ok: false, error: data.detail || 'Error al iniciar sesión' };
-      }
-      const u: ApiUser = {
-        id: data.user.id,
-        email: data.user.email,
-        full_name: data.user.full_name,
-        role: data.user.role,
-        country_code: data.user.country_code,
-        is_active: data.user.is_active,
-        advisorName: data.user.full_name,
-      };
-      setUser(u);
+      if (!res.ok) return { ok: false, error: data.detail || 'Error al iniciar sesión' };
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
       return { ok: true };
     } catch {
       return { ok: false, error: 'No se pudo conectar al servidor' };
@@ -80,7 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
     setUser(null);
     router.push('/login');
   };

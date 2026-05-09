@@ -22,7 +22,7 @@ export default function VendedorReunionesPage() {
   const fetchReuniones = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await API.reuniones('', '', 200, 0, { nombre: user?.advisorName || user?.full_name });
+      const result = await API.reuniones('', '', 200, 0, { nombre: user?.full_name });
       const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
       setReuniones(list);
     } catch (err) {
@@ -30,7 +30,7 @@ export default function VendedorReunionesPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.advisorName]);
+  }, [user?.full_name]);
 
   useEffect(() => {
     fetchReuniones();
