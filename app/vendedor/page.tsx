@@ -45,12 +45,13 @@ export default function VendedorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.full_name]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.country_code]);
 
   useEffect(() => {
-    console.log('[VendedorDashboard] useEffect firing, user:', user?.full_name, 'asesor:', filters.asesor);
+    if (!user) return;
+    console.log('[VendedorDashboard] useEffect firing after auth, user:', user.full_name, 'asesor:', filters.asesor);
     fetchData();
-  }, [fetchData, user?.full_name]);
+  }, [fetchData]);
 
   const resumen = data?.resumen || {};
 
