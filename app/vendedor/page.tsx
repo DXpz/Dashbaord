@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API } from '@/services/api';
 import { KPICard } from '@/components/kpi/KPICard';
@@ -42,7 +42,7 @@ function getMonthFromDate(dateStr: string): { month: string; year: string } {
   return { month, year };
 }
 
-function setMonth(month: string, year: string): { desde: string; hasta: string } {
+function setMonthFn(month: string, year: string): { desde: string; hasta: string } {
   const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
   return {
     desde: `${year}-${month}-01`,
@@ -53,7 +53,6 @@ function setMonth(month: string, year: string): { desde: string; hasta: string }
 export default function VendedorDashboard() {
   const { user } = useAuth();
   const defaultDates = getDefaultDates();
-  const keyRef = useRef(0);
 
   const [asesor, setAsesor] = useState('');
   const [pais, setPais] = useState('');
@@ -62,15 +61,7 @@ export default function VendedorDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.full_name) {
-      setAsesor(user.full_name);
-      setPais(user.country_code || '');
-      keyRef.current += 1;
-    }
-  }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!asesor) return;
     setLoading(true);
     try {
@@ -84,22 +75,29 @@ export default function VendedorDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [asesor, desde, hasta, pais]);
+
+  useEffect(() => {
+    if (user?.full_name) {
+      setAsesor(user.full_name);
+      setPais(user.country_code || '');
+    }
+  }, [user]);
 
   useEffect(() => {
     if (asesor) fetchData();
-  }, [asesor, desde, hasta, pais]);
+  }, [asesor, fetchData]);
 
   const handleMonthChange = (newMonth: string) => {
     const { year } = getMonthFromDate(desde);
-    const dates = setMonth(newMonth, year || String(new Date().getFullYear()));
+    const dates = setMonthFn(newMonth, year || String(new Date().getFullYear()));
     setDesde(dates.desde);
     setHasta(dates.hasta);
   };
 
   const handleYearChange = (newYear: string) => {
     const { month } = getMonthFromDate(desde);
-    const dates = setMonth(month || '01', newYear);
+    const dates = setMonthFn(month || '01', newYear);
     setDesde(dates.desde);
     setHasta(dates.hasta);
   };
@@ -149,7 +147,7 @@ export default function VendedorDashboard() {
   }
 
   return (
-    <div className="space-y-6" key={keyRef.current}>
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4 pb-4 border-b border-[#EEEEEC]">
         <div className="flex items-center gap-2">
           <select value={month} onChange={(e) => handleMonthChange(e.target.value)}
