@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -15,6 +16,7 @@ import {
   X,
   BarChart3,
   CircleDot,
+  LogOut,
 } from 'lucide-react';
 
 const navItems = [
@@ -33,6 +35,7 @@ const LEAVE_DELAY_MS = 1500;
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -151,10 +154,13 @@ export function Sidebar() {
           </nav>
 
           <div className="mt-4 px-2">
-            <div className="flex items-center gap-2 px-3 py-2">
-              <div className="w-1.5 h-1.5 bg-[#22c55e] rounded-full" />
-              <span className="text-xs text-[#B5B5AE]">Sistema activo</span>
-            </div>
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#B5B5AE] hover:text-[#c8151b] hover:bg-red-50 rounded transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Cerrar sesión
+            </button>
           </div>
         </div>
       </aside>
