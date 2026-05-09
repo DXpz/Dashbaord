@@ -4,12 +4,13 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { VendedorFiltersProvider, useVendedorFilters } from '@/lib/vendedor-filters';
-import { LayoutDashboard, Calendar, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, LogOut, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { href: '/vendedor', label: 'Resumen', icon: LayoutDashboard },
   { href: '/vendedor/reuniones', label: 'Mis Reuniones', icon: Calendar },
+  { href: '/vendedor/formulario', label: 'Formulario', icon: FileText },
 ];
 
 const EDGE_TRIGGER_WIDTH = 40;
