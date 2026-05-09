@@ -59,12 +59,6 @@ export default function VendedorDashboard() {
     asesor: '',
   });
 
-  useEffect(() => {
-    if (user?.full_name) {
-      setFilters(f => ({ ...f, pais: user.country_code || '', asesor: user.full_name }));
-    }
-  }, [user]);
-
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -89,10 +83,16 @@ export default function VendedorDashboard() {
   }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
 
   useEffect(() => {
-    console.log('[VendedorDashboard] effect running, user:', user?.full_name, 'asesor:', filters.asesor);
+    if (!user) return;
+    if (!filters.asesor && user.full_name) {
+      setFilters(f => ({ ...f, pais: user.country_code || '', asesor: user.full_name }));
+    }
+  }, [user, filters.asesor]);
+
+  useEffect(() => {
     if (!user || !filters.asesor) return;
     fetchData();
-  }, [fetchData, user, filters.asesor]);
+  }, [user, filters.asesor, fetchData]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
