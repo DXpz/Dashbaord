@@ -16,6 +16,9 @@ const COLORS = {
   light: '#B5B5AE',
   accent: '#EEEEEC',
   primary: '#1F1D3D',
+  success: '#22c55e',
+  danger: '#ef4444',
+  warning: '#eab308',
 };
 
 export default function VendedorDashboard() {
@@ -63,6 +66,27 @@ export default function VendedorDashboard() {
     };
   }, [leadsPorStage]);
 
+  const reunionesChartData = useMemo(() => {
+    return {
+      labels: ['Con Retroalimentación', 'Sin Retroalimentación'],
+      values: [kpis.reunionesConRetro, kpis.reunionesSinRetro],
+    };
+  }, [kpis.reunionesConRetro, kpis.reunionesSinRetro]);
+
+  const cierreChartData = useMemo(() => {
+    return {
+      labels: ['Ganados', 'Perdidos'],
+      values: [kpis.cerradosGanados, kpis.cerradosPerdidos],
+    };
+  }, [kpis.cerradosGanados, kpis.cerradosPerdidos]);
+
+  const propuestaChartData = useMemo(() => {
+    return {
+      labels: ['Propuestas', 'Seguimientos'],
+      values: [kpis.propuestas, kpis.seguimientos],
+    };
+  }, [kpis.propuestas, kpis.seguimientos]);
+
   if (authLoading || (loading && !data)) {
     return (
       <div className="space-y-6">
@@ -93,14 +117,39 @@ export default function VendedorDashboard() {
         </ChartCard>
       )}
 
-      <div className="bg-white border border-[#EEEEEC] p-5">
-        <h3 className="text-sm font-medium text-[#1F1D3D] mb-4">Resumen de Desempeño</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-          <div><span className="text-[#B5B5AE]">Reuniones con Retro</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesConRetro}</p></div>
-          <div><span className="text-[#B5B5AE]">Reuniones Sin Retro</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesSinRetro}</p></div>
-          <div><span className="text-[#B5B5AE]">Propuestas Registradas</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.propuestas}</p></div>
-          <div><span className="text-[#B5B5AE]">Seguimientos</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.seguimientos}</p></div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <ChartCard title="Reuniones" subtitle="Con vs Sin retroalimentación">
+          <ChartWrapper type="doughnut" data={{
+            labels: reunionesChartData.labels,
+            datasets: [{
+              data: reunionesChartData.values,
+              backgroundColor: [COLORS.success, COLORS.danger],
+              borderWidth: 0,
+            }],
+          }} height="200px" />
+        </ChartCard>
+
+        <ChartCard title="Estado de Cierre" subtitle="Ganados vs Perdidos">
+          <ChartWrapper type="doughnut" data={{
+            labels: cierreChartData.labels,
+            datasets: [{
+              data: cierreChartData.values,
+              backgroundColor: [COLORS.success, COLORS.danger],
+              borderWidth: 0,
+            }],
+          }} height="200px" />
+        </ChartCard>
+
+        <ChartCard title="Oportunidades" subtitle="Propuestas y Seguimientos">
+          <ChartWrapper type="doughnut" data={{
+            labels: propuestaChartData.labels,
+            datasets: [{
+              data: propuestaChartData.values,
+              backgroundColor: [COLORS.medium, COLORS.warning],
+              borderWidth: 0,
+            }],
+          }} height="200px" />
+        </ChartCard>
       </div>
     </div>
   );
