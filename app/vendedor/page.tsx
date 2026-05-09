@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API } from '@/services/api';
 import { KPICard } from '@/components/kpi/KPICard';
@@ -62,16 +62,20 @@ export default function VendedorDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+
   const fetchData = useCallback(async () => {
-    if (!filters.asesor) return;
+    const f = filtersRef.current;
+    if (!f.asesor) return;
     setLoading(true);
     try {
       const result = await API.dashboard(
-        filters.desde || '',
-        filters.hasta || '',
+        f.desde || '',
+        f.hasta || '',
         30,
         40,
-        { pais: filters.pais || undefined, asesor: filters.asesor || undefined }
+        { pais: f.pais || undefined, asesor: f.asesor || undefined }
       );
       setData(result);
     } catch (err) {
@@ -79,26 +83,22 @@ export default function VendedorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
+  }, []);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (user === null) return;
     if (!user) return;
-    if (!filters.asesor && user.full_name) {
-      setFilters(f => ({ ...f, pais: user.country_code || '', asesor: user.full_name }));
-    }
-  }, [user, filters.asesor, authLoading]);
+    setFilters({
+      desde: currentDates.desde,
+      hasta: currentDates.hasta,
+      pais: user.country_code || '',
+      asesor: user.full_name,
+    });
+  }, [user]);
 
   useEffect(() => {
-    if (authLoading) return;
     if (!user || !filters.asesor) return;
     fetchData();
-  }, [user, filters.asesor, fetchData, authLoading]);
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
+  }, [user, filters.asesor, fetchData]);
 
   const handleMonthChange = (newMonth: string) => {
     const year = getMonthFromDate(filters.desde).year || String(currentYear);
