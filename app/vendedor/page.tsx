@@ -83,7 +83,10 @@ export default function VendedorDashboard() {
     }
   }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
 
+  console.log('[VendedorDashboard] mount', 'user:', user?.full_name, 'asesor:', filters.asesor);
+
   useEffect(() => {
+    console.log('[VendedorDashboard] effect#1 user loaded, user:', user?.full_name, 'asesor:', filters.asesor);
     if (!user) return;
     if (!filters.asesor && user.full_name) {
       setFilters(f => ({ ...f, pais: user.country_code || '', asesor: user.full_name }));
@@ -91,6 +94,7 @@ export default function VendedorDashboard() {
   }, [user, filters.asesor]);
 
   useEffect(() => {
+    console.log('[VendedorDashboard] effect#2 fetch, user:', user?.full_name, 'asesor:', filters.asesor);
     if (!user || !filters.asesor) return;
     fetchData();
   }, [user, filters.asesor, fetchData]);
