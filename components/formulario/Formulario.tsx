@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { API } from '@/services/api';
+import { useAuth } from '@/lib/auth-context';
 
 export type FormStage = 'REUNION' | 'DEMO' | 'PROPUESTA' | 'SEGUIMIENTO' | 'CIERRE';
 
@@ -23,6 +25,9 @@ interface StageConfig {
   label: string;
   color: string;
   fields: StageField[];
+  stageNumber: number;
+  endpoint: string;
+  method: 'PATCH' | 'PUT';
 }
 
 const STAGES: StageConfig[] = [
@@ -30,6 +35,9 @@ const STAGES: StageConfig[] = [
     id: 'REUNION',
     label: 'Reunión',
     color: '#1F1D3D',
+    stageNumber: 2,
+    endpoint: '/retroalimentacion',
+    method: 'PATCH',
     fields: [
       { id: 'industria_sector', label: 'Industria / Sector', type: 'select', required: true, options: [
         { value: '', label: 'Seleccionar…' },
@@ -66,6 +74,9 @@ const STAGES: StageConfig[] = [
     id: 'DEMO',
     label: 'Demo',
     color: '#35325B',
+    stageNumber: 3,
+    endpoint: '/retroalimentacion',
+    method: 'PATCH',
     fields: [
       { id: 'fecha_demo', label: 'Fecha de Demo', type: 'date', required: true },
       { id: 'cobertura_demo', label: 'Cobertura Demo', type: 'select', required: true, options: [
@@ -99,6 +110,9 @@ const STAGES: StageConfig[] = [
     id: 'PROPUESTA',
     label: 'Propuesta',
     color: '#B5B5AE',
+    stageNumber: 4,
+    endpoint: '/propuesta',
+    method: 'PUT',
     fields: [
       { id: 'productos_propuestos', label: 'Productos Propuestos', type: 'textarea', required: true, placeholder: 'Describe la oferta propuesta' },
       { id: 'modelo_equipo_propuesto', label: 'Modelo de Equipo', type: 'select', required: true, options: [
@@ -144,6 +158,9 @@ const STAGES: StageConfig[] = [
     id: 'SEGUIMIENTO',
     label: 'Seguimiento',
     color: '#1F1D3D',
+    stageNumber: 5,
+    endpoint: '/seguimiento',
+    method: 'PUT',
     fields: [
       { id: 'fecha_seguimiento', label: 'Fecha de Seguimiento', type: 'date', required: true },
       { id: 'medio_seguimiento', label: 'Medio de Seguimiento', type: 'select', required: true, options: [
@@ -174,6 +191,9 @@ const STAGES: StageConfig[] = [
     id: 'CIERRE',
     label: 'Cierre',
     color: '#35325B',
+    stageNumber: 6,
+    endpoint: '/seguimiento',
+    method: 'PUT',
     fields: [
       { id: 'resultado_cierre', label: 'Resultado del Cierre', type: 'select', required: true, options: [
         { value: '', label: 'Seleccionar…' },
@@ -186,14 +206,6 @@ const STAGES: StageConfig[] = [
     ],
   },
 ];
-
-interface FormularioProps {
-  clientId: string;
-  initialStage?: FormStage;
-  initialData?: Record<string, string>;
-  onSave?: (stage: FormStage, data: Record<string, string>) => void;
-  onClose?: () => void;
-}
 
 function FieldInput({ field, value, onChange, readOnly = false }: {
   field: StageField;
@@ -278,49 +290,104 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
   }
 }
 
-export function Formulario({ clientId, initialStage = 'REUNION', initialData = {}, onSave, onClose }: FormularioProps) {
+interface FormularioProps {
+  clientId: string;
+  initialStage?: FormStage;
+  onClose?: () => void;
+}
+
+export function Formulario({ clientId, initialStage = 'REUNION', onClose }: FormularioProps) {
+  const { user } = useAuth();
   const [currentStageIndex, setCurrentStageIndex] = useState(() => {
     const idx = STAGES.findIndex(s => s.id === initialStage);
     return idx >= 0 ? idx : 0;
   });
-  const [stageData, setStageData] = useState<Record<FormStage, Record<string, string>>>(() => {
-    const initial: Record<FormStage, Record<string, string>> = {
-      REUNION: {}, DEMO: {}, PROPUESTA: {}, SEGUIMIENTO: {}, CIERRE: {},
-    };
-    Object.entries(initialData).forEach(([key, val]) => {
-      for (const stage of STAGES) {
-        if (stage.fields.some(f => f.id === key)) {
-          initial[stage.id][key] = val;
-          break;
-        }
-      }
-    });
-    return initial;
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [stageData, setStageData] = useState<Record<FormStage, Record<string, string>>>({
+    REUNION: {}, DEMO: {}, PROPUESTA: {}, SEGUIMIENTO: {}, CIERRE: {},
   });
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await API.auditByClient(clientId);
+        if (data) {
+          if (data.advisor_name && user?.full_name && data.advisor_name !== user.full_name) {
+            setError('Solo el asesor asignado puede editar este lead');
+            setIsOwner(false);
+          } else {
+            setIsOwner(true);
+          }
+
+          if (data.stage_feedback_json) {
+            const feedback = data.stage_feedback_json;
+            setStageData(prev => ({
+              REUNION: feedback[2] || prev.REUNION,
+              DEMO: feedback[3] || prev.DEMO,
+              PROPUESTA: feedback[4] || prev.PROPUESTA,
+              SEGUIMIENTO: feedback[5] || prev.SEGUIMIENTO,
+              CIERRE: feedback[6] || prev.CIERRE,
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Error loading lead data:', err);
+        setError('No se pudo cargar los datos del lead');
+        setIsOwner(false);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [clientId, user?.full_name]);
 
   const currentStage = STAGES[currentStageIndex];
 
   const handleChange = (fieldId: string, value: string) => {
+    if (!isOwner) return;
     setStageData(prev => ({
       ...prev,
       [currentStage.id]: { ...prev[currentStage.id], [fieldId]: value },
     }));
   };
 
-  const handleNext = () => {
-    if (currentStageIndex < STAGES.length - 1) {
-      setCurrentStageIndex(prev => prev + 1);
-    }
-  };
+  const handleSave = async () => {
+    if (!isOwner) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const data = stageData[currentStage.id];
+      const base = `/api/audit/client/${encodeURIComponent(clientId)}`;
+      const stageFeedbackJson = { [currentStage.stageNumber]: data };
 
-  const handlePrev = () => {
-    if (currentStageIndex > 0) {
-      setCurrentStageIndex(prev => prev - 1);
-    }
-  };
+      let body: Record<string, any> = { stage_feedback_json: stageFeedbackJson };
 
-  const handleSave = () => {
-    onSave?.(currentStage.id, stageData[currentStage.id]);
+      if (currentStage.id === 'REUNION' || currentStage.id === 'DEMO') {
+        body.stage = currentStage.stageNumber;
+      } else if (currentStage.id === 'SEGUIMIENTO') {
+        body.resultado_venta = data.resultado_cierre === 'ganado' ? 'cerrada' : 
+                               data.resultado_cierre === 'perdido' ? 'perdida' : 'en_seguimiento';
+      }
+
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE || 'http://200.35.189.139'}${base}${currentStage.endpoint}`, {
+        method: currentStage.method,
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': process.env.API_KEY || '' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      onClose?.();
+    } catch (err) {
+      console.error('Error saving:', err);
+      setError('Error al guardar. Intenta de nuevo.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const currentData = stageData[currentStage.id];
@@ -333,7 +400,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', initialData = {
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
           <div>
-            <h3 className="text-sm font-semibold text-[#1F1D3D]">Formulario de Lead</h3>
+            <h3 className="text-sm font-semibold text-[#1F1D3D]">Actualizar Lead</h3>
             <p className="text-xs text-[#B5B5AE]">Lead: {clientId}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded transition-colors">
@@ -349,7 +416,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', initialData = {
               className={cn(
                 'flex-1 py-3 text-xs font-medium transition-colors border-b-2',
                 idx === currentStageIndex
-                  ? 'border-[#1F1D3D] text-[#1F1D3D]'
+                  ? 'text-[#1F1D3D]'
                   : 'border-transparent text-[#B5B5AE] hover:text-[#35325B]',
               )}
               style={idx === currentStageIndex ? { borderBottomColor: stage.color } : {}}
@@ -360,46 +427,59 @@ export function Formulario({ clientId, initialStage = 'REUNION', initialData = {
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <div className="space-y-4">
-            {currentStage.fields.map((field) => (
-              <div key={field.id} className="space-y-1.5">
-                <label htmlFor={`field-${field.id}`} className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
-                  {field.label}
-                  {field.required && <span className="text-[#c8151b] ml-0.5">*</span>}
-                </label>
-                <FieldInput
-                  field={field}
-                  value={currentData[field.id] || ''}
-                  onChange={handleChange}
-                />
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-[#B5B5AE]" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-600 text-sm font-medium">{error}</p>
+              {!isOwner && (
+                <p className="text-[#B5B5AE] text-xs mt-2">Solo el asesor asignado puede editar este lead</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {currentStage.fields.map((field) => (
+                <div key={field.id} className="space-y-1.5">
+                  <label htmlFor={`field-${field.id}`} className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                    {field.label}
+                    {field.required && <span className="text-[#c8151b] ml-0.5">*</span>}
+                  </label>
+                  <FieldInput
+                    field={field}
+                    value={currentData[field.id] || ''}
+                    onChange={handleChange}
+                    readOnly={!isOwner}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between px-6 py-4 border-t border-[#EEEEEC] shrink-0 bg-[#F5F5ED]">
           <Button
             variant="ghost"
             size="sm"
-            onClick={handlePrev}
-            disabled={currentStageIndex === 0}
+            onClick={() => setCurrentStageIndex(prev => Math.max(0, prev - 1))}
+            disabled={currentStageIndex === 0 || loading || !isOwner}
             className="gap-1.5 text-[#35325B]"
           >
             <ChevronLeft className="h-4 w-4" />
             Anterior
           </Button>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[#B5B5AE]">
-              {currentStageIndex + 1} de {STAGES.length}
-            </span>
-          </div>
+          <span className="text-xs text-[#B5B5AE]">
+            {currentStageIndex + 1} de {STAGES.length}
+          </span>
 
           {currentStageIndex < STAGES.length - 1 ? (
             <Button
               variant="outline"
               size="sm"
-              onClick={handleNext}
+              onClick={() => setCurrentStageIndex(prev => prev + 1)}
+              disabled={loading || !isOwner}
               className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
             >
               Siguiente
@@ -410,9 +490,10 @@ export function Formulario({ clientId, initialStage = 'REUNION', initialData = {
               variant="outline"
               size="sm"
               onClick={handleSave}
+              disabled={saving || loading || !isOwner}
               className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
             >
-              <Check className="h-4 w-4" />
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               Guardar
             </Button>
           )}

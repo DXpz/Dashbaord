@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Formulario, type FormStage } from '@/components/formulario/Formulario';
+import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -10,16 +10,11 @@ export default function VendedorFormularioPage() {
   const [selectedLead, setSelectedLead] = useState('');
   const [showForm, setShowForm] = useState(false);
 
-  const handleSave = async (stage: FormStage, data: Record<string, string>) => {
-    console.log('Saving stage:', stage, 'data:', data);
-    setShowForm(false);
-  };
-
   return (
     <div className="space-y-6">
       <div className="bg-white border border-[#EEEEEC] p-6">
-        <h2 className="text-lg font-semibold text-[#1F1D3D] mb-4">Formulario de Lead</h2>
-        
+        <h2 className="text-lg font-semibold text-[#1F1D3D] mb-4">Actualizar Lead</h2>
+
         <div className="space-y-4">
           <div>
             <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide mb-1.5 block">
@@ -38,7 +33,7 @@ export default function VendedorFormularioPage() {
                 className="bg-[#1F1D3D] hover:bg-[#35325B] text-white"
               >
                 <Plus className="h-4 w-4 mr-1.5" />
-                Nuevo Formulario
+                Actualizar Lead
               </Button>
             </div>
           </div>
@@ -49,7 +44,6 @@ export default function VendedorFormularioPage() {
         <Formulario
           clientId={selectedLead}
           initialStage="REUNION"
-          onSave={handleSave}
           onClose={() => setShowForm(false)}
         />
       )}
