@@ -4,9 +4,8 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { VendedorFiltersProvider, useVendedorFilters } from '@/lib/vendedor-filters';
-import { LayoutDashboard, Calendar, LogOut, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Calendar, LogOut, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 const NAV_ITEMS = [
   { href: '/vendedor', label: 'Resumen', icon: LayoutDashboard },
@@ -20,35 +19,37 @@ function FilterBar() {
   const { month, year, setMonth, setYear, handleLimpiar, availableYears, months } = useVendedorFilters();
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center gap-4 py-4 px-6 border-b border-[#EEEEEC]">
       <div className="flex items-center gap-2">
         <select
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer border border-[#EEEEEC] rounded px-2 py-1"
+          className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
         >
           {months.map((m) => (
             <option key={m.value} value={m.value}>{m.label}</option>
           ))}
         </select>
+
         <select
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer border border-[#EEEEEC] rounded px-2 py-1"
+          className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
         >
           {availableYears.map((y) => (
             <option key={y} value={String(y)}>{y}</option>
           ))}
         </select>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleLimpiar}
-        className="h-8 px-3 text-xs text-[#B5B5AE] hover:text-[#35325B]"
-      >
-        Limpiar
-      </Button>
+
+      <div className="flex items-center gap-2 ml-auto">
+        <button
+          onClick={handleLimpiar}
+          className="text-sm text-[#B5B5AE] hover:text-[#35325B] transition-colors px-3 py-1.5"
+        >
+          Limpiar
+        </button>
+      </div>
     </div>
   );
 }
@@ -145,7 +146,7 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
                 onClick={handleClose}
                 className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B]"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -184,13 +185,13 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
         </aside>
 
         <main className="flex-1 min-w-0">
-          <header className="bg-[#F5F5ED] border-b border-[#EEEEEC] px-6 pt-5 pb-4">
-            <div className="flex items-center justify-between">
+          <header className="bg-[#F5F5ED] border-b border-[#EEEEEC]">
+            <div className="px-6 pt-5 pb-0">
               <h1 className="text-base font-semibold text-[#1F1D3D]">
                 {NAV_ITEMS.find(n => n.href === pathname)?.label ?? 'Dashboard'}
               </h1>
-              <FilterBar />
             </div>
+            <FilterBar />
           </header>
           <div className="p-6">
             {children}
