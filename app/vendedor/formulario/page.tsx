@@ -160,20 +160,25 @@ export default function VendedorFormularioPage() {
             )}
           </div>
 
-          <Button
-            onClick={handleOpenForm}
-            disabled={!selectedLead}
-            className="bg-[#1F1D3D] hover:bg-[#35325B] text-white"
-          >
-            Actualizar Lead
-          </Button>
+        {selectedLead && (
+          <div className="bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg p-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-[#B5B5AE] uppercase tracking-wide">Lead seleccionado</p>
+              <p className="text-sm font-semibold text-[#1F1D3D]">{selectedLead.client_id}</p>
+              <p className="text-xs text-[#35325B]">{selectedLead.client_name}</p>
+            </div>
+            <Button
+              onClick={handleOpenForm}
+              className="bg-[#1F1D3D] hover:bg-[#35325B] text-white shrink-0"
+            >
+              Actualizar Lead
+            </Button>
+          </div>
+        )}
 
-          {selectedLead && (
-            <p className="text-xs text-[#B5B5AE]">
-              Lead seleccionado: <span className="font-medium text-[#1F1D3D]">{selectedLead.client_id}</span> - {selectedLead.client_name}
-            </p>
-          )}
-        </div>
+        {!selectedLead && !loading && leads.length > 0 && (
+          <p className="text-xs text-[#B5B5AE]">Busca y selecciona un lead para actualizar</p>
+        )}</div>
       </div>
 
       {showForm && selectedLead && (

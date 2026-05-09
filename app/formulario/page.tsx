@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Formulario, STAGES } from '@/components/formulario/Formulario';
+import { Formulario, buildStages } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 export default function FormularioPage() {
   const [selectedLead, setSelectedLead] = useState<string>('');
   const [showForm, setShowForm] = useState(false);
+  const stages = buildStages(true);
 
   return (
     <div className="space-y-6">
@@ -43,7 +44,7 @@ export default function FormularioPage() {
       <div className="bg-white border border-[#EEEEEC] p-6">
         <h3 className="text-sm font-medium text-[#1F1D3D] mb-4">Etapas disponibles</h3>
         <div className="grid grid-cols-5 gap-4">
-          {STAGES.map((stage, idx) => (
+          {stages.map((stage, idx) => (
             <div key={stage.id} className="text-center p-4 bg-[#F5F5ED] rounded-lg">
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 text-white text-sm font-bold"
