@@ -64,16 +64,23 @@ export default function VendedorDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[Vendedor] user changed:', user?.full_name, 'current asesor state:', asesor);
     if (user && user.full_name) {
+      console.log('[Vendedor] setting asesor to:', user.full_name);
       setAsesor(user.full_name);
       setPais(user.country_code || '');
     }
   }, [user]);
 
   const fetchData = useCallback(async () => {
-    if (!asesor) return;
+    console.log('[Vendedor] fetchData called, asesor:', asesor, 'desde:', desde, 'hasta:', hasta);
+    if (!asesor) {
+      console.log('[Vendedor] fetchData skipped - no asesor');
+      return;
+    }
     setLoading(true);
     try {
+      console.log('[Vendedor] calling API.dashboard with asesor:', asesor);
       const result = await API.dashboard(
         desde || '',
         hasta || '',
@@ -81,16 +88,21 @@ export default function VendedorDashboard() {
         40,
         { pais: pais || undefined, asesor }
       );
+      console.log('[Vendedor] API.dashboard returned, has data:', !!result, 'keys:', Object.keys(result || {}));
       setData(result);
     } catch (err) {
-      console.error('Error:', err);
+      console.error('[Vendedor] fetchData error:', err);
     } finally {
       setLoading(false);
     }
   }, [asesor, desde, hasta, pais]);
 
   useEffect(() => {
-    if (asesor) fetchData();
+    console.log('[Vendedor] effect#2 running, asesor:', asesor, 'loading:', loading);
+    if (asesor) {
+      console.log('[Vendedor] calling fetchData because asesor is set');
+      fetchData();
+    }
   }, [asesor, fetchData]);
 
   const handleMonthChange = (newMonth: string) => {
