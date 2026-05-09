@@ -44,10 +44,10 @@ export default function VendedorDashboard() {
 
   const kpis = useMemo(() => ({
     leads: resumen.leads_aceptados ?? 0,
-    cerradosGanados: resumen.ventas_cerradas ?? 0,
-    cerradosPerdidos: resumen.ventas_perdidas ?? 0,
+    cerradosGanados: resumen.cerrados_ganados ?? 0,
+    cerradosPerdidos: resumen.cerrados_perdidos ?? 0,
     tasaAceptacion: resumen.total_leads_general ? Math.round((resumen.leads_aceptados / resumen.total_leads_general) * 100) : 0,
-    tasaCierre: resumen.cerrados_total ? Math.round((resumen.ventas_cerradas / resumen.cerrados_total) * 100) : 0,
+    tasaCierre: resumen.cerrados_total ? Math.round((resumen.cerrados_ganados / resumen.cerrados_total) * 100) : 0,
     reunionesConRetro: resumen.reuniones_con_retro ?? 0,
     reunionesSinRetro: resumen.reuniones_sin_retro ?? 0,
     propuestas: resumen.propuestas_registradas ?? 0,
