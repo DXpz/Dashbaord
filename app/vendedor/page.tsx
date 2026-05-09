@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API } from '@/services/api';
 import { KPICard } from '@/components/kpi/KPICard';
@@ -46,36 +46,40 @@ function setMonth(month: string, year: string): { desde: string; hasta: string }
   };
 }
 
-export default function VendedorDashboard() {
-  const { user, loading: authLoading } = useAuth();
+function getDefaultDates() {
   const currentYear = new Date().getFullYear();
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-  const currentDates = setMonth(currentMonth, String(currentYear));
+  return setMonth(currentMonth, String(currentYear));
+}
 
-  const [filters, setFilters] = useState({
-    desde: currentDates.desde,
-    hasta: currentDates.hasta,
-    pais: user?.country_code || '',
-    asesor: '',
-  });
+export default function VendedorDashboard() {
+  const { user } = useAuth();
+  const defaultDates = getDefaultDates();
 
+  const [asesor, setAsesor] = useState('');
+  const [pais, setPais] = useState('');
+  const [desde, setDesde] = useState(defaultDates.desde);
+  const [hasta, setHasta] = useState(defaultDates.hasta);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const filtersRef = useRef(filters);
-  filtersRef.current = filters;
+  useEffect(() => {
+    if (user && user.full_name) {
+      setAsesor(user.full_name);
+      setPais(user.country_code || '');
+    }
+  }, [user]);
 
   const fetchData = useCallback(async () => {
-    const f = filtersRef.current;
-    if (!f.asesor) return;
+    if (!asesor) return;
     setLoading(true);
     try {
       const result = await API.dashboard(
-        f.desde || '',
-        f.hasta || '',
+        desde || '',
+        hasta || '',
         30,
         40,
-        { pais: f.pais || undefined, asesor: f.asesor || undefined }
+        { pais: pais || undefined, asesor }
       );
       setData(result);
     } catch (err) {
@@ -83,43 +87,36 @@ export default function VendedorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [asesor, desde, hasta, pais]);
 
   useEffect(() => {
-    if (!user) return;
-    setFilters({
-      desde: currentDates.desde,
-      hasta: currentDates.hasta,
-      pais: user.country_code || '',
-      asesor: user.full_name,
-    });
-  }, [user]);
-
-  useEffect(() => {
-    if (!user || !filters.asesor) return;
-    fetchData();
-  }, [user, filters.asesor, fetchData]);
+    if (asesor) fetchData();
+  }, [asesor, fetchData]);
 
   const handleMonthChange = (newMonth: string) => {
-    const year = getMonthFromDate(filters.desde).year || String(currentYear);
-    const dates = setMonth(newMonth, year);
-    setFilters(prev => ({ ...prev, desde: dates.desde, hasta: dates.hasta }));
+    const { month, year } = getMonthFromDate(desde);
+    const dates = setMonth(newMonth, year || String(new Date().getFullYear()));
+    setDesde(dates.desde);
+    setHasta(dates.hasta);
   };
 
   const handleYearChange = (newYear: string) => {
-    const month = getMonthFromDate(filters.desde).month || currentMonth;
-    const dates = setMonth(month, newYear);
-    setFilters(prev => ({ ...prev, desde: dates.desde, hasta: dates.hasta }));
+    const { month } = getMonthFromDate(desde);
+    const dates = setMonth(month || String(new Date().getMonth() + 1).padStart(2, '0'), newYear);
+    setDesde(dates.desde);
+    setHasta(dates.hasta);
   };
 
   const handleFiltrar = () => { fetchData(); };
+
   const handleLimpiar = () => {
-    const d = setMonth(currentMonth, String(currentYear));
-    setFilters(prev => ({ ...prev, desde: d.desde, hasta: d.hasta, pais: user?.country_code || '' }));
+    const d = getDefaultDates();
+    setDesde(d.desde);
+    setHasta(d.hasta);
   };
 
-  const { month, year } = getMonthFromDate(filters.desde);
-  const years = [currentYear - 1, currentYear, currentYear + 1];
+  const { month, year } = getMonthFromDate(desde);
+  const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
 
   const resumen = data?.resumen || {};
   const leadsPorStage = data?.leads_por_stage || [];
