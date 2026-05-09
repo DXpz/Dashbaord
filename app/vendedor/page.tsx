@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API } from '@/services/api';
 import { KPICard } from '@/components/kpi/KPICard';
@@ -56,78 +56,69 @@ export default function VendedorDashboard() {
   const { user } = useAuth();
   const defaultDates = getDefaultDates();
 
-  const [asesor, setAsesor] = useState('');
-  const [pais, setPais] = useState('');
-  const [desde, setDesde] = useState(defaultDates.desde);
-  const [hasta, setHasta] = useState(defaultDates.hasta);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const asesorRef = useRef('');
+  const paisRef = useRef('');
+  const desdeRef = useRef(defaultDates.desde);
+  const hastaRef = useRef(defaultDates.hasta);
+
   useEffect(() => {
-    console.log('[Vendedor] user changed:', user?.full_name, 'current asesor state:', asesor);
     if (user && user.full_name) {
-      console.log('[Vendedor] setting asesor to:', user.full_name);
-      setAsesor(user.full_name);
-      setPais(user.country_code || '');
+      asesorRef.current = user.full_name;
+      paisRef.current = user.country_code || '';
     }
   }, [user]);
 
   const fetchData = useCallback(async () => {
-    console.log('[Vendedor] fetchData called, asesor:', asesor, 'desde:', desde, 'hasta:', hasta);
-    if (!asesor) {
-      console.log('[Vendedor] fetchData skipped - no asesor');
-      return;
-    }
+    const currentAsesor = asesorRef.current;
+    if (!currentAsesor) return;
     setLoading(true);
     try {
-      console.log('[Vendedor] calling API.dashboard with asesor:', asesor);
       const result = await API.dashboard(
-        desde || '',
-        hasta || '',
+        desdeRef.current || '',
+        hastaRef.current || '',
         30,
         40,
-        { pais: pais || undefined, asesor }
+        { pais: paisRef.current || undefined, asesor: currentAsesor }
       );
-      console.log('[Vendedor] API.dashboard returned, has data:', !!result, 'keys:', Object.keys(result || {}));
       setData(result);
     } catch (err) {
-      console.error('[Vendedor] fetchData error:', err);
+      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
-  }, [asesor, desde, hasta, pais]);
+  }, []);
 
   useEffect(() => {
-    console.log('[Vendedor] effect#2 running, asesor:', asesor, 'loading:', loading);
-    if (asesor) {
-      console.log('[Vendedor] calling fetchData because asesor is set');
-      fetchData();
-    }
-  }, [asesor, fetchData]);
+    if (asesorRef.current) fetchData();
+  }, [fetchData]);
 
   const handleMonthChange = (newMonth: string) => {
-    const { month, year } = getMonthFromDate(desde);
+    const { month, year } = getMonthFromDate(desdeRef.current);
     const dates = setMonth(newMonth, year || String(new Date().getFullYear()));
-    setDesde(dates.desde);
-    setHasta(dates.hasta);
+    desdeRef.current = dates.desde;
+    hastaRef.current = dates.hasta;
   };
 
   const handleYearChange = (newYear: string) => {
-    const { month } = getMonthFromDate(desde);
+    const { month } = getMonthFromDate(desdeRef.current);
     const dates = setMonth(month || String(new Date().getMonth() + 1).padStart(2, '0'), newYear);
-    setDesde(dates.desde);
-    setHasta(dates.hasta);
+    desdeRef.current = dates.desde;
+    hastaRef.current = dates.hasta;
   };
 
   const handleFiltrar = () => { fetchData(); };
 
   const handleLimpiar = () => {
     const d = getDefaultDates();
-    setDesde(d.desde);
-    setHasta(d.hasta);
+    desdeRef.current = d.desde;
+    hastaRef.current = d.hasta;
   };
 
-  const { month, year } = getMonthFromDate(desde);
+  const currentMonth = getMonthFromDate(desdeRef.current).month;
+  const currentYear = getMonthFromDate(desdeRef.current).year || String(new Date().getFullYear());
   const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
 
   const resumen = data?.resumen || {};
@@ -169,7 +160,7 @@ export default function VendedorDashboard() {
       <div className="flex flex-wrap items-center gap-4 pb-4 border-b border-[#EEEEEC]">
         <div className="flex items-center gap-2">
           <select
-            value={month}
+            value={currentMonth}
             onChange={(e) => handleMonthChange(e.target.value)}
             className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
           >
@@ -179,7 +170,7 @@ export default function VendedorDashboard() {
             ))}
           </select>
           <select
-            value={year}
+            value={currentYear}
             onChange={(e) => handleYearChange(e.target.value)}
             className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
           >

@@ -22,36 +22,61 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const USER_STORAGE_KEY = 'dashboard_user';
+
+function getStoredUser(): ApiUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem(USER_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return null;
+}
+
+function setStoredUser(user: ApiUser | null) {
+  if (typeof window === 'undefined') return;
+  if (user) {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<ApiUser | null>(null);
+  const [user, setUser] = useState<ApiUser | null>(() => getStoredUser());
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
-      .then(r => {
-        if (r.status === 401) return null;
-        return r.ok ? r.json() : null;
-      })
+      .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!data) {
-          setLoading(false);
-          return;
+        if (data) {
+          const u: ApiUser = {
+            id: data.id,
+            email: data.email,
+            full_name: data.full_name,
+            role: data.role,
+            country_code: data.country_code,
+            is_active: data.is_active,
+            advisorName: data.full_name,
+          };
+          setUser(u);
+          setStoredUser(u);
+        } else {
+          setUser(null);
+          setStoredUser(null);
         }
-        const u: ApiUser = {
-          id: data.id,
-          email: data.email,
-          full_name: data.full_name,
-          role: data.role,
-          country_code: data.country_code,
-          is_active: data.is_active,
-          advisorName: data.full_name,
-        };
-        setUser(u);
         setLoading(false);
       })
       .catch(() => {
-        setUser(null);
+        const stored = getStoredUser();
+        if (stored) {
+          setUser(stored);
+        } else {
+          setUser(null);
+          setStoredUser(null);
+        }
         setLoading(false);
       });
   }, []);
@@ -78,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         advisorName: data.user.full_name,
       };
       setUser(u);
+      setStoredUser(u);
       return { ok: true };
     } catch {
       return { ok: false, error: 'No se pudo conectar al servidor' };
@@ -87,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
+    setStoredUser(null);
     router.push('/login');
   };
 
