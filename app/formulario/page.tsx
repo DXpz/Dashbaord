@@ -133,6 +133,8 @@ export default function FormularioPage() {
         'ngrok-skip-browser-warning': 'true',
       };
 
+      console.log('Creating lead:', url, JSON.stringify(payload));
+
       const res = await fetch(url, {
         method: 'POST',
         headers,
