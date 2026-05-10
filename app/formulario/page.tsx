@@ -62,17 +62,11 @@ export default function FormularioPage() {
 
     setReopening(true);
     try {
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
-      const key = process.env.API_KEY || '';
-
       const reason = encodeURIComponent('Reabierto por admin desde dashboard');
-      const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/reopen?reason=${reason}`)}`
-        : `${base}audit/${selectedLead.client_id}/reopen?reason=${reason}`;
+      const url = `http://200.35.189.139/api/audit/${selectedLead.client_id}/reopen?reason=${reason}`;
 
       const headers: Record<string, string> = {
-        'X-API-KEY': key,
+        'X-API-KEY': 'RedApi_2026_SuperSegura_9XK2',
         'ngrok-skip-browser-warning': 'true',
       };
 
@@ -106,8 +100,6 @@ export default function FormularioPage() {
 
     setCreating(true);
     try {
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
       const key = process.env.API_KEY || '';
 
       const payload = {
@@ -123,13 +115,12 @@ export default function FormularioPage() {
         cierre_estimado: '',
       };
 
-      const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin')}&pais=${encodeURIComponent(payload.pais)}`
-        : `${base}audit/assign-round-robin?pais=${payload.pais}`;
+      // Direct to backend
+      const url = `http://200.35.189.139/api/audit/assign-round-robin?pais=${payload.pais}`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'X-API-KEY': key,
+        'X-API-KEY': 'RedApi_2026_SuperSegura_9XK2',
         'ngrok-skip-browser-warning': 'true',
       };
 
@@ -138,7 +129,6 @@ export default function FormularioPage() {
       const res = await fetch(url, {
         method: 'POST',
         headers,
-        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
