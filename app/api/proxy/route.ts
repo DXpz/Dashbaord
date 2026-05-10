@@ -51,14 +51,18 @@ async function handleRequest(req: NextRequest) {
   });
 
   const method = req.method;
-  let body: undefined | ArrayBuffer;
+  let body: undefined | string;
   if (method !== 'GET' && method !== 'HEAD') {
-    body = await req.arrayBuffer();
-    if (body.byteLength === 0) body = undefined;
+    const text = await req.text();
+    if (text) body = text;
   }
 
   try {
-    const upstream = await fetch(target, { method, headers: upstreamHeaders, body });
+    const upstream = await fetch(target, {
+      method,
+      headers: upstreamHeaders,
+      body,
+    });
     const outType = upstream.headers.get('content-type');
     const buffer = Buffer.from(await upstream.arrayBuffer());
 
