@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Search, X } from 'lucide-react';
 import { Shell } from '@/components/layout/Shell';
 import { useAdminDashboard, useConnectionStatus, useFilters } from '@/hooks';
+import { API } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface LeadOption {
@@ -31,11 +32,10 @@ export default function FormularioPage() {
     async function fetchLeads() {
       setLoading(true);
       try {
-        const result = await fetch(`/api/proxy?_path=metrics/reuniones&desde=${filters.desde}&hasta=${filters.hasta}&limite=1000`, {
-          credentials: 'include',
-        });
-        const json = await result.json();
-        const list = json?.reuniones || json?.items || (Array.isArray(json) ? json : []);
+        const desde = `${filters.desde}T00:00:00`;
+        const hasta = `${filters.hasta}T23:59:59.999`;
+        const result = await API.reuniones(desde, hasta, 1000, 0, {});
+        const list = result?.items || (Array.isArray(result) ? result : []);
 
         const mapped: LeadOption[] = list.map((r: any) => ({
           client_id: r.client_id || r.opportunity_number || '',
