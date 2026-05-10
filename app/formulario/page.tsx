@@ -130,7 +130,6 @@ const url = isHttps
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-API-KEY': key,
-        'ngrok-skip-browser-warning': 'true',
       };
 
       console.log('Creating lead:', url, JSON.stringify(payload));
