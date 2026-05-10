@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
-import { Search, X } from 'lucide-react';
+import { Search, X, RotateCcw } from 'lucide-react';
 import { Shell } from '@/components/layout/Shell';
 import { useAdminDashboard, useConnectionStatus, useFilters, useAllLeads } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,7 @@ interface LeadOption {
   client_name: string;
   opportunity_stage_label: string;
   oportunidad_id: number;
+  status?: string;
 }
 
 export default function FormularioPage() {
@@ -25,6 +26,7 @@ export default function FormularioPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadOption | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [reopening, setReopening] = useState(false);
 
   const filteredLeads = useMemo(() => {
     if (!searchTerm) return leads.slice(0, 30);
@@ -43,9 +45,52 @@ export default function FormularioPage() {
       client_name: lead.client_name || lead.cliente || '',
       opportunity_stage_label: lead.opportunity_stage_label || lead.opportunity_stage || '',
       oportunidad_id: lead.id || 0,
+      status: lead.status || '',
     });
     setSearchTerm(lead.client_id);
     setShowDropdown(false);
+  };
+
+  const handleReopenLead = async () => {
+    if (!selectedLead) return;
+    if (!confirm('¿Reabrir este lead? Volverá a etapa de Reunión.')) return;
+    
+    setReopening(true);
+    try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
+      const key = process.env.API_KEY || '';
+      
+      const reason = encodeURIComponent('Reabierto por admin desde dashboard');
+      const url = isHttps 
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/reopen?reason=${reason}`)}`
+        : `${base}audit/${selectedLead.client_id}/reopen?reason=${reason}`;
+      
+      const headers: Record<string, string> = {
+        'X-API-KEY': key,
+        'ngrok-skip-browser-warning': 'true',
+      };
+      
+      const res = await fetch(url, { 
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      });
+      
+      if (res.ok) {
+        alert('Lead reabierto correctamente');
+        setSelectedLead(null);
+        setSearchTerm('');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data?.detail || 'Error al reabrir lead');
+      }
+    } catch (err) {
+      console.error('Error reopening lead:', err);
+      alert('Error al reabrir lead');
+    } finally {
+      setReopening(false);
+    }
   };
 
   return (
@@ -133,12 +178,23 @@ export default function FormularioPage() {
                     <p className="text-sm font-semibold text-[#1F1D3D]">{selectedLead.client_id}</p>
                     <p className="text-xs text-[#35325B]">{selectedLead.client_name}</p>
                   </div>
-                  <Button
-                    onClick={() => setShowForm(true)}
-                    className="bg-[#1F1D3D] hover:bg-[#35325B] text-white shrink-0"
-                  >
-                    Actualizar Lead
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handleReopenLead}
+                      disabled={reopening}
+                      variant="outline"
+                      className="gap-1.5 border-[#EEEEEC] text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#EEEEEC]"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      {reopening ? 'Reabriendo...' : 'Reabrir'}
+                    </Button>
+                    <Button
+                      onClick={() => setShowForm(true)}
+                      className="bg-[#1F1D3D] hover:bg-[#35325B] text-white shrink-0"
+                    >
+                      Actualizar Lead
+                    </Button>
+                  </div>
                 </div>
               )}
 
