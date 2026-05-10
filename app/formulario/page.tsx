@@ -121,7 +121,6 @@ export default function FormularioPage() {
       const res = await fetch(url, {
         method: 'POST',
         headers,
-        body: 'Lead no calificado',
       });
 
       if (res.ok) {
