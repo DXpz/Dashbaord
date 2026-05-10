@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { API } from '@/services/api';
 import { useAuth } from '@/lib/auth-context';
 
 export type FormStage = 'REUNION' | 'DEMO' | 'PROPUESTA' | 'SEGUIMIENTO' | 'CIERRE';
@@ -175,17 +174,14 @@ function buildStages(requiresDemo: boolean): StageConfig[] {
   const stages: StageConfig[] = [
     { id: 'REUNION', label: 'Reunión', color: '#1F1D3D', stageNumber: 2, endpoint: '/retroalimentacion', method: 'PATCH', fields: REUNION_FIELDS },
   ];
-
   if (requiresDemo) {
     stages.push({ id: 'DEMO', label: 'Demo', color: '#35325B', stageNumber: 3, endpoint: '/retroalimentacion', method: 'PATCH', fields: DEMO_FIELDS });
   }
-
   stages.push(
     { id: 'PROPUESTA', label: 'Propuesta', color: '#B5B5AE', stageNumber: 4, endpoint: '/propuesta', method: 'PUT', fields: PROPUESTA_FIELDS },
     { id: 'SEGUIMIENTO', label: 'Seguimiento', color: '#1F1D3D', stageNumber: 5, endpoint: '/seguimiento', method: 'PUT', fields: SEGUIMIENTO_FIELDS },
     { id: 'CIERRE', label: 'Cierre', color: '#35325B', stageNumber: 6, endpoint: '/seguimiento', method: 'PUT', fields: CIERRE_FIELDS },
   );
-
   return stages;
 }
 
@@ -233,65 +229,94 @@ interface FormularioProps {
   onClose?: () => void;
 }
 
+interface LoadedData {
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  sellerName: string;
+  opportunityStage: number;
+  stageFeedbackJson: Record<number, any>;
+  history: any[];
+}
+
 export function Formulario({ clientId, initialStage = 'REUNION', onClose }: FormularioProps) {
   const { user } = useAuth();
   const [requiresDemo, setRequiresDemo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isOwner, setIsOwner] = useState(false);
-  const [stageData, setStageData] = useState<Record<string, Record<string, string>>>({});
+  const [loadedData, setLoadedData] = useState<LoadedData | null>(null);
   const [stages, setStages] = useState<StageConfig[]>(buildStages(false));
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       setError(null);
       try {
-        const data = await API.auditByClient(clientId);
-        if (data) {
-          if (data.advisor_name && user?.full_name && data.advisor_name !== user.full_name) {
-            setError('Solo el asesor asignado puede editar este lead');
-            setIsOwner(false);
-          } else {
-            setIsOwner(true);
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
+        const key = process.env.API_KEY || '';
+
+        const headers = {
+          'X-API-KEY': key,
+          'ngrok-skip-browser-warning': 'true',
+          ...(isHttps ? {} : { 'Authorization': `Bearer ${''}` }),
+        };
+
+        const fetchUrl = (path: string) => {
+          if (isHttps) {
+            return fetch(`/api/proxy?endpoint=${encodeURIComponent(path)}`, { credentials: 'include' });
           }
+          return fetch(`${base}${path}`, { headers });
+        };
 
-          if (data.stage_feedback_json) {
-            const feedback = data.stage_feedback_json;
-            setStageData({
-              2: feedback[2] || {},
-              3: feedback[3] || {},
-              4: feedback[4] || {},
-              5: feedback[5] || {},
-              6: feedback[6] || {},
-            });
-          }
+        const [oppRes, auditRes] = await Promise.all([
+          fetchUrl(`/opportunity?number=${encodeURIComponent(clientId)}`),
+          fetchUrl(`/audit/by-client/${encodeURIComponent(clientId)}`),
+        ]);
 
-          const demoReq = data.stage_feedback_json?.[2]?.requiere_demo === 'si';
-          setRequiresDemo(demoReq);
+        const oppData = await oppRes.json();
+        const auditData = await auditRes.json();
 
-          const initialStages = buildStages(demoReq);
-          const initIdx = initialStages.findIndex(s => s.id === initialStage);
-          setStages(initialStages);
-          setCurrentStageIndex(initIdx >= 0 ? initIdx : 0);
-        }
+        const clientName = oppData?.client_name || oppData?.clientName || '';
+        const clientEmail = oppData?.client_email || oppData?.clientEmail || '';
+        const clientPhone = oppData?.client_phone || oppData?.clientPhone || '';
+        const sellerName = oppData?.advisor_name || oppData?.sellerName || '';
+        const opportunityStage = auditData?.opportunity_stage || oppData?.opportunity_stage || 2;
+        const stageFeedbackJson = auditData?.stage_feedback_json || {};
+
+        const demoRequired = stageFeedbackJson[2]?.requiere_demo === 'si';
+        setRequiresDemo(demoRequired);
+
+        const newStages = buildStages(demoRequired);
+        setStages(newStages);
+
+        const initIdx = newStages.findIndex(s => s.id === initialStage);
+        setCurrentStageIndex(initIdx >= 0 ? initIdx : 0);
+
+        setLoadedData({
+          clientName,
+          clientEmail,
+          clientPhone,
+          sellerName,
+          opportunityStage,
+          stageFeedbackJson,
+          history: auditData?.history || [],
+        });
       } catch (err) {
         console.error('Error loading lead data:', err);
         setError('No se pudo cargar los datos del lead');
-        setIsOwner(false);
       } finally {
         setLoading(false);
-        setIsInitialized(true);
       }
     }
     loadData();
-  }, [clientId, user?.full_name, initialStage]);
+  }, [clientId, initialStage]);
+
+  const [stageData, setStageData] = useState<Record<number, Record<string, string>>>({});
 
   const handleChange = (fieldId: string, value: string) => {
-    if (!isOwner) return;
     const stageNum = stages[currentStageIndex]?.stageNumber;
     setStageData(prev => ({
       ...prev,
@@ -308,30 +333,38 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   };
 
   const handleSave = async () => {
-    if (!isOwner) return;
     setSaving(true);
     setError(null);
     try {
       const current = stages[currentStageIndex];
       const data = stageData[current.stageNumber] || {};
-      const stageFeedbackJson = { [current.stageNumber]: data };
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
+      const key = process.env.API_KEY || '';
 
-      let body: Record<string, any> = { stage_feedback_json: stageFeedbackJson };
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-API-KEY': key,
+        'ngrok-skip-browser-warning': 'true',
+      };
 
-      if (current.id === 'REUNION' || current.id === 'DEMO') {
-        body.stage = current.stageNumber;
-      } else if (current.id === 'SEGUIMIENTO') {
-        body.resultado_venta = data.resultado_cierre === 'ganado' ? 'cerrada' :
-                               data.resultado_cierre === 'perdido' ? 'perdida' : 'en_seguimiento';
-      }
+      const fetchUrl = (path: string) => {
+        if (isHttps) {
+          return fetch(`/api/proxy?endpoint=${encodeURIComponent(path)}`, {
+            method: current.method,
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({ ...data, stage: current.stageNumber }),
+          });
+        }
+        return fetch(`${base}${path}`, {
+          method: current.method,
+          headers,
+          body: JSON.stringify({ ...data, stage: current.stageNumber }),
+        });
+      };
 
-      await fetch(`${process.env.NEXT_PUBLIC_API_BASE || 'http://200.35.189.139'}/api/audit/client/${encodeURIComponent(clientId)}${current.endpoint}`, {
-        method: current.method,
-        headers: { 'Content-Type': 'application/json', 'X-API-Key': process.env.API_KEY || '' },
-        credentials: 'include',
-        body: JSON.stringify(body),
-      });
-
+      await fetchUrl(`/audit/client/${encodeURIComponent(clientId)}${current.endpoint}`);
       onClose?.();
     } catch (err) {
       console.error('Error saving:', err);
@@ -358,7 +391,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           </button>
         </div>
 
-        {isInitialized && !loading && (
+        {!loading && (
           <div className="flex border-b border-[#EEEEEC]">
             {stages.map((stage, idx) => (
               <button
@@ -386,9 +419,6 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           ) : error ? (
             <div className="text-center py-12">
               <p className="text-red-600 text-sm font-medium">{error}</p>
-              {!isOwner && (
-                <p className="text-[#B5B5AE] text-xs mt-2">Solo el asesor asignado puede editar este lead</p>
-              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -402,7 +432,6 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
                     field={field}
                     value={currentData[field.id] || ''}
                     onChange={handleChange}
-                    readOnly={!isOwner}
                   />
                   {field.id === 'industria_sector' && currentData['industria_sector'] === 'otro' && (
                     <div className="space-y-1.5">
@@ -415,7 +444,6 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
                         type="text"
                         value={currentData['industria_otro'] || ''}
                         onChange={(e) => handleChange('industria_otro', e.target.value)}
-                        disabled={!isOwner}
                         placeholder="Describe el sector"
                         className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] transition-colors"
                       />
@@ -432,7 +460,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
             variant="ghost"
             size="sm"
             onClick={() => setCurrentStageIndex(prev => Math.max(0, prev - 1))}
-            disabled={currentStageIndex === 0 || loading || !isOwner}
+            disabled={currentStageIndex === 0 || loading}
             className="gap-1.5 text-[#35325B]"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -448,7 +476,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
               variant="outline"
               size="sm"
               onClick={() => setCurrentStageIndex(prev => prev + 1)}
-              disabled={loading || !isOwner}
+              disabled={loading}
               className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
             >
               Siguiente
@@ -459,7 +487,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
               variant="outline"
               size="sm"
               onClick={handleSave}
-              disabled={saving || loading || !isOwner}
+              disabled={saving || loading}
               className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
