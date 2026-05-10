@@ -5,7 +5,7 @@ import { Shell } from '@/components/layout/Shell';
 import { KPICard } from '@/components/kpi/KPICard';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
-import { useDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
+import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, TrendingUp, DollarSign, Users, Calendar } from 'lucide-react';
 
@@ -19,7 +19,7 @@ const COLORS = {
 
 export default function NegociacionPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const { data, loading, error } = useDashboard(filters);
+  const { data, loading, error } = useAdminDashboard(filters);
   const connectionStatus = useConnectionStatus();
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
 
