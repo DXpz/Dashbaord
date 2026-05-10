@@ -41,7 +41,6 @@ async function handleRequest(req: NextRequest) {
   const upstreamHeaders: Record<string, string> = {
     'X-API-KEY': process.env.API_KEY || '',
     'ngrok-skip-browser-warning': 'true',
-    'Authorization': `Bearer ${token}`,
   };
 
   const forwarded = ['content-type', 'accept'];
