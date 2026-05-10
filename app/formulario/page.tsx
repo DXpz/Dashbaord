@@ -138,7 +138,6 @@ const url = isHttps
       const res = await fetch(url, {
         method: 'POST',
         headers,
-        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
