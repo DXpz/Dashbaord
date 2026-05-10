@@ -114,7 +114,6 @@ export default function FormularioPage() {
         nombre: newLead.nombre.trim(),
         correo: newLead.correo.trim(),
         telefono: newLead.telefono.trim(),
-        pais: newLead.pais || 'SV',
         asunto: 'Lead nuevo desde dashboard',
         ubicacion: '',
         descripcion: 'Creado por admin',
