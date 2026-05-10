@@ -57,6 +57,8 @@ async function handleRequest(req: NextRequest) {
     if (text) body = text;
   }
 
+  console.log('[proxy] target:', target, 'body:', body);
+
   try {
     const upstream = await fetch(target, {
       method,
