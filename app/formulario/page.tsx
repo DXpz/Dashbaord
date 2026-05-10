@@ -32,10 +32,19 @@ export default function FormularioPage() {
     async function fetchLeads() {
       setLoading(true);
       try {
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
         const desde = `${filters.desde}T00:00:00`;
         const hasta = `${filters.hasta}T23:59:59.999`;
-        const result = await API.reuniones(desde, hasta, 1000, 0, {});
-        const list = result?.items || (Array.isArray(result) ? result : []);
+        const params = new URLSearchParams({ desde, hasta, limite: '1000' });
+        const suffix = params.toString();
+        const targetPath = 'metrics/reuniones';
+        const url = isHttps
+          ? `/api/proxy?_path=${encodeURIComponent(targetPath)}&${suffix}`
+          : `http://200.35.189.139/api/${targetPath}?${suffix}`;
+        
+        const result = await fetch(url, { credentials: 'include' });
+        const json = await result.json();
+        const list = json?.items || (Array.isArray(json) ? json : []);
 
         const mapped: LeadOption[] = list.map((r: any) => ({
           client_id: r.client_id || r.opportunity_number || '',
