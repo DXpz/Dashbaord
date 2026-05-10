@@ -62,11 +62,17 @@ export default function FormularioPage() {
 
     setReopening(true);
     try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
+      const key = process.env.API_KEY || '';
+
       const reason = encodeURIComponent('Reabierto por admin desde dashboard');
-      const url = `http://200.35.189.139/api/audit/${selectedLead.client_id}/reopen?reason=${reason}`;
+      const url = isHttps
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/reopen?reason=${reason}`)}`
+        : `${base}audit/${selectedLead.client_id}/reopen?reason=${reason}`;
 
       const headers: Record<string, string> = {
-        'X-API-KEY': 'RedApi_2026_SuperSegura_9XK2',
+        'X-API-KEY': key,
         'ngrok-skip-browser-warning': 'true',
       };
 
@@ -100,6 +106,8 @@ export default function FormularioPage() {
 
     setCreating(true);
     try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
       const key = process.env.API_KEY || '';
 
       const payload = {
@@ -115,20 +123,22 @@ export default function FormularioPage() {
         cierre_estimado: '',
       };
 
-      // Direct to backend
-      const url = `http://200.35.189.139/api/audit/assign-round-robin?pais=${payload.pais}`;
+const url = isHttps
+        ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + payload.pais)}`
+        : `${base}audit/assign-round-robin?pais=${payload.pais}`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'X-API-KEY': 'RedApi_2026_SuperSegura_9XK2',
+        'X-API-KEY': key,
         'ngrok-skip-browser-warning': 'true',
       };
 
       console.log('Creating lead:', url, JSON.stringify(payload));
 
       const res = await fetch(url, {
-        method: 'POST',
+        method: 'PATCH',
         headers,
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
