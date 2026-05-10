@@ -35,6 +35,7 @@ export default function FormularioPage() {
         const desde = `${filters.desde}T00:00:00`;
         const hasta = `${filters.hasta}T23:59:59.999`;
         const params = new URLSearchParams({ desde, hasta, limite: '1000' });
+        if (filters.pais) params.set('pais', filters.pais);
         const suffix = params.toString();
         const url = `/api/proxy?endpoint=/metrics/reuniones&${suffix}`;
         
