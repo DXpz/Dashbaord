@@ -6,7 +6,7 @@ import { Shell } from '@/components/layout/Shell';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { KPICard } from '@/components/kpi/KPICard';
-import { useDashboard, useConnectionStatus, useAsesores, useFilters, useMotivosPerdida } from '@/hooks';
+import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters, useMotivosPerdida } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, TrendingDown, Target, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ const COLORS = {
 
 export default function PropuestasPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const { data, loading, error } = useDashboard(filters);
+  const { data, loading, error } = useAdminDashboard(filters);
   const { motivos, categorias, loading: motivosLoading } = useMotivosPerdida(filters);
   const [normalizadas, setNormalizadas] = useState(false);
   const connectionStatus = useConnectionStatus();
