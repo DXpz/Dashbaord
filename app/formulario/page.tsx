@@ -118,7 +118,7 @@ export default function FormularioPage() {
         asunto: 'Lead nuevo desde dashboard',
         ubicacion: '',
         descripcion: 'Creado por admin',
-        validador: '',
+        validador: 'Lead Manual',
         dia_reunion: '',
         cierre_estimado: '',
       };
@@ -136,7 +136,7 @@ const url = isHttps
       console.log('Creating lead:', url, JSON.stringify(payload));
 
       const res = await fetch(url, {
-        method: 'PATCH',
+        method: 'POST',
         headers,
         credentials: 'include',
         body: JSON.stringify(payload),

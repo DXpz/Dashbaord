@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, X-API-KEY, ngrok-skip-browser-warning, Authorization',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 export async function GET(request: NextRequest) {
   return handleRequest(request);
 }
@@ -50,15 +62,19 @@ async function handleRequest(req: NextRequest) {
   });
 
   const method = req.method;
+
   let body: undefined | string;
   if (method !== 'GET' && method !== 'HEAD') {
-    const text = await req.text();
-    if (text) body = text;
+    const contentType = req.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      body = await req.text();
+    } else {
+      const formData = await req.formData();
+      body = JSON.stringify(Object.fromEntries(formData));
+    }
   }
 
-  console.log('[proxy] method:', method, 'target:', target);
-  console.log('[proxy] headers:', JSON.stringify(upstreamHeaders));
-  console.log('[proxy] body:', body);
+  console.log('[proxy]', method, target, 'headers:', upstreamHeaders, 'body:', body);
 
   try {
     const upstream = await fetch(target, {
