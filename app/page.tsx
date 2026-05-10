@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
+import { useDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 
@@ -15,7 +15,7 @@ const STAGE_COLORS = [
 
 export default function HomePage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const { data, loading, error } = useAdminDashboard(filters);
+  const { data, loading, error } = useDashboard(filters);
   const connectionStatus = useConnectionStatus();
   const asesoresList = useAsesores(filters);
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
