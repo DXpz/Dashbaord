@@ -26,6 +26,7 @@ const navItems = [
   { href: '/round-robin', label: 'Round Robin', icon: CircleDot },
   { href: '/origen-leads', label: 'Origen Leads', icon: Globe },
   { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
+  { href: '/formulario', label: 'Formulario', icon: FileText },
 ];
 
 const EDGE_TRIGGER_WIDTH = 40;
