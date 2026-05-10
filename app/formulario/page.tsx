@@ -34,14 +34,8 @@ export default function FormularioPage() {
       try {
         const desde = `${filters.desde}T00:00:00`;
         const hasta = `${filters.hasta}T23:59:59.999`;
-        const params = new URLSearchParams({ desde, hasta, limite: '1000' });
-        if (filters.pais) params.set('pais', filters.pais);
-        const suffix = params.toString();
-        const url = `/api/proxy?endpoint=/metrics/reuniones&${suffix}`;
-        
-        const result = await fetch(url, { credentials: 'include' });
-        const json = await result.json();
-        const list = json?.items || (Array.isArray(json) ? json : []);
+        const result = await API.reuniones(desde, hasta, 1000, 0, { pais: filters.pais });
+        const list = result?.items || (Array.isArray(result) ? result : []);
 
         const mapped: LeadOption[] = list.map((r: any) => ({
           client_id: r.client_id || r.opportunity_number || '',
