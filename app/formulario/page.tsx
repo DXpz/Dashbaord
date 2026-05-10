@@ -114,6 +114,7 @@ export default function FormularioPage() {
         nombre: newLead.nombre.trim(),
         correo: newLead.correo.trim(),
         telefono: newLead.telefono.trim(),
+        pais: newLead.pais || 'SV',
         asunto: 'Lead nuevo desde dashboard',
         ubicacion: '',
         descripcion: 'Creado por admin',
@@ -123,8 +124,8 @@ export default function FormularioPage() {
       };
 
 const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + payload.pais)}`
-        : `${base}audit/assign-round-robin?pais=${payload.pais}`;
+        ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + newLead.pais)}`
+        : `${base}audit/assign-round-robin?pais=${newLead.pais}`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
