@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
 import { Search, X } from 'lucide-react';
 import { Shell } from '@/components/layout/Shell';
-import { useAdminDashboard, useConnectionStatus, useFilters } from '@/hooks';
-import { API } from '@/services/api';
+import { useAdminDashboard, useConnectionStatus, useFilters, useAllLeads } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface LeadOption {
@@ -20,63 +19,31 @@ export default function FormularioPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading: dashboardLoading } = useAdminDashboard(filters);
   const connectionStatus = useConnectionStatus();
+  const { leads, loading } = useAllLeads(filters);
 
-  const [leads, setLeads] = useState<LeadOption[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadOption | null>(null);
   const [showForm, setShowForm] = useState(false);
-
-  useEffect(() => {
-    async function fetchLeads() {
-      setLoading(true);
-      try {
-        const desde = filters.desde ? `${filters.desde}T00:00:00` : '';
-        const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : '';
-        const result = await API.reuniones(desde, hasta, 1000, 0, {});
-        const list = result?.items || (Array.isArray(result) ? result : []);
-
-        const mapped: LeadOption[] = list.map((r: any) => ({
-          client_id: r.client_id || r.opportunity_number || '',
-          client_name: r.client_name || r.cliente || '',
-          opportunity_stage_label: r.opportunity_stage_label || r.opportunity_stage || '',
-          oportunidad_id: r.id || r.opportunity_id || 0,
-        }));
-
-        const unique = mapped.reduce((acc: LeadOption[], lead: LeadOption) => {
-          if (!acc.find(l => l.client_id === lead.client_id)) {
-            acc.push(lead);
-          }
-          return acc;
-        }, []);
-
-        setLeads(unique);
-      } catch (err) {
-        console.error('Error fetching leads:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (filters.desde && filters.hasta) {
-      fetchLeads();
-    }
-  }, [filters.desde, filters.hasta]);
 
   const filteredLeads = useMemo(() => {
     if (!searchTerm) return leads.slice(0, 30);
     const q = searchTerm.toLowerCase();
     return leads
       .filter(l =>
-        l.client_id.toLowerCase().includes(q) ||
-        l.client_name.toLowerCase().includes(q)
+        (l.client_id || '').toLowerCase().includes(q) ||
+        (l.client_name || '').toLowerCase().includes(q)
       )
       .slice(0, 30);
   }, [leads, searchTerm]);
 
-  const handleSelectLead = (lead: LeadOption) => {
-    setSelectedLead(lead);
+  const handleSelectLead = (lead: any) => {
+    setSelectedLead({
+      client_id: lead.client_id || lead.opportunity_number || '',
+      client_name: lead.client_name || lead.cliente || '',
+      opportunity_stage_label: lead.opportunity_stage_label || lead.opportunity_stage || '',
+      oportunidad_id: lead.id || 0,
+    });
     setSearchTerm(lead.client_id);
     setShowDropdown(false);
   };

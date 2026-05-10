@@ -257,6 +257,33 @@ export function useReuniones(filters: FilterState) {
   return { reuniones, loading, error };
 }
 
+export function useAllLeads(filters: FilterState) {
+  const [leads, setLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLeads = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
+        const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
+        const result = await API.reuniones(desde ?? '', hasta ?? '', 1000, 0, {});
+        const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
+        setLeads(Array.isArray(list) ? list : []);
+      } catch (err: any) {
+        setError(err.message || 'Error al cargar leads');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeads();
+  }, [filters.desde, filters.hasta, filters.pais]);
+
+  return { leads, loading, error };
+}
+
 export function useFuentes(filters: FilterState) {
   const [fuentes, setFuentes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
