@@ -25,7 +25,7 @@ async function handleRequest(req: NextRequest) {
   const base = (process.env.API_UPSTREAM ?? 'http://200.35.189.139').trim().replace(/\/+$/, '');
 
   const { searchParams } = req.nextUrl;
-  const pathParam = searchParams.get('endpoint') || '';
+  const pathParam = searchParams.get('endpoint') || searchParams.get('_path') || '';
   const suffix = pathParam;
 
   const qs = new URLSearchParams();
