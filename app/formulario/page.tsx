@@ -32,9 +32,9 @@ export default function FormularioPage() {
     async function fetchLeads() {
       setLoading(true);
       try {
-        const desde = `${filters.desde}T00:00:00`;
-        const hasta = `${filters.hasta}T23:59:59.999`;
-        const result = await API.reuniones(desde, hasta, 1000, 0, { pais: filters.pais });
+        const desde = filters.desde ? `${filters.desde}T00:00:00` : '';
+        const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : '';
+        const result = await API.reuniones(desde, hasta, 1000, 0, {});
         const list = result?.items || (Array.isArray(result) ? result : []);
 
         const mapped: LeadOption[] = list.map((r: any) => ({
