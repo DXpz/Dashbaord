@@ -3,7 +3,9 @@
 import { useState, useMemo } from 'react';
 import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
-import { Search, X, RotateCcw } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Search, X, RotateCcw, Plus } from 'lucide-react';
 import { Shell } from '@/components/layout/Shell';
 import { useAdminDashboard, useConnectionStatus, useFilters, useAllLeads } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,6 +29,9 @@ export default function FormularioPage() {
   const [selectedLead, setSelectedLead] = useState<LeadOption | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [reopening, setReopening] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: 'SV' });
 
   const filteredLeads = useMemo(() => {
     if (!searchTerm) return leads.slice(0, 30);
@@ -54,29 +59,29 @@ export default function FormularioPage() {
   const handleReopenLead = async () => {
     if (!selectedLead) return;
     if (!confirm('¿Reabrir este lead? Volverá a etapa de Reunión.')) return;
-    
+
     setReopening(true);
     try {
       const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
       const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
       const key = process.env.API_KEY || '';
-      
+
       const reason = encodeURIComponent('Reabierto por admin desde dashboard');
-      const url = isHttps 
+      const url = isHttps
         ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/reopen?reason=${reason}`)}`
         : `${base}audit/${selectedLead.client_id}/reopen?reason=${reason}`;
-      
+
       const headers: Record<string, string> = {
         'X-API-KEY': key,
         'ngrok-skip-browser-warning': 'true',
       };
-      
-      const res = await fetch(url, { 
+
+      const res = await fetch(url, {
         method: 'POST',
         headers,
         credentials: 'include',
       });
-      
+
       if (res.ok) {
         alert('Lead reabierto correctamente');
         setSelectedLead(null);
@@ -90,6 +95,68 @@ export default function FormularioPage() {
       alert('Error al reabrir lead');
     } finally {
       setReopening(false);
+    }
+  };
+
+  const handleCreateLead = async () => {
+    if (!newLead.nombre.trim() || !newLead.correo.trim()) {
+      alert('Nombre y correo son obligatorios');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
+      const key = process.env.API_KEY || '';
+
+      const payload = {
+        nombre: newLead.nombre.trim(),
+        correo: newLead.correo.trim(),
+        telefono: newLead.telefono.trim(),
+        pais: newLead.pais || 'SV',
+        asunto: 'Lead nuevo desde dashboard',
+        ubicacion: '',
+        descripcion: 'Creado por admin',
+        validador: '',
+        dia_reunion: '',
+        cierre_estimado: '',
+      };
+
+      const url = isHttps
+        ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + payload.pais)}`
+        : `${base}audit/assign-round-robin?pais=${payload.pais}`;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-API-KEY': key,
+        'ngrok-skip-browser-warning': 'true',
+      };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        alert(`Lead creado: ${data.client_id} - Asesor: ${data.advisor_name}`);
+        setShowCreateModal(false);
+        setNewLead({ nombre: '', correo: '', telefono: '', pais: 'SV' });
+      } else if (data.already_existed) {
+        alert(`Lead ya existía: ${data.client_id}`);
+        setShowCreateModal(false);
+      } else {
+        alert(data?.detail || 'Error al crear lead');
+      }
+    } catch (err) {
+      console.error('Error creating lead:', err);
+      alert('Error al crear lead');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -113,11 +180,8 @@ export default function FormularioPage() {
             <h2 className="text-lg font-semibold text-[#1F1D3D] mb-4">Actualizar Lead</h2>
 
             <div className="space-y-4">
-              <div>
-                <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide mb-1.5 block">
-                  Selecciona el Lead
-                </label>
-                <div className="relative">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1 max-w-md">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <Search className="h-4 w-4 text-[#B5B5AE]" />
                   </div>
@@ -131,7 +195,7 @@ export default function FormularioPage() {
                       if (!e.target.value) setSelectedLead(null);
                     }}
                     onFocus={() => setShowDropdown(true)}
-                    className="w-full max-w-md pl-9 pr-8 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] transition-colors"
+                    className="w-full pl-9 pr-8 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] transition-colors"
                     disabled={loading}
                   />
                   {searchTerm && (
@@ -143,33 +207,41 @@ export default function FormularioPage() {
                     </button>
                   )}
                 </div>
-
-                {showDropdown && searchTerm && filteredLeads.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full max-w-md bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                    {filteredLeads.map((lead) => (
-                      <button
-                        key={lead.client_id}
-                        onClick={() => handleSelectLead(lead)}
-                        className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex items-center justify-between"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</p>
-                          <p className="text-xs text-[#B5B5AE]">{lead.client_name}</p>
-                        </div>
-                        <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">
-                          {lead.opportunity_stage_label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {showDropdown && searchTerm && filteredLeads.length === 0 && !loading && (
-                  <div className="absolute z-10 mt-1 w-full max-w-md bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
-                    No se encontraron leads
-                  </div>
-                )}
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  variant="outline"
+                  className="gap-1.5 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]"
+                >
+                  <Plus className="h-4 w-4" />
+                  Crear Lead
+                </Button>
               </div>
+
+              {showDropdown && searchTerm && filteredLeads.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full max-w-md bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                  {filteredLeads.map((lead) => (
+                    <button
+                      key={lead.client_id}
+                      onClick={() => handleSelectLead(lead)}
+                      className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</p>
+                        <p className="text-xs text-[#B5B5AE]">{lead.client_name}</p>
+                      </div>
+                      <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">
+                        {lead.opportunity_stage_label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {showDropdown && searchTerm && filteredLeads.length === 0 && !loading && (
+                <div className="absolute z-10 mt-1 w-full max-w-md bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
+                  No se encontraron leads
+                </div>
+              )}
 
               {selectedLead && (
                 <div className="bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg p-3 flex items-center justify-between">
@@ -211,6 +283,73 @@ export default function FormularioPage() {
               onClose={() => setShowForm(false)}
             />
           )}
+
+          <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Crear Nuevo Lead</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                    Nombre <span className="text-[#c8151b]">*</span>
+                  </label>
+                  <Input
+                    value={newLead.nombre}
+                    onChange={(e) => setNewLead({ ...newLead, nombre: e.target.value })}
+                    placeholder="Nombre del cliente"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                    Correo <span className="text-[#c8151b]">*</span>
+                  </label>
+                  <Input
+                    type="email"
+                    value={newLead.correo}
+                    onChange={(e) => setNewLead({ ...newLead, correo: e.target.value })}
+                    placeholder="correo@ejemplo.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                    Teléfono
+                  </label>
+                  <Input
+                    value={newLead.telefono}
+                    onChange={(e) => setNewLead({ ...newLead, telefono: e.target.value })}
+                    placeholder="5555-5555"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                    País
+                  </label>
+                  <Input
+                    value={newLead.pais}
+                    onChange={(e) => setNewLead({ ...newLead, pais: e.target.value })}
+                    placeholder="SV"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={creating}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCreateLead}
+                  disabled={creating}
+                  className="bg-[#1F1D3D] hover:bg-[#35325B] text-white"
+                >
+                  {creating ? 'Creando...' : 'Crear Lead'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </Shell>
