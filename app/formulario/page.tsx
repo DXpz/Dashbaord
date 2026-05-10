@@ -30,6 +30,8 @@ export default function FormularioPage() {
   const [showForm, setShowForm] = useState(false);
   const [reopening, setReopening] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: 'SV' });
@@ -101,7 +103,10 @@ export default function FormularioPage() {
 
   const handleDeleteLead = async () => {
     if (!selectedLead) return;
-    if (!confirm('¿Marcar este lead como no agendado?')) return;
+    if (!deleteReason.trim()) {
+      alert('Escribe una razón para eliminar');
+      return;
+    }
 
     setDeleting(true);
     try {
@@ -122,10 +127,12 @@ export default function FormularioPage() {
         method: 'POST',
         headers,
         credentials: 'include',
-        body: JSON.stringify({ reason: 'Lead no calificado' }),
+        body: JSON.stringify({ reason: deleteReason }),
       });
 
       if (res.ok) {
+        setShowDeleteDialog(false);
+        setDeleteReason('');
         alert('Lead marcado como no agendado');
         setSelectedLead(null);
         setSearchTerm('');
@@ -295,13 +302,12 @@ const url = isHttps
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
-                      onClick={handleDeleteLead}
-                      disabled={deleting}
+                      onClick={() => setShowDeleteDialog(true)}
                       variant="outline"
                       className="gap-1.5 border-[#EEEEEC] text-[#B5B5AE] hover:text-red-600 hover:bg-red-50 hover:border-red-200"
                     >
                       <Trash2 className="h-4 w-4" />
-                      {deleting ? 'Eliminando...' : 'Eliminar'}
+                      Eliminar
                     </Button>
                     <Button
                       onClick={handleReopenLead}
@@ -398,6 +404,42 @@ const url = isHttps
                   className="bg-[#1F1D3D] hover:bg-[#35325B] text-white"
                 >
                   {creating ? 'Creando...' : 'Crear Lead'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Marcar lead como no agendado</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                    Razón <span className="text-[#c8151b]">*</span>
+                  </label>
+                  <Input
+                    value={deleteReason}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                    placeholder="Escribe la razón..."
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => { setShowDeleteDialog(false); setDeleteReason(''); }}
+                  disabled={deleting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleDeleteLead}
+                  disabled={deleting || !deleteReason.trim()}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {deleting ? 'Eliminando...' : 'Eliminar Lead'}
                 </Button>
               </DialogFooter>
             </DialogContent>
