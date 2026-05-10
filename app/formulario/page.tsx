@@ -5,7 +5,7 @@ import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Search, X, RotateCcw, Plus } from 'lucide-react';
+import { Search, X, RotateCcw, Plus, Trash2 } from 'lucide-react';
 import { Shell } from '@/components/layout/Shell';
 import { useAdminDashboard, useConnectionStatus, useFilters, useAllLeads } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,6 +29,7 @@ export default function FormularioPage() {
   const [selectedLead, setSelectedLead] = useState<LeadOption | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [reopening, setReopening] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: 'SV' });
@@ -95,6 +96,48 @@ export default function FormularioPage() {
       alert('Error al reabrir lead');
     } finally {
       setReopening(false);
+    }
+  };
+
+  const handleDeleteLead = async () => {
+    if (!selectedLead) return;
+    if (!confirm('¿Marcar este lead como no agendado?')) return;
+
+    setDeleting(true);
+    try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
+      const key = process.env.API_KEY || '';
+
+      const reason = encodeURIComponent('Lead no calificado');
+      const url = isHttps
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/no-agendado?reason=${reason}`)}`
+        : `${base}audit/${selectedLead.client_id}/no-agendado?reason=${reason}`;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-API-KEY': key,
+      };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        alert('Lead marcado como no agendado');
+        setSelectedLead(null);
+        setSearchTerm('');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data?.detail || 'Error al eliminar lead');
+      }
+    } catch (err) {
+      console.error('Error deleting lead:', err);
+      alert('Error al eliminar lead');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -251,6 +294,15 @@ const url = isHttps
                     <p className="text-xs text-[#35325B]">{selectedLead.client_name}</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handleDeleteLead}
+                      disabled={deleting}
+                      variant="outline"
+                      className="gap-1.5 border-[#EEEEEC] text-[#B5B5AE] hover:text-red-600 hover:bg-red-50 hover:border-red-200"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {deleting ? 'Eliminando...' : 'Eliminar'}
+                    </Button>
                     <Button
                       onClick={handleReopenLead}
                       disabled={reopening}
