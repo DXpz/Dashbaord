@@ -25,12 +25,13 @@ async function handleRequest(req: NextRequest) {
   const base = (process.env.API_UPSTREAM ?? 'http://200.35.189.139').trim().replace(/\/+$/, '');
 
   const { searchParams } = req.nextUrl;
-  const pathParam = searchParams.get('endpoint') || searchParams.get('_path') || '';
+  const rawPath = searchParams.get('endpoint') || searchParams.get('_path') || '';
+  const pathParam = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
   const suffix = pathParam;
 
   const qs = new URLSearchParams();
   searchParams.forEach((value, key) => {
-    if (key !== 'endpoint') qs.set(key, value);
+    if (key !== 'endpoint' && key !== '_path') qs.set(key, value);
   });
   const queryString = qs.toString();
   const target = `${base}/api${suffix}${queryString ? `?${queryString}` : ''}`;
