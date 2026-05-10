@@ -116,11 +116,13 @@ export default function FormularioPage() {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-API-KEY': key,
+        'Authorization': `Bearer ${selectedLead.client_id}`, // dummy token for proxy auth
       };
 
       const res = await fetch(url, {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ reason: 'Lead no calificado' }),
       });
 
