@@ -279,12 +279,12 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         const oppData = await oppRes.json();
         const auditData = await auditRes.json();
 
-        const clientName = oppData?.client_name || oppData?.clientName || '';
-        const clientEmail = oppData?.client_email || oppData?.clientEmail || '';
-        const clientPhone = oppData?.client_phone || oppData?.clientPhone || '';
-        const sellerName = oppData?.advisor_name || oppData?.sellerName || '';
-        const opportunityStage = auditData?.opportunity_stage || oppData?.opportunity_stage || 2;
-        const stageFeedbackJson = auditData?.stage_feedback_json || {};
+        const clientName = auditData?.audit?.client_name || oppData?.client_name || oppData?.clientName || '';
+        const clientEmail = auditData?.audit?.client_email || oppData?.client_email || oppData?.clientEmail || '';
+        const clientPhone = auditData?.audit?.client_phone || oppData?.client_phone || oppData?.clientPhone || '';
+        const sellerName = auditData?.audit?.advisor_name || oppData?.advisor_name || oppData?.sellerName || '';
+        const opportunityStage = auditData?.audit?.opportunity_stage || oppData?.opportunity_stage || 2;
+        const stageFeedbackJson = auditData?.audit?.stage_feedback_json || {};
 
         const demoRequired = stageFeedbackJson[2]?.requiere_demo === 'si';
         setRequiresDemo(demoRequired);
@@ -294,6 +294,14 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
 
         const initIdx = newStages.findIndex(s => s.id === initialStage);
         setCurrentStageIndex(initIdx >= 0 ? initIdx : 0);
+
+        const mergedStageData: Record<number, Record<string, string>> = {};
+        Object.entries(stageFeedbackJson).forEach(([stageNum, fields]) => {
+          if (fields && typeof fields === 'object') {
+            mergedStageData[Number(stageNum)] = fields as Record<string, string>;
+          }
+        });
+        setStageData(mergedStageData);
 
         setLoadedData({
           clientName,
