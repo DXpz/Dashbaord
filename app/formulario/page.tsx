@@ -109,10 +109,9 @@ export default function FormularioPage() {
       const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
       const key = process.env.API_KEY || '';
 
-      const reason = encodeURIComponent('Lead no calificado');
       const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/no-agendado?reason=${reason}`)}`
-        : `${base}audit/${selectedLead.client_id}/no-agendado?reason=${reason}`;
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/no-agendado`)}`
+        : `${base}audit/${selectedLead.client_id}/no-agendado`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -122,7 +121,7 @@ export default function FormularioPage() {
       const res = await fetch(url, {
         method: 'POST',
         headers,
-        credentials: 'include',
+        body: JSON.stringify({ reason: 'Lead no calificado' }),
       });
 
       if (res.ok) {
