@@ -124,7 +124,7 @@ export default function FormularioPage() {
       };
 
       const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + payload.pais)}`
+        ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin')}&pais=${encodeURIComponent(payload.pais)}`
         : `${base}audit/assign-round-robin?pais=${payload.pais}`;
 
       const headers: Record<string, string> = {
