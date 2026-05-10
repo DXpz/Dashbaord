@@ -269,7 +269,7 @@ export function useAllLeads(filters: FilterState) {
       try {
         const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
         const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
-        const result = await API.reuniones(desde ?? '', hasta ?? '', 1000, 0, {});
+        const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, {});
         const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
         setLeads(Array.isArray(list) ? list : []);
       } catch (err: any) {
