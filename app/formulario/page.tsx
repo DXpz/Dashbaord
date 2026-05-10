@@ -110,7 +110,7 @@ export default function FormularioPage() {
       const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
       const key = process.env.API_KEY || '';
 
-      const payload = {
+      const payload: Record<string, string> = {
         nombre: newLead.nombre.trim(),
         correo: newLead.correo.trim(),
         telefono: newLead.telefono.trim(),
@@ -120,8 +120,8 @@ export default function FormularioPage() {
         descripcion: 'Creado por admin',
         validador: 'Lead Manual',
         dia_reunion: '',
-        cierre_estimado: '',
       };
+      if (newLead.pais) payload.pais = newLead.pais;
 
 const url = isHttps
         ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + newLead.pais)}`
