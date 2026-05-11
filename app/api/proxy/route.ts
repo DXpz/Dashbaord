@@ -79,13 +79,13 @@ async function handleRequest(req: NextRequest) {
     }
   }
 
-  console.log('[proxy]', method, target, 'headers:', upstreamHeaders, 'body:', body);
+console.log('[proxy]', method, target, 'headers:', JSON.stringify(upstreamHeaders), 'body:', upstreamBody);
 
   try {
     const upstream = await fetch(target, {
       method,
       headers: upstreamHeaders,
-      body: body || undefined,
+      body: upstreamBody,
     });
     const outType = upstream.headers.get('content-type');
     const buffer = Buffer.from(await upstream.arrayBuffer());
@@ -99,6 +99,6 @@ async function handleRequest(req: NextRequest) {
     return response;
   } catch (err: any) {
     console.error('[proxy] Error conectando a', target, err);
-    return NextResponse.json({ error: 'Error conectando al upstream.', detail: String(err) }, { status: 502 });
+    return NextResponse.json({ error: 'Error conectando al upstream.', detail: String(err), target }, { status: 502 });
   }
 }
