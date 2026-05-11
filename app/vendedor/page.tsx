@@ -26,14 +26,17 @@ export default function VendedorDashboard() {
 const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    console.log('useEffect triggered', { user: user?.full_name, refreshKey, authLoading });
-    if (!user?.full_name) {
-      console.log('No user.full_name');
-      return;
-    }
-    setLoading(true);
+    if (!user?.full_name) return;
+    if (authLoading) return;
+    console.log('Setting isReady=true');
+    setIsReady(true);
+  }, [user, authLoading]);
+
+  useEffect(() => {
+    if (!isReady) return;
     console.log('Fetching metrics...');
     API.asesor(
       user.full_name,
@@ -47,7 +50,13 @@ const [data, setData] = useState<any>(null);
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [refreshKey, user, authLoading]);
+  }, [isReady, desde, hasta, refreshKey]);
+
+  useEffect(() => {
+    console.log(' pathname changed, resetting');
+    setRefreshKey(k => k + 1);
+    setIsReady(false);
+  }, [pathname]);
 
   const metricas = data?.metricas || {};
 
