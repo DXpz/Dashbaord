@@ -25,7 +25,7 @@ export default function VendedorDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.full_name || authLoading) return;
     setLoading(true);
     API.asesor(
       user.full_name,
@@ -38,7 +38,7 @@ export default function VendedorDashboard() {
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [user, desde, hasta]);
+  }, [user?.full_name, authLoading, desde, hasta]);
 
   const metricas = data?.metricas || {};
 
