@@ -22,20 +22,26 @@ export default function HomePage() {
   const asesoresList = useAsesores(filters);
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
-  const resumen = data?.resumen || {};
+  const metricas = data?.metricas || {};
   const stagesFromApi = data?.stages || [];
   const leadsPorStage = data?.leads_por_stage || [];
 
-  const totalLeads = resumen.total_auditorias ?? 0;
-  const liderLeads = resumen.atendidos_por_lider ?? 0;
-  const gerenteLeads = resumen.atendidos_por_gerente ?? 0;
+  const totalLeads = metricas.total_auditorias ?? 0;
+  const leadsAceptados = metricas.leads_aceptados ?? 0;
+  const leadsNoAgendados = metricas.leads_no_agendados ?? 0;
+  const reunionesConRetro = metricas.reuniones_con_retro ?? 0;
+  const reunionesSinRetro = metricas.reuniones_sin_retro ?? 0;
+  const propuestas = metricas.propuestas_registradas ?? 0;
+  const seguimientos = metricas.seguimientos_registrados ?? 0;
+  const ventasCerradas = metricas.ventas_cerradas ?? 0;
+  const ventasPerdidas = metricas.ventas_perdidas ?? 0;
 
   const stageData = useMemo(() => {
     if (stagesFromApi.length === 0) return [];
 
     return stagesFromApi.map((s: any) => {
       if (s.id === 1) {
-        return { label: s.label, value: resumen.leads_aceptados ?? 0 };
+        return { label: s.label, value: leadsAceptados };
       }
       const matching = leadsPorStage.filter((l: any) => l.stage === s.id);
       const hasSubStages = matching.length > 1 || matching.some((l: any) => (l as any).sub_stage);
@@ -52,7 +58,7 @@ export default function HomePage() {
       const entry = matching[0];
       return { label: s.label, value: entry?.total || 0 };
     });
-  }, [stagesFromApi, leadsPorStage, resumen]);
+  }, [stagesFromApi, leadsPorStage, leadsAceptados]);
 
   const flatData = useMemo(() => {
     const seen = new Set<string>();
@@ -144,39 +150,39 @@ export default function HomePage() {
           <div className="w-44 flex flex-col gap-3">
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
               <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead No Calificado</p>
-              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_no_agendados ?? 0}</p>
+              <p className="text-lg font-bold text-[#1F1D3D]">{leadsNoAgendados}</p>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
               <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead Calificado</p>
-              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.leads_aceptados ?? 0}</p>
+              <p className="text-lg font-bold text-[#1F1D3D]">{leadsAceptados}</p>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
               <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Total Leads</p>
-              <p className="text-lg font-bold text-[#1F1D3D]">{resumen.total_leads_general ?? totalLeads}</p>
+              <p className="text-lg font-bold text-[#1F1D3D]">{totalLeads}</p>
             </div>
           </div>
 
           <div className="flex-1 flex gap-3">
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Total Comercial</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Reuniones</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{resumen.atendidos_por_asesor ?? 0}</p>
+                <p className="text-6xl font-bold text-[#1F1D3D]">{reunionesConRetro + reunionesSinRetro}</p>
               </div>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Líder de Ventas</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Propuestas</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{liderLeads}</p>
+                <p className="text-6xl font-bold text-[#1F1D3D]">{propuestas}</p>
               </div>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Gerencial</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Ventas Cerradas</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{gerenteLeads}</p>
+                <p className="text-6xl font-bold text-[#1F1D3D]">{ventasCerradas}</p>
               </div>
             </div>
           </div>
