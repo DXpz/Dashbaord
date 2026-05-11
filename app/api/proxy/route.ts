@@ -38,7 +38,7 @@ async function handleRequest(req: NextRequest) {
     return NextResponse.json({ detail: 'No autenticado' }, { status: 401 });
   }
 
-  const base = (process.env.API_UPSTREAM ?? 'http://200.35.189.139').trim().replace(/\/+$/, '');
+  const base = (process.env.API_UPSTREAM ?? 'http://200.35.189.139:3001').trim().replace(/\/+$/, '');
 
   const { searchParams } = req.nextUrl;
   const endpointParam = searchParams.get('endpoint');
