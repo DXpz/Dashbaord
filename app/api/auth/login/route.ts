@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
+  const { username, password } = await req.json();
 
   try {
     const upstream = await fetch('http://200.35.189.139/api/auth/login', {
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
         'X-API-KEY': process.env.API_KEY || '',
         'ngrok-skip-browser-warning': 'true',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
 
     const data = await upstream.json();
