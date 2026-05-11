@@ -24,7 +24,7 @@ export default function VendedorDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const isMounted = useRef(false);
+  const prevAuthLoading = useRef(true);
 
   useEffect(() => {
     if (!user?.full_name) return;
@@ -44,13 +44,10 @@ export default function VendedorDashboard() {
   }, [user?.full_name, authLoading, desde, hasta, refreshKey]);
 
   useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-      return;
+    if (prevAuthLoading.current === true && authLoading === false) {
+      setRefreshKey(k => k + 1);
     }
-    if (!user?.full_name) return;
-    if (authLoading) return;
-    setRefreshKey(k => k + 1);
+    prevAuthLoading.current = authLoading;
   }, [authLoading]);
 
   const metricas = data?.metricas || {};
