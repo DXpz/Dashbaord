@@ -38,7 +38,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const userData = await res.json();
         console.log('/api/auth/me data:', userData);
-        setUser(userData);
+        setUser(userData.user || userData.data || userData);
       } else {
         const errData = await res.json().catch(() => ({}));
         console.log('/api/auth/me error:', errData);
@@ -61,8 +61,8 @@ const login = async (username: string, password: string): Promise<{ ok: boolean;
       });
       const data = await res.json();
       if (!res.ok) return { ok: false, error: data.detail || data.error || 'Error al iniciar sesión' };
-      setUser(data.user);
-      router.push(data.user.role === 'advisor' ? '/vendedor' : '/');
+      setUser(data.user || data.data || data);
+      router.push((data.user || data.data || data).role === 'advisor' ? '/vendedor' : '/');
       return { ok: true };
     } catch (e) {
       return { ok: false, error: 'No se pudo conectar al servidor' };
