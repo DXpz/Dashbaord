@@ -257,6 +257,32 @@ export default function FormularioPage() {
                       <X className="h-4 w-4" />
                     </button>
                   )}
+
+                  {showDropdown && searchTerm && filteredLeads.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                      {filteredLeads.map((lead) => (
+                        <button
+                          key={lead.client_id}
+                          onClick={() => handleSelectLead(lead)}
+                          className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</p>
+                            <p className="text-xs text-[#B5B5AE]">{lead.client_name}</p>
+                          </div>
+                          <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">
+                            {lead.opportunity_stage_label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {showDropdown && searchTerm && filteredLeads.length === 0 && !loading && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
+                      No se encontraron leads
+                    </div>
+                  )}
                 </div>
                 <Button
                   onClick={() => setShowCreateModal(true)}
@@ -268,31 +294,7 @@ export default function FormularioPage() {
                 </Button>
               </div>
 
-              {showDropdown && searchTerm && filteredLeads.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full max-w-md bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                  {filteredLeads.map((lead) => (
-                    <button
-                      key={lead.client_id}
-                      onClick={() => handleSelectLead(lead)}
-                      className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</p>
-                        <p className="text-xs text-[#B5B5AE]">{lead.client_name}</p>
-                      </div>
-                      <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">
-                        {lead.opportunity_stage_label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {showDropdown && searchTerm && filteredLeads.length === 0 && !loading && (
-                <div className="absolute z-10 mt-1 w-full max-w-md bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
-                  No se encontraron leads
-                </div>
-              )}
+              
 
               {selectedLead && (
                 <div className="bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg p-3 flex items-center justify-between">
