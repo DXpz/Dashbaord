@@ -36,7 +36,7 @@ const [data, setData] = useState<any>(null);
   }, [user, authLoading]);
 
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || !user?.full_name) return;
     console.log('Fetching metrics...');
     API.asesor(
       user.full_name,
@@ -50,7 +50,7 @@ const [data, setData] = useState<any>(null);
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [isReady, desde, hasta, refreshKey]);
+  }, [isReady, user, desde, hasta, refreshKey]);
 
   useEffect(() => {
     console.log(' pathname changed, resetting');
