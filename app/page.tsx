@@ -23,6 +23,7 @@ export default function HomePage() {
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
   const metricas = data?.metricas || {};
+  const resumen = data?.resumen || {};
   const stagesFromApi = data?.stages || [];
   const leadsPorStage = data?.leads_por_stage || [];
 
@@ -35,6 +36,9 @@ export default function HomePage() {
   const seguimientos = metricas.seguimientos_registrados ?? 0;
   const ventasCerradas = metricas.ventas_cerradas ?? 0;
   const ventasPerdidas = metricas.ventas_perdidas ?? 0;
+  const atendidosPorAsesor = metricas.atendidos_por_asesor ?? resumen.atendidos_por_asesor ?? 0;
+  const atendidosPorLider = metricas.atendidos_por_lider ?? resumen.atendidos_por_lider ?? 0;
+  const atendidosPorGerente = metricas.atendidos_por_gerente ?? resumen.atendidos_por_gerente ?? 0;
 
   const stageData = useMemo(() => {
     if (stagesFromApi.length === 0) return [];
@@ -166,23 +170,23 @@ export default function HomePage() {
 
           <div className="flex-1 flex gap-3">
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Reuniones</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Total Comercial</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{reunionesConRetro + reunionesSinRetro}</p>
+                <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorAsesor}</p>
               </div>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Propuestas</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Líder de Ventas</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{propuestas}</p>
+                <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorLider}</p>
               </div>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Ventas Cerradas</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Gerencial</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{ventasCerradas}</p>
+                <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorGerente}</p>
               </div>
             </div>
           </div>
