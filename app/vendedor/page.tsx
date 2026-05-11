@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useVendedorFilters } from '@/lib/vendedor-filters';
 import { API } from '@/services/api';
@@ -24,6 +24,7 @@ export default function VendedorDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const isMounted = useRef(false);
 
   useEffect(() => {
     if (!user?.full_name) return;
@@ -43,26 +44,14 @@ export default function VendedorDashboard() {
   }, [user?.full_name, authLoading, desde, hasta, refreshKey]);
 
   useEffect(() => {
-    if (!user?.full_name) return;
-    setLoading(true);
-    API.asesor(
-      user.full_name,
-      desde, hasta,
-      user.country_code
-    ).then(result => {
-      setData(result);
-      setLoading(false);
-    }).catch(err => {
-      console.error('Error:', err);
-      setLoading(false);
-    });
-  }, [user?.full_name, refreshKey]);
-
-  useEffect(() => {
-    if (!authLoading && user?.full_name) {
-      setRefreshKey(k => k + 1);
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
     }
-  }, [authLoading, user?.full_name]);
+    if (!user?.full_name) return;
+    if (authLoading) return;
+    setRefreshKey(k => k + 1);
+  }, [authLoading]);
 
   const metricas = data?.metricas || {};
 
