@@ -399,14 +399,14 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
           : `${base}audit/client/${clientId}/seguimiento`;
         body = {
-          resultado_venta: data.resultado_venta || '',
-          resultado_propuesta: data.resultado_propuesta || '',
-          motivo_perdida: data.motivo_perdida || '',
           resumen_general: data.resumen_general || '',
           cliente_interesado: data.cliente_interesado == 'si' || data.cliente_interesado == true,
           cliente_ha_negociado: data.cliente_ha_negociado == 'si' || data.cliente_ha_negociado == true,
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
+        if (data.resultado_venta) body.resultado_venta = data.resultado_venta;
+        if (data.resultado_propuesta) body.resultado_propuesta = data.resultado_propuesta;
+        if (data.motivo_perdida) body.motivo_perdida = data.motivo_perdida;
       }
 
       const res = await fetch(url, {
