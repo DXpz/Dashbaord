@@ -40,7 +40,7 @@ export default function VendedorDashboard() {
     });
   }, [user, desde, hasta]);
 
-  const metricas = data?.asesor || data?.metricas || {};
+  const metricas = data?.metricas || {};
 
   const kpis = useMemo(() => ({
     leads: metricas.leads_aceptados ?? 0,
