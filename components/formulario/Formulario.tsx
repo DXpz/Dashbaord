@@ -304,9 +304,14 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         setCurrentStageIndex(initIdx >= 0 ? initIdx : 0);
 
         const mergedStageData: Record<number, Record<string, string>> = {};
-        Object.entries(stageFeedbackJson).forEach(([stageNum, fields]) => {
+        Object.entries(stageFeedbackJson).forEach(([stageKey, fields]) => {
           if (fields && typeof fields === 'object') {
-            mergedStageData[Number(stageNum)] = fields as Record<string, string>;
+            let stageNum = Number(stageKey);
+            if (isNaN(stageNum)) {
+              const parts = stageKey.split('|');
+              stageNum = Number(parts[parts.length - 1]);
+            }
+            mergedStageData[stageNum] = fields as Record<string, string>;
           }
         });
         setStageData(mergedStageData);
