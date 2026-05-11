@@ -25,7 +25,8 @@ export default function VendedorDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.full_name || authLoading) return;
+    if (authLoading) return;
+    if (!user?.full_name) return;
     setLoading(true);
     API.asesor(
       user.full_name,
