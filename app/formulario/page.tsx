@@ -77,15 +77,14 @@ export default function FormularioPage() {
         : `${base}audit/${selectedLead.client_id}/reopen`;
 
       const headers: Record<string, string> = {
-        'Content-Type': 'text/plain',
         'X-API-KEY': key,
+        'ngrok-skip-browser-warning': 'true',
       };
 
       const res = await fetch(url, {
         method: 'POST',
         headers,
         credentials: 'include',
-        body: 'Reabierto por admin desde dashboard',
       });
 
       if (res.ok) {
