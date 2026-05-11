@@ -38,7 +38,7 @@ async function handleRequest(req: NextRequest) {
     return NextResponse.json({ detail: 'No autenticado' }, { status: 401 });
   }
 
-  const base = (process.env.API_UPSTREAM ?? 'http://200.35.189.139:3001').trim().replace(/\/+$/, '');
+  const base = (process.env.API_UPSTREAM ?? 'http://200.35.189.139').trim().replace(/\/+$/, '');
 
   const { searchParams } = req.nextUrl;
   const endpointParam = searchParams.get('endpoint');
@@ -73,13 +73,15 @@ async function handleRequest(req: NextRequest) {
     const contentType = req.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
       body = await req.text();
-    } else {
+    } else if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
       const formData = await req.formData();
       body = JSON.stringify(Object.fromEntries(formData));
     }
   }
 
-console.log('[proxy]', method, target, 'headers:', JSON.stringify(upstreamHeaders), 'body:', upstreamBody);
+  const upstreamBody = body && body.length > 0 ? body : undefined;
+
+  console.log('[proxy]', method, target, 'headers:', JSON.stringify(upstreamHeaders), 'body:', upstreamBody);
 
   try {
     const upstream = await fetch(target, {
