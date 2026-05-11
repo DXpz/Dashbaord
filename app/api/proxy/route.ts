@@ -24,6 +24,10 @@ export async function PATCH(request: NextRequest) {
   return handleRequest(request);
 }
 
+export async function PUT(request: NextRequest) {
+  return handleRequest(request);
+}
+
 export async function DELETE(request: NextRequest) {
   return handleRequest(request);
 }
