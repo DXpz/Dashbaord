@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Check, Loader2, Lock, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
+import { useNotification } from '@/components/ui/notification';
 
 export type FormStage = 'REUNION' | 'DEMO' | 'PROPUESTA' | 'SEGUIMIENTO' | 'CIERRE';
 
@@ -241,13 +244,18 @@ interface LoadedData {
 
 export function Formulario({ clientId, initialStage = 'REUNION', onClose }: FormularioProps) {
   const { user } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const [requiresDemo, setRequiresDemo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadedData, setLoadedData] = useState<LoadedData | null>(null);
   const [stages, setStages] = useState<StageConfig[]>(buildStages(false));
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
+  const [showLostDialog, setShowLostDialog] = useState(false);
+  const [lostReason, setLostReason] = useState('');
+  const [lostDescription, setLostDescription] = useState('');
 
   useEffect(() => {
     async function loadData() {
@@ -322,7 +330,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
     loadData();
   }, [clientId, initialStage]);
 
-  const [stageData, setStageData] = useState<Record<number, Record<string, string>>>({});
+  const [stageData, setStageData] = useState<Record<number, Record<string, string | boolean>>>({});
 
   const handleChange = (fieldId: string, value: string) => {
     const stageNum = stages[currentStageIndex]?.stageNumber;
@@ -353,32 +361,207 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-API-KEY': key,
-        'ngrok-skip-browser-warning': 'true',
       };
 
-      const fetchUrl = (path: string) => {
-        if (isHttps) {
-          return fetch(`/api/proxy?endpoint=${encodeURIComponent(path)}`, {
-            method: current.method,
-            headers,
-            credentials: 'include',
-            body: JSON.stringify({ ...data, stage: current.stageNumber }),
-          });
-        }
-        return fetch(`${base}${path}`, {
-          method: current.method,
-          headers,
-          body: JSON.stringify({ ...data, stage: current.stageNumber }),
-        });
-      };
+      let url: string;
+      let body: Record<string, any> = {};
 
-      await fetchUrl(`/audit/client/${encodeURIComponent(clientId)}${current.endpoint}`);
-      onClose?.();
+      if (current.id === 'REUNION' || current.id === 'DEMO') {
+        url = isHttps
+          ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/retroalimentacion`)}`
+          : `${base}audit/client/${clientId}/retroalimentacion`;
+        body = {
+          stage: current.stageNumber,
+          retroalimentacion: data.retroalimentacion || '',
+          notes: data.notes || '',
+          client_name: loadedData?.clientName || '',
+          client_phone: loadedData?.clientPhone || '',
+          client_email: loadedData?.clientEmail || '',
+          cierre_estimado: data.cierre_estimado || '',
+          stage_feedback_json: { [current.stageNumber]: data },
+        };
+      } else if (current.id === 'PROPUESTA') {
+        url = isHttps
+          ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/propuesta`)}`
+          : `${base}audit/client/${clientId}/propuesta`;
+        body = {
+          resumen_general: data.resumen_general || '',
+          tipo_propuesta: data.tipo_propuesta || '',
+          equipos: data.equipos || '',
+          rubro: data.rubro || '',
+          cantidad_oferta: data.cantidad_oferta || '',
+          stage_feedback_json: { [`${current.stageNumber}`]: data },
+        };
+      } else {
+        url = isHttps
+          ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
+          : `${base}audit/client/${clientId}/seguimiento`;
+        body = {
+          resultado_venta: data.resultado_venta || '',
+          resultado_propuesta: data.resultado_propuesta || '',
+          motivo_perdida: data.motivo_perdida || '',
+          resumen_general: data.resumen_general || '',
+          cliente_interesado: data.cliente_interesado == 'si' || data.cliente_interesado == true,
+          cliente_ha_negociado: data.cliente_ha_negociado == 'si' || data.cliente_ha_negociado == true,
+          stage_feedback_json: { [`${current.stageNumber}`]: data },
+        };
+      }
+
+      const res = await fetch(url, {
+        method: current.method,
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        showSuccess('Feedback guardado correctamente');
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        showError(errorData?.detail || 'Error al guardar');
+      }
     } catch (err) {
       console.error('Error saving:', err);
-      setError('Error al guardar. Intenta de nuevo.');
+      showError('Error al guardar. Intenta de nuevo.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCloseAsLost = async () => {
+    if (!lostReason.trim() || !lostDescription.trim()) {
+      showError('Selecciona un motivo y escribe una descripción');
+      return;
+    }
+
+    setClosing(true);
+    try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
+      const key = process.env.API_KEY || '';
+      const current = stages[currentStageIndex];
+      const data = stageData[current.stageNumber] || {};
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-API-KEY': key,
+      };
+
+      const motivoCompleto = `SIN CONTACTO - ${lostReason}: ${lostDescription}`;
+      const body = {
+        resultado_venta: 'perdida',
+        resultado_propuesta: 'perdida',
+        motivo_perdida: motivoCompleto,
+        resumen_general: motivoCompleto,
+        cliente_interesado: false,
+        cliente_ha_negociado: false,
+        stage_feedback_json: {
+          [`${current.stageNumber}`]: {
+            resultado_cierre: 'perdido',
+            razon_cierre: motivoCompleto,
+            contacto_exitoso: 'false',
+            motivo_no_contacto: lostReason,
+            descripcion_no_contacto: lostDescription,
+          },
+        },
+      };
+
+      const url = isHttps
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
+        : `${base}audit/client/${clientId}/seguimiento`;
+
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        showSuccess('Lead cerrado como perdido');
+        setShowLostDialog(false);
+        setLostReason('');
+        setLostDescription('');
+        onClose?.();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        showError(errorData?.detail || 'Error al cerrar lead');
+      }
+    } catch (err) {
+      console.error('Error closing:', err);
+      showError('Error al cerrar lead');
+    } finally {
+      setClosing(false);
+    }
+  };
+
+  const handleCloseAsWon = async () => {
+    setClosing(true);
+    try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
+      const key = process.env.API_KEY || '';
+      const current = stages[currentStageIndex];
+      const data = stageData[current.stageNumber] || {};
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-API-KEY': key,
+      };
+
+      const body = {
+        resultado_venta: 'cerrada',
+        resultado_propuesta: 'ganada',
+        motivo_perdida: '',
+        resumen_general: data.resumen_general || data.razon_cierre || '',
+        cliente_interesado: true,
+        cliente_ha_negociado: true,
+        stage_feedback_json: {
+          [`${current.stageNumber}`]: {
+            resultado_cierre: 'ganado',
+            fecha_cierre_real: data.fecha_cierre_real || new Date().toISOString().split('T')[0],
+            razon_cierre: data.razon_cierre || '',
+          },
+        },
+      };
+
+      const url = isHttps
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
+        : `${base}audit/client/${clientId}/seguimiento`;
+
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        showSuccess('Lead cerrado como ganado');
+        onClose?.();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        showError(errorData?.detail || 'Error al cerrar lead');
+      }
+    } catch (err) {
+      console.error('Error closing:', err);
+      showError('Error al cerrar lead');
+    } finally {
+      setClosing(false);
+    }
+  };
+
+  const handleClose = () => {
+    const current = stages[currentStageIndex];
+    const data = current ? (stageData[current.stageNumber] || {}) : {};
+    const resultadoCierre = data.resultado_cierre || '';
+
+    if (current?.id === 'CIERRE' && resultadoCierre === 'perdido') {
+      setShowLostDialog(true);
+    } else if (current?.id === 'CIERRE' && resultadoCierre === 'ganado') {
+      handleCloseAsWon();
+    } else {
+      showError('Selecciona un resultado de cierre (ganado o perdido)');
     }
   };
 
@@ -438,7 +621,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
                   </label>
                   <FieldInput
                     field={field}
-                    value={currentData[field.id] || ''}
+                    value={String(currentData[field.id] || '')}
                     onChange={handleChange}
                   />
                   {field.id === 'industria_sector' && currentData['industria_sector'] === 'otro' && (
@@ -450,7 +633,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
                       <input
                         id="field-industria_otro"
                         type="text"
-                        value={currentData['industria_otro'] || ''}
+                        value={String(currentData['industria_otro'] || '')}
                         onChange={(e) => handleChange('industria_otro', e.target.value)}
                         placeholder="Describe el sector"
                         className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] transition-colors"
@@ -479,31 +662,97 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
             {currentStageIndex + 1} de {stages.length}
           </span>
 
-          {currentStageIndex < maxIndex ? (
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentStageIndex(prev => prev + 1)}
-              disabled={loading}
-              className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
+              onClick={handleClose}
+              disabled={closing || loading || currentStageIndex !== maxIndex}
+              className="gap-1.5 border-[#c8151b] text-[#c8151b] hover:bg-red-50"
             >
-              Siguiente
-              <ChevronRight className="h-4 w-4" />
+              {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+              Cerrar
             </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSave}
-              disabled={saving || loading}
-              className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
-            >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              Guardar
-            </Button>
-          )}
+
+            {currentStageIndex < maxIndex ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentStageIndex(prev => prev + 1)}
+                disabled={loading}
+                className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
+              >
+                Siguiente
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSave}
+                disabled={saving || loading}
+                className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                Guardar
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
+      <Dialog open={showLostDialog} onOpenChange={setShowLostDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Cerrar como perdido</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                Motivo <span className="text-[#c8151b]">*</span>
+              </label>
+              <select
+                value={lostReason}
+                onChange={(e) => setLostReason(e.target.value)}
+                className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] focus:outline-none focus:border-[#35325B]"
+              >
+                <option value="">Seleccionar...</option>
+                <option value="no_respondio">No respondió</option>
+                <option value="presupuesto">Presupuesto</option>
+                <option value="precio">Precio</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                Descripción <span className="text-[#c8151b]">*</span>
+              </label>
+              <textarea
+                value={lostDescription}
+                onChange={(e) => setLostDescription(e.target.value)}
+                placeholder="Describe el intento de contacto..."
+                rows={3}
+                className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] resize-y"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => { setShowLostDialog(false); setLostReason(''); setLostDescription(''); }}
+              disabled={closing}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCloseAsLost}
+              disabled={closing || !lostReason.trim() || !lostDescription.trim()}
+              className="bg-[#c8151b] hover:bg-[#a50f0f] text-white"
+            >
+              {closing ? 'Cerrando...' : 'Cerrar como perdido'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

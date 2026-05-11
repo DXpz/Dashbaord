@@ -9,6 +9,7 @@ import { Search, X, RotateCcw, Plus, Trash2 } from 'lucide-react';
 import { Shell } from '@/components/layout/Shell';
 import { useAdminDashboard, useConnectionStatus, useFilters, useAllLeads } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useNotification } from '@/components/ui/notification';
 
 interface LeadOption {
   client_id: string;
@@ -35,6 +36,8 @@ export default function FormularioPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: 'SV' });
+
+  const { showSuccess, showError } = useNotification();
 
   const filteredLeads = useMemo(() => {
     if (!searchTerm) return leads.slice(0, 30);
@@ -86,16 +89,16 @@ export default function FormularioPage() {
       });
 
       if (res.ok) {
-        alert('Lead reabierto correctamente');
+        showSuccess('Lead reabierto correctamente');
         setSelectedLead(null);
         setSearchTerm('');
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data?.detail || 'Error al reabrir lead');
+        showError(data?.detail || 'Error al reabrir lead');
       }
     } catch (err) {
       console.error('Error reopening lead:', err);
-      alert('Error al reabrir lead');
+      showError('Error al reabrir lead');
     } finally {
       setReopening(false);
     }
@@ -104,7 +107,7 @@ export default function FormularioPage() {
   const handleDeleteLead = async () => {
     if (!selectedLead) return;
     if (!deleteReason.trim()) {
-      alert('Escribe una razón para eliminar');
+      showError('Escribe una razón para eliminar');
       return;
     }
 
@@ -133,16 +136,16 @@ export default function FormularioPage() {
       if (res.ok) {
         setShowDeleteDialog(false);
         setDeleteReason('');
-        alert('Lead marcado como no agendado');
+        showSuccess('Lead marcado como no agendado');
         setSelectedLead(null);
         setSearchTerm('');
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data?.detail || 'Error al eliminar lead');
+        showError(data?.detail || 'Error al eliminar lead');
       }
     } catch (err) {
       console.error('Error deleting lead:', err);
-      alert('Error al eliminar lead');
+      showError('Error al eliminar lead');
     } finally {
       setDeleting(false);
     }
@@ -150,7 +153,7 @@ export default function FormularioPage() {
 
   const handleCreateLead = async () => {
     if (!newLead.nombre.trim() || !newLead.correo.trim()) {
-      alert('Nombre y correo son obligatorios');
+      showError('Nombre y correo son obligatorios');
       return;
     }
 
@@ -193,18 +196,18 @@ const url = isHttps
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        alert(`Lead creado: ${data.client_id} - Asesor: ${data.advisor_name}`);
+        showSuccess(`Lead ${data.client_id} creado - Asesor: ${data.advisor_name || 'Asignado'}`);
         setShowCreateModal(false);
         setNewLead({ nombre: '', correo: '', telefono: '', pais: 'SV' });
       } else if (data.already_existed) {
-        alert(`Lead ya existía: ${data.client_id}`);
+        showSuccess(`Lead ${data.client_id} ya existía`);
         setShowCreateModal(false);
       } else {
-        alert(data?.detail || 'Error al crear lead');
+        showError(data?.detail || 'Error al crear lead');
       }
     } catch (err) {
       console.error('Error creating lead:', err);
-      alert('Error al crear lead');
+      showError('Error al crear lead');
     } finally {
       setCreating(false);
     }
