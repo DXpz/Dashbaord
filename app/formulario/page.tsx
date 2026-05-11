@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Search, X, RotateCcw, Plus, Trash2 } from 'lucide-react';
 import { Shell } from '@/components/layout/Shell';
@@ -36,6 +36,7 @@ export default function FormularioPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: 'SV' });
+  const [showReopenDialog, setShowReopenDialog] = useState(false);
 
   const { showSuccess, showError } = useNotification();
 
@@ -64,7 +65,6 @@ export default function FormularioPage() {
 
   const handleReopenLead = async () => {
     if (!selectedLead) return;
-    if (!confirm('¿Reabrir este lead? Volverá a etapa de Reunión.')) return;
 
     setReopening(true);
     try {
@@ -312,7 +312,7 @@ const url = isHttps
                       Eliminar
                     </Button>
                     <Button
-                      onClick={handleReopenLead}
+                      onClick={() => setShowReopenDialog(true)}
                       disabled={reopening}
                       variant="outline"
                       className="gap-1.5 border-[#EEEEEC] text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#EEEEEC]"
@@ -442,6 +442,34 @@ const url = isHttps
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   {deleting ? 'Eliminando...' : 'Eliminar Lead'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showReopenDialog} onOpenChange={setShowReopenDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Reabrir Lead</DialogTitle>
+                <DialogDescription>¿Reabrir este lead? Volverá a etapa de Reunión.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReopenDialog(false)}
+                  disabled={reopening}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setShowReopenDialog(false);
+                    await handleReopenLead();
+                  }}
+                  disabled={reopening}
+                  className="bg-[#1F1D3D] hover:bg-[#35325B] text-white"
+                >
+                  {reopening ? 'Reabriendo...' : 'Reabrir'}
                 </Button>
               </DialogFooter>
             </DialogContent>
