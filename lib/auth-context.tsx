@@ -33,13 +33,18 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   async function checkAuth() {
     try {
       const res = await fetch('/api/auth/me');
+      console.log('/api/auth/me status:', res.status);
       if (res.ok) {
         const userData = await res.json();
+        console.log('/api/auth/me data:', userData);
         setUser(userData);
       } else {
+        const errData = await res.json().catch(() => ({}));
+        console.log('/api/auth/me error:', errData);
         setUser(null);
       }
     } catch (e) {
+      console.log('/api/auth/me exception:', e);
       setUser(null);
     } finally {
       setLoading(false);
