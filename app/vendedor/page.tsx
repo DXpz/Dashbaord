@@ -27,9 +27,10 @@ export default function VendedorDashboard() {
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    API.dashboard(
+    API.asesor(
+      user.full_name,
       desde, hasta,
-      { pais: user.country_code || undefined, asesor: user.full_name }
+      user.country_code
     ).then(result => {
       setData(result);
       setLoading(false);
@@ -39,28 +40,19 @@ export default function VendedorDashboard() {
     });
   }, [user, desde, hasta]);
 
-  const resumen = data?.metricas || {};
-  const leadsPorStage = data?.leads_por_stage || [];
+  const metricas = data?.asesor || data?.metricas || {};
 
   const kpis = useMemo(() => ({
-    leads: resumen.leads_aceptados ?? 0,
-    cerradosGanados: resumen.cerrados_ganados ?? 0,
-    cerradosPerdidos: resumen.cerrados_perdidos ?? 0,
-    tasaAceptacion: resumen.total_leads_general ? Math.round((resumen.leads_aceptados / resumen.total_leads_general) * 100) : 0,
-    tasaCierre: resumen.cerrados_total ? Math.round((resumen.cerrados_ganados / resumen.cerrados_total) * 100) : 0,
-    reunionesConRetro: resumen.reuniones_con_retro ?? 0,
-    reunionesSinRetro: resumen.reuniones_sin_retro ?? 0,
-    propuestas: resumen.propuestas_registradas ?? 0,
-    seguimientos: resumen.seguimientos_registrados ?? 0,
-  }), [resumen]);
-
-  const stagesChartData = useMemo(() => {
-    if (!leadsPorStage.length) return null;
-    return {
-      labels: leadsPorStage.map((s: any) => s.stage_label || '—'),
-      values: leadsPorStage.map((s: any) => s.total || 0),
-    };
-  }, [leadsPorStage]);
+    leads: metricas.leads_aceptados ?? 0,
+    cerradosGanados: metricas.cerrados_ganados ?? 0,
+    cerradosPerdidos: metricas.cerrados_perdidos ?? 0,
+    tasaAceptacion: metricas.total_leads_general ? Math.round((metricas.leads_aceptados / metricas.total_leads_general) * 100) : 0,
+    tasaCierre: metricas.cerrados_total ? Math.round((metricas.cerrados_ganados / metricas.cerrados_total) * 100) : 0,
+    reunionesConRetro: metricas.reuniones_con_retro ?? 0,
+    reunionesSinRetro: metricas.reuniones_sin_retro ?? 0,
+    propuestas: metricas.propuestas_registradas ?? 0,
+    seguimientos: metricas.seguimientos_registrados ?? 0,
+  }), [metricas]);
 
   const reunionesChartData = useMemo(() => {
     return {
@@ -103,15 +95,6 @@ export default function VendedorDashboard() {
         <KPICard label="Tasa Aceptación %" value={kpis.tasaAceptacion} icon={TrendingUp} className="delay-4" />
         <KPICard label="Tasa Cierre %" value={kpis.tasaCierre} icon={Target} className="delay-5" />
       </div>
-
-      {stagesChartData && (
-        <ChartCard title="Mis Leads por Etapa" subtitle="Pipeline actual">
-          <ChartWrapper type="bar" data={{
-            labels: stagesChartData.labels,
-            datasets: [{ data: stagesChartData.values, backgroundColor: COLORS.dark, borderRadius: 4, borderSkipped: false }],
-          }} height="280px" />
-        </ChartCard>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <ChartCard title="Reuniones" subtitle="Con vs Sin retroalimentación">

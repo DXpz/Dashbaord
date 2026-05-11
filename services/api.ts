@@ -163,8 +163,8 @@ export const API = {
     return get('/metrics/asesores', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
   },
 
-  asesor(nombre: string, desde: string, hasta: string, pais?: string) {
-    return get('/metrics/asesor', { nombre, desde, hasta, ...paisParam(pais) });
+  asesor(asesor: string, desde: string, hasta: string, pais?: string) {
+    return get('/metrics/asesor', { asesor, desde, hasta, ...paisParam(pais) });
   },
 
   propuestasPorRubro(desde: string, hasta: string, group_by = 'rubro', nombre?: string, pais?: string) {
