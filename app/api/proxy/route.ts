@@ -85,7 +85,7 @@ async function handleRequest(req: NextRequest) {
     const upstream = await fetch(target, {
       method,
       headers: upstreamHeaders,
-      body,
+      body: body || undefined,
     });
     const outType = upstream.headers.get('content-type');
     const buffer = Buffer.from(await upstream.arrayBuffer());
