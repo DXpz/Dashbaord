@@ -32,11 +32,13 @@ export default function VendedorDashboard() {
     if (!user?.full_name) return;
     if (authLoading) return;
     setLoading(true);
+    console.log('Fetching metrics...');
     API.asesor(
       user.full_name,
       desde, hasta,
       user.country_code
     ).then(result => {
+      console.log('Metrics received:', result);
       setData(result);
       setLoading(false);
     }).catch(err => {
