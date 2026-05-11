@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
+import { AnimatedButton, useNotification } from '@/components/ui/notification';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Search, X, RotateCcw, Plus, Trash2 } from 'lucide-react';
@@ -59,6 +60,8 @@ export default function FormularioPage() {
     setShowDropdown(false);
   };
 
+  const { showSuccess, showError } = useNotification();
+
   const handleReopenLead = async () => {
     if (!selectedLead) return;
     if (!confirm('¿Reabrir este lead? Volverá a etapa de Reunión.')) return;
@@ -86,16 +89,16 @@ export default function FormularioPage() {
       });
 
       if (res.ok) {
-        alert('Lead reabierto correctamente');
+        showSuccess('Lead reabierto correctamente', selectedLead.client_id);
         setSelectedLead(null);
         setSearchTerm('');
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data?.detail || 'Error al reabrir lead');
+        showError(data?.detail || 'Error al reabrir lead', selectedLead.client_id);
       }
     } catch (err) {
       console.error('Error reopening lead:', err);
-      alert('Error al reabrir lead');
+      showError('Error al reabrir lead', selectedLead?.client_id);
     } finally {
       setReopening(false);
     }
@@ -104,7 +107,7 @@ export default function FormularioPage() {
   const handleDeleteLead = async () => {
     if (!selectedLead) return;
     if (!deleteReason.trim()) {
-      alert('Escribe una razón para eliminar');
+      showError('Escribe una razón para eliminar');
       return;
     }
 
@@ -133,16 +136,16 @@ export default function FormularioPage() {
       if (res.ok) {
         setShowDeleteDialog(false);
         setDeleteReason('');
-        alert('Lead marcado como no agendado');
+        showSuccess('Lead marcado como no agendado', selectedLead.client_id);
         setSelectedLead(null);
         setSearchTerm('');
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data?.detail || 'Error al eliminar lead');
+        showError(data?.detail || 'Error al eliminar lead', selectedLead.client_id);
       }
     } catch (err) {
       console.error('Error deleting lead:', err);
-      alert('Error al eliminar lead');
+      showError('Error al eliminar lead', selectedLead?.client_id);
     } finally {
       setDeleting(false);
     }
@@ -150,7 +153,7 @@ export default function FormularioPage() {
 
   const handleCreateLead = async () => {
     if (!newLead.nombre.trim() || !newLead.correo.trim()) {
-      alert('Nombre y correo son obligatorios');
+      showError('Nombre y correo son obligatorios');
       return;
     }
 
@@ -173,7 +176,7 @@ export default function FormularioPage() {
       };
       if (newLead.pais) payload.pais = newLead.pais;
 
-const url = isHttps
+      const url = isHttps
         ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + newLead.pais)}`
         : `${base}audit/assign-round-robin?pais=${newLead.pais}`;
 
@@ -181,8 +184,6 @@ const url = isHttps
         'Content-Type': 'application/json',
         'X-API-KEY': key,
       };
-
-      console.log('Creating lead:', url, JSON.stringify(payload));
 
       const res = await fetch(url, {
         method: 'POST',
@@ -193,18 +194,18 @@ const url = isHttps
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        alert(`Lead creado: ${data.client_id} - Asesor: ${data.advisor_name}`);
+        showSuccess(`Lead ${data.client_id} creado - Asesor: ${data.advisor?.name || 'Asignado'}`, data.client_id);
         setShowCreateModal(false);
         setNewLead({ nombre: '', correo: '', telefono: '', pais: 'SV' });
       } else if (data.already_existed) {
-        alert(`Lead ya existía: ${data.client_id}`);
+        showSuccess(`Lead ${data.client_id} ya existía`, data.client_id);
         setShowCreateModal(false);
       } else {
-        alert(data?.detail || 'Error al crear lead');
+        showError(data?.detail || 'Error al crear lead');
       }
     } catch (err) {
       console.error('Error creating lead:', err);
-      alert('Error al crear lead');
+      showError('Error al crear lead');
     } finally {
       setCreating(false);
     }
