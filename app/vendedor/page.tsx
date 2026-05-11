@@ -30,7 +30,6 @@ export default function VendedorDashboard() {
 
   useEffect(() => {
     if (!user?.full_name) return;
-    if (authLoading) return;
     setLoading(true);
     console.log('Fetching metrics...');
     API.asesor(
@@ -45,7 +44,7 @@ export default function VendedorDashboard() {
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [user?.full_name, authLoading, desde, hasta, refreshKey]);
+  }, [user?.full_name, desde, hasta, refreshKey]);
 
   useEffect(() => {
     if (prevAuthLoading.current === true && authLoading === false) {
