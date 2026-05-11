@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
     const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
 
     return NextResponse.json(
-      { user: data.user },
+      { ok: true, user: data.user },
       {
         headers: {
-          'Set-Cookie': `api_token=${data.access_token}; ${cookieOptions}${secureFlag}`,
+          'Set-Cookie': `api_token=${data.token}; ${cookieOptions}${secureFlag}`,
         },
       }
     );
