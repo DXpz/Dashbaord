@@ -39,7 +39,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
       }
-    } catch {
+    } catch (e) {
       setUser(null);
     } finally {
       setLoading(false);
@@ -47,18 +47,18 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }
 
 const login = async (username: string, password: string): Promise<{ ok: boolean; error?: string }> => {
-
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
       const data = await res.json();
       if (!res.ok) return { ok: false, error: data.detail || data.error || 'Error al iniciar sesión' };
       setUser(data.user);
       router.push(data.user.role === 'advisor' ? '/vendedor' : '/');
       return { ok: true };
-    } catch {
+    } catch (e) {
       return { ok: false, error: 'No se pudo conectar al servidor' };
     }
   };
