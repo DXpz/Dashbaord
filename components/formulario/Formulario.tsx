@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Check, Loader2, Lock, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -693,6 +693,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Cerrar como perdido</DialogTitle>
+            <DialogDescription>Selecciona el motivo por el cual se cierra el lead y proporciona una descripción.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
