@@ -294,7 +294,11 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         const opportunityStage = auditData?.audit?.opportunity_stage || oppData?.opportunity_stage || 2;
         const stageFeedbackJson = auditData?.audit?.stage_feedback_json || {};
 
-        const demoRequired = stageFeedbackJson[2]?.requiere_demo === 'si';
+        let demoRequired = false;
+        const stage2Data = stageFeedbackJson['2'] || stageFeedbackJson[2] || stageFeedbackJson['2|3'];
+        if (stage2Data?.requiere_demo === 'si') {
+          demoRequired = true;
+        }
         setRequiresDemo(demoRequired);
 
         const newStages = buildStages(demoRequired);
@@ -306,12 +310,17 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         const mergedStageData: Record<number, Record<string, string>> = {};
         Object.entries(stageFeedbackJson).forEach(([stageKey, fields]) => {
           if (fields && typeof fields === 'object') {
-            let stageNum = Number(stageKey);
-            if (isNaN(stageNum)) {
+            if (!isNaN(Number(stageKey))) {
+              mergedStageData[Number(stageKey)] = fields as Record<string, string>;
+            } else {
               const parts = stageKey.split('|');
-              stageNum = Number(parts[parts.length - 1]);
+              parts.forEach(p => {
+                const n = Number(p);
+                if (!isNaN(n) && !mergedStageData[n]) {
+                  mergedStageData[n] = fields as Record<string, string>;
+                }
+              });
             }
-            mergedStageData[stageNum] = fields as Record<string, string>;
           }
         });
         setStageData(mergedStageData);
