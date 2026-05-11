@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useVendedorFilters } from '@/lib/vendedor-filters';
 import { API } from '@/services/api';
@@ -23,13 +23,16 @@ export default function VendedorDashboard() {
   const { desde, hasta } = useVendedorFilters();
   const pathname = usePathname();
 
-  const [data, setData] = useState<any>(null);
+const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const prevAuthLoading = useRef(true);
 
   useEffect(() => {
-    if (!user?.full_name) return;
+    console.log('useEffect triggered', { user: user?.full_name, refreshKey });
+    if (!user?.full_name) {
+      console.log('No user.full_name');
+      return;
+    }
     setLoading(true);
     console.log('Fetching metrics...');
     API.asesor(
@@ -44,18 +47,16 @@ export default function VendedorDashboard() {
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [user?.full_name, desde, hasta, refreshKey]);
+  }, [refreshKey]);
 
   useEffect(() => {
-    if (prevAuthLoading.current === true && authLoading === false) {
-      setRefreshKey(k => k + 1);
-    }
-    prevAuthLoading.current = authLoading;
-  }, [authLoading]);
-
-  useEffect(() => {
+    console.log('Pathname changed');
     setRefreshKey(k => k + 1);
   }, [pathname]);
+
+  useEffect(() => {
+    console.log('Auth or user changed', { authLoading, user: user?.full_name });
+  }, [authLoading, user?.full_name]);
 
   const metricas = data?.metricas || {};
 
