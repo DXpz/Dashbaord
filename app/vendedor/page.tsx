@@ -33,7 +33,7 @@ const [data, setData] = useState<any>(null);
     if (authLoading) return;
     console.log('Setting isReady=true');
     setIsReady(true);
-  }, [user, authLoading]);
+  }, [user?.full_name, authLoading]);
 
   useEffect(() => {
     if (!isReady || !user?.full_name) return;
@@ -50,7 +50,7 @@ const [data, setData] = useState<any>(null);
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [isReady, user, desde, hasta, refreshKey]);
+  }, [isReady, user?.full_name, desde, hasta, refreshKey]);
 
   useEffect(() => {
     console.log(' pathname changed, resetting');
