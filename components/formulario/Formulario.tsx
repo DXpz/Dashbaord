@@ -398,15 +398,31 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         url = isHttps
           ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
           : `${base}audit/client/${clientId}/seguimiento`;
+
+        const isCierre = current.id === 'CIERRE';
+        const resultadoCierre = data.resultado_cierre || '';
+
         body = {
           resumen_general: data.resumen_general || '',
-          cliente_interesado: data.cliente_interesado == 'si' || data.cliente_interesado == true,
-          cliente_ha_negociado: data.cliente_ha_negociado == 'si' || data.cliente_ha_negociado == true,
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
-        if (data.resultado_venta) body.resultado_venta = data.resultado_venta;
-        if (data.resultado_propuesta) body.resultado_propuesta = data.resultado_propuesta;
-        if (data.motivo_perdida) body.motivo_perdida = data.motivo_perdida;
+
+        if (isCierre) {
+          body.resultado_propuesta = resultadoCierre === 'ganado' ? 'ganada' : resultadoCierre === 'perdido' ? 'perdida' : '';
+          if (resultadoCierre === 'ganado') {
+            body.resultado_venta = 'cerrada';
+            body.cliente_interesado = true;
+            body.cliente_ha_negociado = true;
+          } else if (resultadoCierre === 'perdido') {
+            body.resultado_venta = 'perdida';
+            body.cliente_interesado = false;
+            body.cliente_ha_negociado = false;
+          }
+        } else {
+          body.resultado_venta = 'en_seguimiento';
+          body.cliente_interesado = data.cliente_interesado == 'si' || data.cliente_interesado == true;
+          body.cliente_ha_negociado = data.cliente_ha_negociado == 'si' || data.cliente_ha_negociado == true;
+        }
       }
 
       const res = await fetch(url, {
