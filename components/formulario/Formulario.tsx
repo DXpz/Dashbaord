@@ -281,22 +281,23 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
 
         const [oppRes, auditRes] = await Promise.all([
           fetchUrl(`/opportunity?number=${encodeURIComponent(clientId)}`),
-          fetchUrl(`/audit/by-client/${encodeURIComponent(clientId)}`),
+          fetchUrl(`/audit?client_id=${encodeURIComponent(clientId)}`),
         ]);
 
         const oppData = await oppRes.json();
-        const auditData = await auditRes.json();
+        const auditData = auditRes.ok ? await auditRes.json() : {};
 
         console.log('[Formulario] oportunidad data:', JSON.stringify(oppData).substring(0, 500));
         console.log('[Formulario] audit data:', JSON.stringify(auditData).substring(0, 500));
 
-        const clientName = auditData?.audit?.client_name || oppData?.client_name || oppData?.clientName || '';
-        const clientEmail = auditData?.audit?.client_email || oppData?.client_email || oppData?.clientEmail || '';
-        const clientPhone = auditData?.audit?.client_phone || oppData?.client_phone || oppData?.clientPhone || '';
-        const sellerName = auditData?.audit?.advisor_name || oppData?.advisor_name || oppData?.sellerName || '';
-        const opportunityStage = auditData?.audit?.opportunity_stage || oppData?.opportunity_stage || 2;
-        const stageFeedbackJson = auditData?.audit?.stage_feedback_json || oppData?.stage_feedback_json || {};
-        const seguimientoJson = auditData?.audit?.seguimiento_json || {};
+        const audit = auditData?.audit || auditData || {};
+        const clientName = audit?.client_name || oppData?.client_name || oppData?.clientName || '';
+        const clientEmail = audit?.client_email || oppData?.client_email || oppData?.clientEmail || '';
+        const clientPhone = audit?.client_phone || oppData?.client_phone || oppData?.clientPhone || '';
+        const sellerName = audit?.advisor_name || oppData?.advisor_name || oppData?.sellerName || '';
+        const opportunityStage = audit?.opportunity_stage || oppData?.opportunity_stage || 2;
+        const stageFeedbackJson = audit?.stage_feedback_json || oppData?.stage_feedback_json || {};
+        const seguimientoJson = audit?.seguimiento_json || {};
 
         console.log('[Formulario] stageFeedbackJson keys:', Object.keys(stageFeedbackJson));
         console.log('[Formulario] seguimiento_json:', JSON.stringify(seguimientoJson));
