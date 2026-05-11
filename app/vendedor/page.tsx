@@ -25,8 +25,8 @@ export default function VendedorDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading) return;
     if (!user?.full_name) return;
+    if (authLoading) return;
     setLoading(true);
     API.asesor(
       user.full_name,
@@ -40,6 +40,22 @@ export default function VendedorDashboard() {
       setLoading(false);
     });
   }, [user?.full_name, authLoading, desde, hasta]);
+
+  useEffect(() => {
+    if (!user?.full_name) return;
+    setLoading(true);
+    API.asesor(
+      user.full_name,
+      desde, hasta,
+      user.country_code
+    ).then(result => {
+      setData(result);
+      setLoading(false);
+    }).catch(err => {
+      console.error('Error:', err);
+      setLoading(false);
+    });
+  }, [user?.full_name]);
 
   const metricas = data?.metricas || {};
 
