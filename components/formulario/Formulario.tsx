@@ -696,11 +696,8 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
             setLostDescription('');
           }
         }}>
-        <DialogContent
-          className="sm:max-w-[425px]"
-          onInteractOutside={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-        >
+        <DialogContent className="sm:max-w-[425px]">
+          <div onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Cerrar como perdido</DialogTitle>
             <DialogDescription>Selecciona el motivo por el cual se cierra el lead y proporciona una descripción.</DialogDescription>
@@ -713,7 +710,6 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
               <select
                 value={lostReason}
                 onChange={(e) => setLostReason(e.target.value)}
-                onMouseDown={(e) => e.stopPropagation()}
                 className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] focus:outline-none focus:border-[#35325B]"
               >
                 <option value="">Seleccionar...</option>
@@ -729,7 +725,6 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
               <textarea
                 value={lostDescription}
                 onChange={(e) => setLostDescription(e.target.value)}
-                onPointerDown={(e) => e.stopPropagation()}
                 placeholder="Describe el intento de contacto..."
                 rows={3}
                 className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] resize-y"
@@ -752,6 +747,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
               {closing ? 'Cerrando...' : 'Cerrar como perdido'}
             </Button>
           </DialogFooter>
+        </div>
         </DialogContent>
       </Dialog>
     </div>
