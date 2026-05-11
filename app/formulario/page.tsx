@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { Formulario } from '@/components/formulario/Formulario';
 import { Button } from '@/components/ui/button';
-import { AnimatedButton, useNotification } from '@/components/ui/notification';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Search, X, RotateCcw, Plus, Trash2 } from 'lucide-react';
@@ -60,8 +59,6 @@ export default function FormularioPage() {
     setShowDropdown(false);
   };
 
-  const { showSuccess, showError } = useNotification();
-
   const handleReopenLead = async () => {
     if (!selectedLead) return;
     if (!confirm('¿Reabrir este lead? Volverá a etapa de Reunión.')) return;
@@ -89,16 +86,16 @@ export default function FormularioPage() {
       });
 
       if (res.ok) {
-        showSuccess('Lead reabierto correctamente', selectedLead.client_id);
+        alert('Lead reabierto correctamente');
         setSelectedLead(null);
         setSearchTerm('');
       } else {
         const data = await res.json().catch(() => ({}));
-        showError(data?.detail || 'Error al reabrir lead', selectedLead.client_id);
+        alert(data?.detail || 'Error al reabrir lead');
       }
     } catch (err) {
       console.error('Error reopening lead:', err);
-      showError('Error al reabrir lead', selectedLead?.client_id);
+      alert('Error al reabrir lead');
     } finally {
       setReopening(false);
     }
@@ -107,7 +104,7 @@ export default function FormularioPage() {
   const handleDeleteLead = async () => {
     if (!selectedLead) return;
     if (!deleteReason.trim()) {
-      showError('Escribe una razón para eliminar');
+      alert('Escribe una razón para eliminar');
       return;
     }
 
@@ -136,16 +133,16 @@ export default function FormularioPage() {
       if (res.ok) {
         setShowDeleteDialog(false);
         setDeleteReason('');
-        showSuccess('Lead marcado como no agendado', selectedLead.client_id);
+        alert('Lead marcado como no agendado');
         setSelectedLead(null);
         setSearchTerm('');
       } else {
         const data = await res.json().catch(() => ({}));
-        showError(data?.detail || 'Error al eliminar lead', selectedLead.client_id);
+        alert(data?.detail || 'Error al eliminar lead');
       }
     } catch (err) {
       console.error('Error deleting lead:', err);
-      showError('Error al eliminar lead', selectedLead?.client_id);
+      alert('Error al eliminar lead');
     } finally {
       setDeleting(false);
     }
@@ -153,7 +150,7 @@ export default function FormularioPage() {
 
   const handleCreateLead = async () => {
     if (!newLead.nombre.trim() || !newLead.correo.trim()) {
-      showError('Nombre y correo son obligatorios');
+      alert('Nombre y correo son obligatorios');
       return;
     }
 
@@ -176,7 +173,7 @@ export default function FormularioPage() {
       };
       if (newLead.pais) payload.pais = newLead.pais;
 
-      const url = isHttps
+const url = isHttps
         ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + newLead.pais)}`
         : `${base}audit/assign-round-robin?pais=${newLead.pais}`;
 
@@ -184,6 +181,8 @@ export default function FormularioPage() {
         'Content-Type': 'application/json',
         'X-API-KEY': key,
       };
+
+      console.log('Creating lead:', url, JSON.stringify(payload));
 
       const res = await fetch(url, {
         method: 'POST',
@@ -194,18 +193,18 @@ export default function FormularioPage() {
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        showSuccess(`Lead ${data.client_id} creado - Asesor: ${data.advisor?.name || 'Asignado'}`, data.client_id);
+        alert(`Lead creado: ${data.client_id} - Asesor: ${data.advisor_name}`);
         setShowCreateModal(false);
         setNewLead({ nombre: '', correo: '', telefono: '', pais: 'SV' });
       } else if (data.already_existed) {
-        showSuccess(`Lead ${data.client_id} ya existía`, data.client_id);
+        alert(`Lead ya existía: ${data.client_id}`);
         setShowCreateModal(false);
       } else {
-        showError(data?.detail || 'Error al crear lead');
+        alert(data?.detail || 'Error al crear lead');
       }
     } catch (err) {
       console.error('Error creating lead:', err);
-      showError('Error al crear lead');
+      alert('Error al crear lead');
     } finally {
       setCreating(false);
     }
@@ -257,32 +256,6 @@ export default function FormularioPage() {
                       <X className="h-4 w-4" />
                     </button>
                   )}
-
-                  {showDropdown && searchTerm && filteredLeads.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                      {filteredLeads.map((lead) => (
-                        <button
-                          key={lead.client_id}
-                          onClick={() => handleSelectLead(lead)}
-                          className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex items-center justify-between"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</p>
-                            <p className="text-xs text-[#B5B5AE]">{lead.client_name}</p>
-                          </div>
-                          <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">
-                            {lead.opportunity_stage_label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {showDropdown && searchTerm && filteredLeads.length === 0 && !loading && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
-                      No se encontraron leads
-                    </div>
-                  )}
                 </div>
                 <Button
                   onClick={() => setShowCreateModal(true)}
@@ -294,7 +267,31 @@ export default function FormularioPage() {
                 </Button>
               </div>
 
-              
+              {showDropdown && searchTerm && filteredLeads.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full max-w-md bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                  {filteredLeads.map((lead) => (
+                    <button
+                      key={lead.client_id}
+                      onClick={() => handleSelectLead(lead)}
+                      className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</p>
+                        <p className="text-xs text-[#B5B5AE]">{lead.client_name}</p>
+                      </div>
+                      <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">
+                        {lead.opportunity_stage_label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {showDropdown && searchTerm && filteredLeads.length === 0 && !loading && (
+                <div className="absolute z-10 mt-1 w-full max-w-md bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
+                  No se encontraron leads
+                </div>
+              )}
 
               {selectedLead && (
                 <div className="bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg p-3 flex items-center justify-between">
