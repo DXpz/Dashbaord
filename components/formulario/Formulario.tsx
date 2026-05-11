@@ -183,7 +183,7 @@ function buildStages(requiresDemo: boolean): StageConfig[] {
   stages.push(
     { id: 'PROPUESTA', label: 'Propuesta', color: '#B5B5AE', stageNumber: 4, endpoint: '/propuesta', method: 'PUT', fields: PROPUESTA_FIELDS },
     { id: 'SEGUIMIENTO', label: 'Seguimiento', color: '#1F1D3D', stageNumber: 5, endpoint: '/seguimiento', method: 'PUT', fields: SEGUIMIENTO_FIELDS },
-    { id: 'CIERRE', label: 'Cierre', color: '#35325B', stageNumber: 6, endpoint: '/seguimiento', method: 'PUT', fields: CIERRE_FIELDS },
+    { id: 'CIERRE', label: 'Cierre', color: '#35325B', stageNumber: 6, endpoint: '/cierre', method: 'PUT', fields: CIERRE_FIELDS },
   );
   return stages;
 }
