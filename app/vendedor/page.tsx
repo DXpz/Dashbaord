@@ -23,6 +23,7 @@ export default function VendedorDashboard() {
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user?.full_name) return;
@@ -39,7 +40,7 @@ export default function VendedorDashboard() {
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [user?.full_name, authLoading, desde, hasta]);
+  }, [user?.full_name, authLoading, desde, hasta, refreshKey]);
 
   useEffect(() => {
     if (!user?.full_name) return;
@@ -55,7 +56,13 @@ export default function VendedorDashboard() {
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [user?.full_name]);
+  }, [user?.full_name, refreshKey]);
+
+  useEffect(() => {
+    if (!authLoading && user?.full_name) {
+      setRefreshKey(k => k + 1);
+    }
+  }, [authLoading, user?.full_name]);
 
   const metricas = data?.metricas || {};
 
