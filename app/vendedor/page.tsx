@@ -9,6 +9,7 @@ import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Target, TrendingUp, Users, CheckCircle } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 const COLORS = {
   dark: '#1F1D3D',
@@ -20,6 +21,7 @@ const COLORS = {
 export default function VendedorDashboard() {
   const { user, loading: authLoading } = useAuth();
   const { desde, hasta } = useVendedorFilters();
+  const pathname = usePathname();
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,10 @@ export default function VendedorDashboard() {
     }
     prevAuthLoading.current = authLoading;
   }, [authLoading]);
+
+  useEffect(() => {
+    setRefreshKey(k => k + 1);
+  }, [pathname]);
 
   const metricas = data?.metricas || {};
 
