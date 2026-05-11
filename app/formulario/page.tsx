@@ -77,7 +77,7 @@ export default function FormularioPage() {
         : `${base}audit/${selectedLead.client_id}/reopen`;
 
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
         'X-API-KEY': key,
       };
 
@@ -85,7 +85,7 @@ export default function FormularioPage() {
         method: 'POST',
         headers,
         credentials: 'include',
-        body: JSON.stringify({ reason: 'Reabierto por admin desde dashboard' }),
+        body: 'Reabierto por admin desde dashboard',
       });
 
       if (res.ok) {
