@@ -237,8 +237,9 @@ interface LoadedData {
   clientEmail: string;
   clientPhone: string;
   sellerName: string;
-  opportunityStage: number;
-  stageFeedbackJson: Record<number, any>;
+  oportunidadId: string;
+  etapaActual: number;
+  stageFeedback: Record<string, any>;
   history: any[];
 }
 
@@ -279,32 +280,34 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           return fetch(`${base}${path}`, { headers });
         };
 
-        const [oppRes, auditRes] = await Promise.all([
-          fetchUrl(`/opportunity?number=${encodeURIComponent(clientId)}`),
-          fetchUrl(`/audit?client_id=${encodeURIComponent(clientId)}`),
+        const [stagesRes, auditRes] = await Promise.all([
+          fetchUrl('/opportunity-stages'),
+          fetchUrl(`/audit/by-client/${encodeURIComponent(clientId)}`),
         ]);
 
-        const oppData = await oppRes.json();
+        const stagesData = stagesRes.ok ? await stagesRes.json() : {};
         const auditData = auditRes.ok ? await auditRes.json() : {};
 
-        console.log('[Formulario] oportunidad data:', JSON.stringify(oppData).substring(0, 500));
+        console.log('[Formulario] stages data:', JSON.stringify(stagesData).substring(0, 500));
         console.log('[Formulario] audit data:', JSON.stringify(auditData).substring(0, 500));
 
-        const audit = auditData?.audit || auditData || {};
-        const clientName = audit?.client_name || oppData?.client_name || oppData?.clientName || '';
-        const clientEmail = audit?.client_email || oppData?.client_email || oppData?.clientEmail || '';
-        const clientPhone = audit?.client_phone || oppData?.client_phone || oppData?.clientPhone || '';
-        const sellerName = audit?.advisor_name || oppData?.advisor_name || oppData?.sellerName || '';
-        const opportunityStage = audit?.opportunity_stage || oppData?.opportunity_stage || 2;
-        const stageFeedbackJson = audit?.stage_feedback_json || oppData?.stage_feedback_json || {};
+        const audit = auditData || {};
+        const clientName = audit?.nombre || '';
+        const clientEmail = audit?.email || '';
+        const clientPhone = audit?.telefono || '';
+        const sellerName = audit?.asesor_asignado || '';
+        const oportunidadId = audit?.opportunity_number || '';
+        const etapaActual = audit?.etapa_actual || 2;
+        const stageFeedback = audit?.stage_feedback || {};
+        const propuestaJson = audit?.propuesta_json || {};
         const seguimientoJson = audit?.seguimiento_json || {};
         const cierreJson = audit?.cierre_json || {};
 
-        console.log('[Formulario] stageFeedbackJson keys:', Object.keys(stageFeedbackJson));
+        console.log('[Formulario] stageFeedback keys:', Object.keys(stageFeedback));
         console.log('[Formulario] seguimiento_json:', JSON.stringify(seguimientoJson));
 
         let demoRequired = false;
-        const stage2Data = stageFeedbackJson['2'] || stageFeedbackJson[2] || stageFeedbackJson['2|3'];
+        const stage2Data = stageFeedback['2'] || stageFeedback[2];
         if (stage2Data?.requiere_demo === 'si') {
           demoRequired = true;
         }
@@ -317,18 +320,10 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         setCurrentStageIndex(initIdx >= 0 ? initIdx : 0);
 
         const mergedStageData: Record<number, Record<string, string>> = {};
-        Object.entries(stageFeedbackJson).forEach(([stageKey, fields]) => {
+        Object.entries(stageFeedback).forEach(([stageKey, fields]) => {
           if (fields && typeof fields === 'object') {
             if (!isNaN(Number(stageKey))) {
               mergedStageData[Number(stageKey)] = fields as Record<string, string>;
-            } else {
-              const parts = stageKey.split('|');
-              parts.forEach(p => {
-                const n = Number(p);
-                if (!isNaN(n) && !mergedStageData[n]) {
-                  mergedStageData[n] = fields as Record<string, string>;
-                }
-              });
             }
           }
         });
@@ -341,7 +336,6 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           mergedStageData[6] = { ...mergedStageData[6], ...cierreJson };
         }
 
-        const propuestaJson = audit?.propuesta_json || oppData?.propuesta_json || {};
         if (Object.keys(propuestaJson).length > 0 && !mergedStageData[4]) {
           mergedStageData[4] = propuestaJson;
         } else if (Object.keys(propuestaJson).length > 0) {
@@ -356,9 +350,10 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           clientEmail,
           clientPhone,
           sellerName,
-          opportunityStage,
-          stageFeedbackJson,
-          history: auditData?.history || [],
+          oportunidadId,
+          etapaActual,
+          stageFeedback,
+          history: [],
         });
       } catch (err) {
         console.error('Error loading lead data:', err);
