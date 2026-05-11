@@ -28,7 +28,7 @@ const [data, setData] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    console.log('useEffect triggered', { user: user?.full_name, refreshKey });
+    console.log('useEffect triggered', { user: user?.full_name, refreshKey, authLoading });
     if (!user?.full_name) {
       console.log('No user.full_name');
       return;
@@ -47,16 +47,7 @@ const [data, setData] = useState<any>(null);
       console.error('Error:', err);
       setLoading(false);
     });
-  }, [refreshKey]);
-
-  useEffect(() => {
-    console.log('Pathname changed');
-    setRefreshKey(k => k + 1);
-  }, [pathname]);
-
-  useEffect(() => {
-    console.log('Auth or user changed', { authLoading, user: user?.full_name });
-  }, [authLoading, user?.full_name]);
+  }, [refreshKey, user, authLoading]);
 
   const metricas = data?.metricas || {};
 
