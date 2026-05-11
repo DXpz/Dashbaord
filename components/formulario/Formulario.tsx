@@ -551,19 +551,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
     }
   };
 
-  const handleClose = () => {
-    const current = stages[currentStageIndex];
-    const data = current ? (stageData[current.stageNumber] || {}) : {};
-    const resultadoCierre = data.resultado_cierre || '';
-
-    if (current?.id === 'CIERRE' && resultadoCierre === 'perdido') {
-      setShowLostDialog(true);
-    } else if (current?.id === 'CIERRE' && resultadoCierre === 'ganado') {
-      handleCloseAsWon();
-    } else {
-      showError('Selecciona un resultado de cierre (ganado o perdido)');
-    }
-  };
+  
 
   const currentStage = stages[currentStageIndex];
   const currentData = currentStage ? (stageData[currentStage.stageNumber] || {}) : {};
@@ -663,16 +651,18 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           </span>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleClose}
-              disabled={closing || loading}
-              className="gap-1.5 border-[#c8151b] text-[#c8151b] hover:bg-red-50"
-            >
-              {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-              Cerrar
-            </Button>
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLostDialog(true)}
+                disabled={closing || loading}
+                className="gap-1.5 border-[#c8151b] text-[#c8151b] hover:bg-red-50"
+              >
+                {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                Cerrar
+              </Button>
+            </div>
 
             <Button
               variant="outline"
