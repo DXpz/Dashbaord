@@ -72,20 +72,20 @@ export default function FormularioPage() {
       const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
       const key = process.env.API_KEY || '';
 
-      const reason = encodeURIComponent('Reabierto por admin desde dashboard');
       const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/reopen?reason=${reason}`)}`
-        : `${base}audit/${selectedLead.client_id}/reopen?reason=${reason}`;
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/reopen`)}`
+        : `${base}audit/${selectedLead.client_id}/reopen`;
 
       const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
         'X-API-KEY': key,
-        'ngrok-skip-browser-warning': 'true',
       };
 
       const res = await fetch(url, {
         method: 'POST',
         headers,
         credentials: 'include',
+        body: JSON.stringify({ reason: 'Reabierto por admin desde dashboard' }),
       });
 
       if (res.ok) {
