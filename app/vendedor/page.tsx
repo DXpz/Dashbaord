@@ -28,7 +28,7 @@ export default function VendedorDashboard() {
     if (!user) return;
     setLoading(true);
     API.dashboard(
-      desde, hasta, 30, 40,
+      desde, hasta,
       { pais: user.country_code || undefined, asesor: user.full_name }
     ).then(result => {
       setData(result);
@@ -39,7 +39,7 @@ export default function VendedorDashboard() {
     });
   }, [user, desde, hasta]);
 
-  const resumen = data?.resumen || {};
+  const resumen = data?.metricas || {};
   const leadsPorStage = data?.leads_por_stage || [];
 
   const kpis = useMemo(() => ({

@@ -139,18 +139,13 @@ export const API = {
   async dashboard(
     desde: string,
     hasta: string,
-    limite_motivos = 30,
-    limite_reuniones_muestra = 40,
     opts: Record<string, any> = {}
   ) {
-    const group_by_asesores = opts.group_by_asesores ?? 'asesor';
-    const group_by_propuestas = opts.group_by_propuestas ?? 'rubro';
     const paisCode = normPaisQuery(opts.pais);
-    const key = `dashboard|${desde}|${hasta}|${limite_motivos}|${limite_reuniones_muestra}|${group_by_asesores}|${group_by_propuestas}|${opts.asesor || opts.nombre || ''}|${paisCode}`;
+    const key = `dashboard|${desde}|${hasta}|${opts.asesor || opts.nombre || ''}|${paisCode}`;
     if (_cache && _cacheKey === key) return _cache;
     const params = {
-      desde, hasta, limite_motivos, limite_reuniones_muestra,
-      group_by_asesores, group_by_propuestas,
+      desde, hasta,
       ...(opts.asesor ? asesorParam(opts.asesor) : nombreParam(opts.nombre)),
       ...paisParam(paisCode)
     };

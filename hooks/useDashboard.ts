@@ -61,8 +61,6 @@ export function useDashboard(filters: FilterState | null) {
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
-        30,
-        40,
         { pais: filters.pais, nombre: filters.asesor, asesor: filters.asesor }
       );
       setData(result as DashboardData);
@@ -96,8 +94,6 @@ export function useAdminDashboard(filters: FilterState | null) {
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
-        30,
-        40,
         { pais: filters.pais }
       );
       setData(result as DashboardData);
@@ -213,7 +209,7 @@ export function useStages() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const d = await API.dashboard('', '', 30, 40, {});
+        const d = await API.dashboard('', '', {});
         const s = d?.stages || [];
         setStages(s);
       } catch (err) {
