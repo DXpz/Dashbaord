@@ -667,36 +667,34 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
               variant="outline"
               size="sm"
               onClick={handleClose}
-              disabled={closing || loading || currentStageIndex !== maxIndex}
+              disabled={closing || loading}
               className="gap-1.5 border-[#c8151b] text-[#c8151b] hover:bg-red-50"
             >
               {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
               Cerrar
             </Button>
 
-            {currentStageIndex < maxIndex ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentStageIndex(prev => prev + 1)}
-                disabled={loading}
-                className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
-              >
-                Siguiente
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSave}
-                disabled={saving || loading}
-                className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                Guardar
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSave}
+              disabled={saving || loading}
+              className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              Guardar
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentStageIndex(prev => Math.min(stages.length - 1, prev + 1))}
+              disabled={currentStageIndex === stages.length - 1 || loading}
+              className="gap-1.5 text-[#35325B]"
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
