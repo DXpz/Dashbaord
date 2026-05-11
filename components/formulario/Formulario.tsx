@@ -298,6 +298,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         const opportunityStage = audit?.opportunity_stage || oppData?.opportunity_stage || 2;
         const stageFeedbackJson = audit?.stage_feedback_json || oppData?.stage_feedback_json || {};
         const seguimientoJson = audit?.seguimiento_json || {};
+        const cierreJson = audit?.cierre_json || {};
 
         console.log('[Formulario] stageFeedbackJson keys:', Object.keys(stageFeedbackJson));
         console.log('[Formulario] seguimiento_json:', JSON.stringify(seguimientoJson));
@@ -334,10 +335,13 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
 
         if (Object.keys(seguimientoJson).length > 0) {
           mergedStageData[5] = { ...mergedStageData[5], ...seguimientoJson };
-          mergedStageData[6] = { ...mergedStageData[6], ...seguimientoJson };
         }
 
-        const propuestaJson = auditData?.audit?.propuesta_json || oppData?.propuesta_json || {};
+        if (Object.keys(cierreJson).length > 0) {
+          mergedStageData[6] = { ...mergedStageData[6], ...cierreJson };
+        }
+
+        const propuestaJson = audit?.propuesta_json || oppData?.propuesta_json || {};
         if (Object.keys(propuestaJson).length > 0 && !mergedStageData[4]) {
           mergedStageData[4] = propuestaJson;
         } else if (Object.keys(propuestaJson).length > 0) {
