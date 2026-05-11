@@ -296,8 +296,10 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         const sellerName = auditData?.audit?.advisor_name || oppData?.advisor_name || oppData?.sellerName || '';
         const opportunityStage = auditData?.audit?.opportunity_stage || oppData?.opportunity_stage || 2;
         const stageFeedbackJson = auditData?.audit?.stage_feedback_json || oppData?.stage_feedback_json || {};
+        const seguimientoJson = oppData?.seguimiento_json || {};
 
         console.log('[Formulario] stageFeedbackJson keys:', Object.keys(stageFeedbackJson));
+        console.log('[Formulario] seguimiento_json:', JSON.stringify(seguimientoJson));
 
         let demoRequired = false;
         const stage2Data = stageFeedbackJson['2'] || stageFeedbackJson[2] || stageFeedbackJson['2|3'];
@@ -328,6 +330,11 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
             }
           }
         });
+
+        if (Object.keys(seguimientoJson).length > 0) {
+          mergedStageData[5] = { ...mergedStageData[5], ...seguimientoJson };
+          mergedStageData[6] = { ...mergedStageData[6], ...seguimientoJson };
+        }
 
         console.log('[Formulario] mergedStageData:', JSON.stringify(mergedStageData));
         setStageData(mergedStageData);
