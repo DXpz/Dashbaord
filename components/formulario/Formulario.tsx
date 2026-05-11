@@ -377,9 +377,11 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           client_name: loadedData?.clientName || '',
           client_phone: loadedData?.clientPhone || '',
           client_email: loadedData?.clientEmail || '',
-          cierre_estimado: data.cierre_estimado || '',
           stage_feedback_json: { [current.stageNumber]: data },
         };
+        if (data.cierre_estimado) {
+          body.cierre_estimado = data.cierre_estimado;
+        }
       } else if (current.id === 'PROPUESTA') {
         url = isHttps
           ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/propuesta`)}`
