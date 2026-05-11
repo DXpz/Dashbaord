@@ -434,12 +434,22 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           cantidad_oferta: data.cantidad_oferta || '',
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
-      } else {
+      } else if (current.id === 'SEGUIMIENTO') {
         url = isHttps
           ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
           : `${base}audit/client/${clientId}/seguimiento`;
 
-        const isCierre = current.id === 'CIERRE';
+        body = {
+          resumen_general: data.resumen_general || '',
+          resultado_venta: 'en_seguimiento',
+          cliente_ha_negociado: data.cliente_ha_negociado == 'si' || data.cliente_ha_negociado == true,
+          stage_feedback_json: { [`${current.stageNumber}`]: data },
+        };
+      } else if (current.id === 'CIERRE') {
+        url = isHttps
+          ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/cierre`)}`
+          : `${base}audit/client/${clientId}/cierre`;
+
         const resultadoCierre = data.resultado_cierre || '';
 
         body = {
@@ -447,22 +457,17 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
 
-        if (isCierre) {
-          body.resultado_propuesta = resultadoCierre === 'ganado' ? 'ganada' : resultadoCierre === 'perdido' ? 'perdida' : '';
-          if (resultadoCierre === 'ganado') {
-            body.resultado_venta = 'cerrada';
-            body.cliente_interesado = true;
-            body.cliente_ha_negociado = true;
-          } else if (resultadoCierre === 'perdido') {
-            body.resultado_venta = 'perdida';
-            body.cliente_interesado = false;
-            body.cliente_ha_negociado = false;
-          }
-        } else {
-          body.resultado_venta = 'en_seguimiento';
-          body.cliente_interesado = data.cliente_interesado == 'si' || data.cliente_interesado == true;
-          body.cliente_ha_negociado = data.cliente_ha_negociado == 'si' || data.cliente_ha_negociado == true;
+        if (resultadoCierre === 'ganado') {
+          body.resultado_venta = 'cerrada';
+          body.resultado_propuesta = 'ganada';
+          body.cliente_ha_negociado = true;
+        } else if (resultadoCierre === 'perdido') {
+          body.resultado_venta = 'perdida';
+          body.resultado_propuesta = 'perdida';
+          body.cliente_ha_negociado = false;
         }
+      } else {
+        throw new Error('Etapa no reconocida');
       }
 
       const res = await fetch(url, {
@@ -525,8 +530,8 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
       };
 
       const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
-        : `${base}audit/client/${clientId}/seguimiento`;
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/cierre`)}`
+        : `${base}audit/client/${clientId}/cierre`;
 
       const res = await fetch(url, {
         method: 'PUT',
@@ -583,9 +588,9 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         },
       };
 
-      const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
-        : `${base}audit/client/${clientId}/seguimiento`;
+const url = isHttps
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/cierre`)}`
+        : `${base}audit/client/${clientId}/cierre`;
 
       const res = await fetch(url, {
         method: 'PUT',
@@ -609,7 +614,6 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
     }
   };
 
-  
 
   const currentStage = stages[currentStageIndex];
   const currentData = currentStage ? (stageData[currentStage.stageNumber] || {}) : {};
