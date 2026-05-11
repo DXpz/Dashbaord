@@ -31,19 +31,16 @@ const [data, setData] = useState<any>(null);
   useEffect(() => {
     if (!user?.full_name) return;
     if (authLoading) return;
-    console.log('Setting isReady=true');
     setIsReady(true);
   }, [user?.full_name, authLoading]);
 
   useEffect(() => {
     if (!isReady || !user?.full_name) return;
-    console.log('Fetching metrics...');
     API.asesor(
       user.full_name,
       desde, hasta,
       user.country_code
     ).then(result => {
-      console.log('Metrics received:', result);
       setData(result);
       setLoading(false);
     }).catch(err => {
@@ -53,7 +50,6 @@ const [data, setData] = useState<any>(null);
   }, [isReady, user?.full_name, desde, hasta, refreshKey]);
 
   useEffect(() => {
-    console.log(' pathname changed, resetting');
     setRefreshKey(k => k + 1);
     setIsReady(false);
   }, [pathname]);
