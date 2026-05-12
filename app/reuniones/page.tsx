@@ -44,7 +44,13 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
   const resultadoColor = isGanada ? 'text-green-600' : isPerdida ? 'text-red-600' : 'text-[#1F1D3D]';
 
-  const advisorFeedback = reunion.advisor_feedback || '';
+  const advisorFeedback = (reunion.advisor_feedback || '')
+    .replace(/,\s*\|[^|]*\|\s*/g, ', ')
+    .replace(/\s*\|\s*/g, ' ')
+    .replace(/,\s*,/g, ',')
+    .replace(/^\s*,\s*/, '')
+    .replace(/\s*,\s*$/, '')
+    .trim() || '';
   const hasFeedback = !!advisorFeedback;
 
   return (
