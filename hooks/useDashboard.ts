@@ -350,6 +350,48 @@ export function useMotivosPerdida(filters: FilterState) {
   return { motivos: data.motivos, categorias: data.categorias, loading };
 }
 
+export function useNegociacion(filters: FilterState) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchNegociacion = async () => {
+      setLoading(true);
+      try {
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const params = new URLSearchParams();
+        if (filters.desde) params.set('desde', filters.desde);
+        if (filters.hasta) params.set('hasta', filters.hasta);
+        if (filters.pais) params.set('pais', filters.pais);
+        const qs = params.toString();
+        const suffix = qs ? `&${qs}` : '';
+        const targetPath = 'metrics/negociacion';
+        const url = isHttps
+          ? `/api/proxy?_path=${encodeURIComponent(targetPath)}${suffix}`
+          : `http://200.35.189.139/api/${targetPath}${qs ? '?' + qs : ''}`;
+        const res = await window.fetch(url, {
+          headers: {
+            'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
+            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
+          }
+        });
+        const json = await res.json();
+        if (cancelled) return;
+        setData(json);
+      } catch (err) {
+        console.error('Error fetching negociacion:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchNegociacion();
+    return () => { cancelled = true; };
+  }, [filters.desde, filters.hasta, filters.pais]);
+
+  return { data, loading };
+}
+
 export function usePropuestasPorRubro(filters: FilterState) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

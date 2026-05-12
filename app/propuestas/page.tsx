@@ -6,7 +6,7 @@ import { Shell } from '@/components/layout/Shell';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { KPICard } from '@/components/kpi/KPICard';
-import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters, useMotivosPerdida, usePropuestasPorRubro } from '@/hooks';
+import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters, useMotivosPerdida, usePropuestasPorRubro, useNegociacion } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, TrendingDown, Target, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ export default function PropuestasPage() {
   const { data, loading, error } = useAdminDashboard(filters);
   const { data: propuestasPorRubroData, loading: propuestasLoading } = usePropuestasPorRubro(filters);
   const { motivos, categorias, loading: motivosLoading } = useMotivosPerdida(filters);
+  const { data: negociacionData, loading: negociacionLoading } = useNegociacion(filters);
   const [normalizadas, setNormalizadas] = useState(false);
   const connectionStatus = useConnectionStatus();
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
@@ -31,9 +32,8 @@ export default function PropuestasPage() {
   const resumen = data?.resumen || {};
   const metricas = data?.metricas || {};
   const propuestasPorRubro = propuestasPorRubroData || [];
-  const motivosPerdida = data?.motivos_perdida || {};
-  const negociacion = data?.negociacion || {};
-  const decisiones = data?.decisiones || {};
+  const negociacion = negociacionData?.negociacion || {};
+  const decisiones = negociacionData?.decisiones || {};
   const decGlobal = decisiones?.global || {};
 
   const motivosItems = normalizadas ? categorias : motivos;
@@ -63,38 +63,28 @@ export default function PropuestasPage() {
     if (!arr.length) return null;
     return {
       labels: arr.map((r: any) => r.rubro || '—'),
-      values: arr.map((r: any) => r.tasa_cierre_pct || r.tasa || 0),
+      values: arr.map((r: any) => r.tasa_cierre_pct || r.tasa_cierre || r.tasa || 0),
     };
-  }, [data]);
+  }, [propuestasPorRubro]);
 
 const motivosChartData = useMemo(() => {
     if (!motivosItems.length) return null;
-    const sorted = [...motivosItems].sort((a: any, b: any) => (b.veces || 0) - (a.veces || 0)).slice(0, 15);
+    const sorted = [...motivosItems].sort((a: any, b: any) => (b.total || b.veces || 0) - (a.total || a.veces || 0)).slice(0, 15);
     return {
-      labels: sorted.map((m: any) => (m.categoria || m.motivo_perdida || m.texto || '—').substring(0, 30)),
-      values: sorted.map((m: any) => m.veces || 0),
+      labels: sorted.map((m: any) => (m.categoria || m.motivo || m.motivo_perdida || m.texto || '—').substring(0, 30)),
+      values: sorted.map((m: any) => m.total || m.veces || 0),
     };
   }, [motivosItems]);
 
-  const negociacionChartData = useMemo(() => {
-    const conResumen = negociacionGlobal.seguimientos_con_resumen || 0;
-    const negociaron = negociacionGlobal.negociaron || 0;
-    if (conResumen === 0 && negociaron === 0) return null;
-    return {
-      labels: ['Con Resumen', 'En Negociación'],
-      values: [conResumen, negociaron],
-    };
-  }, [negociacionGlobal]);
-
   const decisionesChartData = useMemo(() => {
-    const aceptados = negociacionGlobal.negociaron || 0;
-    const rechazados = (negociacionGlobal.segui_mientos_con_resumen || 0) - aceptados;
+    const aceptados = decGlobal.aceptados ?? 0;
+    const rechazados = decGlobal.rechazados ?? 0;
     if (aceptados === 0 && rechazados === 0) return null;
     return {
-      labels: ['Con Resumen', 'En Negociación'],
+      labels: ['Aceptados', 'Rechazados'],
       values: [aceptados, rechazados],
     };
-  }, [negociacionGlobal]);
+  }, [decGlobal]);
 
   return (
     <Shell
