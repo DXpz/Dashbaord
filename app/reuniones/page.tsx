@@ -246,10 +246,7 @@ export default function ReunionesPage() {
                     Cancelar
                   </Button>
                 )}
-                <Button variant="outline" size="sm" onClick={() => window.open('https://front-leads-xi.vercel.app/', '_blank')} className="gap-1.5 text-xs h-8 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                  Formulario
-                </Button>
+                
                 <div className="flex items-center gap-1 bg-[#F5F5ED] p-1 rounded">
                   <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 px-2">
                     <ChevronLeft className="h-4 w-4" />
@@ -303,7 +300,7 @@ export default function ReunionesPage() {
                     >
                       <TableCell>
                         {editMode ? (
-                          <input type="text" value={getEditedValue(reunion.client_id, 'client_name', reunion.client_name || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_name', e.target.value)} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
+                          <input type="text" value={getEditedValue(reunion.client_id, 'client_id', reunion.client_id || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_id', e.target.value)} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
                         ) : (
                           <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
                         )}
