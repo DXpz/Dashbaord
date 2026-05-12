@@ -26,8 +26,10 @@ function StatusBadge({ reunion }: { reunion: any }) {
   return <span className="text-xs text-gray-500">{status || '—'}</span>;
 }
 
-function StageBadge({ stageLabel, stageNum }: { stageLabel?: string; stageNum?: number }) {
-  if (stageLabel) return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{stageLabel}</span>;
+function StageBadge({ stageLabel, stageNum, stages }: { stageLabel?: string; stageNum?: number; stages?: any[] }) {
+  const labelFromNum = stages?.find(s => s.id === stageNum)?.label;
+  const displayLabel = labelFromNum || stageLabel;
+  if (displayLabel) return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{displayLabel}</span>;
   if (stageNum == null) return <span className="text-gray-400">—</span>;
   return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Etapa {stageNum}</span>;
 }
@@ -348,7 +350,7 @@ export default function ReunionesPage() {
                             {stages.map(s => <option key={s.id} value={String(s.id)}>{s.label}</option>)}
                           </select>
                         ) : (
-                          <StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} />
+                          <StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} stages={stages} />
                         )}
                       </TableCell>
                       <TableCell>
