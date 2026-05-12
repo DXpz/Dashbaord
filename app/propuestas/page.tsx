@@ -6,7 +6,7 @@ import { Shell } from '@/components/layout/Shell';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { KPICard } from '@/components/kpi/KPICard';
-import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters, useMotivosPerdida } from '@/hooks';
+import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters, useMotivosPerdida, usePropuestasPorRubro } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, TrendingDown, Target, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,13 +22,15 @@ const COLORS = {
 export default function PropuestasPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading, error } = useAdminDashboard(filters);
+  const { data: propuestasPorRubroData, loading: propuestasLoading } = usePropuestasPorRubro(filters);
   const { motivos, categorias, loading: motivosLoading } = useMotivosPerdida(filters);
   const [normalizadas, setNormalizadas] = useState(false);
   const connectionStatus = useConnectionStatus();
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
 
   const resumen = data?.resumen || {};
-  const propuestasPorRubro = data?.propuestas_por_rubro || [];
+  const metricas = data?.metricas || {};
+  const propuestasPorRubro = propuestasPorRubroData || [];
   const motivosPerdida = data?.motivos_perdida || {};
   const negociacion = data?.negociacion || {};
   const decisiones = data?.decisiones || {};
@@ -39,25 +41,25 @@ export default function PropuestasPage() {
   const porRubroNeg = negociacion?.por_rubro || [];
 
   const kpis = useMemo(() => ({
-    cantidad: resumen.propuestas_registradas ?? 0,
-    cerradas: resumen.ventas_cerradas ?? 0,
-    perdidas: resumen.ventas_perdidas ?? 0,
-    tasaCierre: (resumen.propuestas_registradas ?? 0) > 0
-      ? ((resumen.ventas_cerradas / resumen.propuestas_registradas) * 100).toFixed(1)
+    cantidad: metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0,
+    cerradas: metricas.ventas_cerradas ?? resumen.ventas_cerradas ?? 0,
+    perdidas: metricas.ventas_perdidas ?? resumen.ventas_perdidas ?? 0,
+    tasaCierre: (metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0) > 0
+      ? ((metricas.ventas_cerradas ?? resumen.ventas_cerradas ?? 0) / (metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 1) * 100).toFixed(1)
       : '0.0',
-  }), [resumen]);
+  }), [metricas, resumen]);
 
   const rubroChartData = useMemo(() => {
-    const arr = data?.propuestas_por_rubro || [];
+    const arr = propuestasPorRubro;
     if (!arr.length) return null;
     return {
       labels: arr.map((r: any) => r.rubro || '—'),
       values: arr.map((r: any) => r.propuestas || r.cantidad || 0),
     };
-  }, [data]);
+  }, [propuestasPorRubro]);
 
   const tasaChartData = useMemo(() => {
-    const arr = data?.propuestas_por_rubro || [];
+    const arr = propuestasPorRubro;
     if (!arr.length) return null;
     return {
       labels: arr.map((r: any) => r.rubro || '—'),

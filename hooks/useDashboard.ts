@@ -326,7 +326,6 @@ export function useMotivosPerdida(filters: FilterState) {
         const url = isHttps
           ? `/api/proxy?_path=${encodeURIComponent(targetPath)}${suffix}`
           : `http://200.35.189.139/api/${targetPath}${qs ? '?' + qs : ''}`;
-        console.log('[useMotivosPerdida] fetching:', url);
         const res = await window.fetch(url, {
           headers: {
             'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
@@ -335,8 +334,7 @@ export function useMotivosPerdida(filters: FilterState) {
         });
         const json = await res.json();
         if (cancelled) return;
-        console.log('[useMotivosPerdida] got', json.motivos?.length, 'motivos,', json.categorias_normalizadas?.length, 'cats');
-        const motivos = Array.isArray(json.motivos) ? json.motivos : [];
+        const motivos = Array.isArray(json.motivos) ? json.motivos : (Array.isArray(json.items) ? json.items : []);
         const categorias = Array.isArray(json.categorias_normalizadas) ? json.categorias_normalizadas : [];
         setData({ motivos, categorias });
       } catch (err) {
@@ -350,4 +348,47 @@ export function useMotivosPerdida(filters: FilterState) {
   }, [filters.desde, filters.hasta, filters.pais]);
 
   return { motivos: data.motivos, categorias: data.categorias, loading };
+}
+
+export function usePropuestasPorRubro(filters: FilterState) {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchPropuestas = async () => {
+      setLoading(true);
+      try {
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const params = new URLSearchParams();
+        if (filters.desde) params.set('desde', filters.desde);
+        if (filters.hasta) params.set('hasta', filters.hasta);
+        if (filters.pais) params.set('pais', filters.pais);
+        const qs = params.toString();
+        const suffix = qs ? `&${qs}` : '';
+        const targetPath = 'metrics/propuestas-por-rubro';
+        const url = isHttps
+          ? `/api/proxy?_path=${encodeURIComponent(targetPath)}${suffix}`
+          : `http://200.35.189.139/api/${targetPath}${qs ? '?' + qs : ''}`;
+        const res = await window.fetch(url, {
+          headers: {
+            'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
+            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
+          }
+        });
+        const json = await res.json();
+        if (cancelled) return;
+        const arr = json.propuestas_por_rubro || json.items || json || [];
+        setData(Array.isArray(arr) ? arr : []);
+      } catch (err) {
+        console.error('Error fetching propuestas por rubro:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchPropuestas();
+    return () => { cancelled = true; };
+  }, [filters.desde, filters.hasta, filters.pais]);
+
+  return { data, loading };
 }

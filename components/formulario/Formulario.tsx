@@ -286,22 +286,22 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         ]);
 
         const stagesData = stagesRes.ok ? await stagesRes.json() : {};
-        const auditData = auditRes.ok ? await auditRes.json() : {};
+        const rawAuditData = auditRes.ok ? await auditRes.json() : {};
+        const auditData = rawAuditData.audit || rawAuditData || {};
 
         console.log('[Formulario] stages data:', JSON.stringify(stagesData).substring(0, 500));
         console.log('[Formulario] audit data:', JSON.stringify(auditData).substring(0, 500));
 
-        const audit = auditData || {};
-        const clientName = audit?.nombre || '';
-        const clientEmail = audit?.email || '';
-        const clientPhone = audit?.telefono || '';
-        const sellerName = audit?.asesor_asignado || '';
-        const oportunidadId = audit?.opportunity_number || '';
-        const etapaActual = audit?.etapa_actual || 2;
-        const stageFeedback = audit?.stage_feedback || {};
-        const propuestaJson = audit?.propuesta_json || {};
-        const seguimientoJson = audit?.seguimiento_json || {};
-        const cierreJson = audit?.cierre_json || {};
+        const clientName = auditData?.client_name || '';
+        const clientEmail = auditData?.client_email || '';
+        const clientPhone = auditData?.client_phone || '';
+        const sellerName = auditData?.advisor_name || '';
+        const oportunidadId = auditData?.client_id || '';
+        const etapaActual = auditData?.opportunity_stage || 2;
+        const stageFeedback = auditData?.stage_feedback_json || {};
+        const propuestaJson = auditData?.propuesta_json || {};
+        const seguimientoJson = auditData?.seguimiento_json || {};
+        const cierreJson = auditData?.cierre_json || {};
 
         console.log('[Formulario] stageFeedback keys:', Object.keys(stageFeedback));
         console.log('[Formulario] seguimiento_json:', JSON.stringify(seguimientoJson));

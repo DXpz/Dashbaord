@@ -24,6 +24,7 @@ export default function NegociacionPage() {
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
 
   const resumen = data?.resumen || {};
+  const metricas = data?.metricas || {};
   const negociacion = data?.negociacion || {};
   const decisiones = data?.decisiones || {};
   const decGlobal = decisiones?.global || {};
@@ -32,12 +33,12 @@ export default function NegociacionPage() {
   const globalStats = negociacion?.global || {};
 
   const kpis = useMemo(() => ({
-    seguimientos: resumen.seguimientos_registrados ?? 0,
-    propuestas: resumen.propuestas_registradas ?? 0,
+    seguimientos: metricas.seguimientos_registrados ?? resumen.seguimientos_registrados ?? 0,
+    propuestas: metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0,
     aceptados: globalStats.negociaron ?? 0,
     rechazados: (globalStats.seguimientos_con_resumen ?? 0) - (globalStats.negociaron ?? 0),
     tasaAceptacion: globalStats.pct_negociaron_sobre_con_flag ?? '—',
-  }), [resumen, globalStats]);
+  }), [metricas, resumen, globalStats]);
 
   const porRubroChartData = useMemo(() => {
     if (!porRubroNeg.length) return null;
