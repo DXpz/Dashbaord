@@ -35,17 +35,55 @@ function StageBadge({ stageLabel, stageNum, stages }: { stageLabel?: string; sta
 }
 
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
-  const seg = reunion.seguimiento_json || {};
+  const seg = typeof reunion.seguimiento_json === 'string'
+    ? { retroalimentacion: reunion.seguimiento_json }
+    : (reunion.seguimiento_json || {});
   const resultado = reunion.resultado_venta || seg.resultado_propuesta || seg.resultado_cierre || '';
   const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
   const isPerdida = resultado.toLowerCase().includes('perdida');
 
   const resultadoColor = isGanada ? 'text-green-600' : isPerdida ? 'text-red-600' : 'text-[#1F1D3D]';
-  const retroalimentacion = reunion.advisor_feedback || 'Sin retroalimentación registrada';
+
+  const rawFeedback = reunion.advisor_feedback || seg.retroalimentacion || seg.notas || '';
+
+  const labelMap: Record<string, string> = {
+    industria_sector: 'Industria / Sector',
+    tipo_reunion: 'Tipo de Reunión',
+    interes_producto: 'Interés en Producto',
+    productos_ofrecidos: 'Productos Ofrecidos',
+    requiere_demo: 'Requiere Demo',
+    fecha_reunion: 'Fecha Reunión',
+    cobertura_demo: 'Cobertura Demo',
+    fecha_demo: 'Fecha Demo',
+    retroalimentacion: 'Retroalimentación',
+    notes: 'Notas',
+    resumen_general: 'Resumen General',
+  };
+
+  const isKeyValueFormat = rawFeedback.includes(';') || (rawFeedback.includes(':') && rawFeedback.includes('\n'));
+
+  let feedbackFields: Array<{label: string; value: string}> = [];
+  let feedbackText = rawFeedback;
+
+  if (isKeyValueFormat && rawFeedback.includes(';')) {
+    const pairs = rawFeedback.split(';').map((s: string) => s.trim()).filter(Boolean);
+    feedbackFields = pairs
+      .map((pair: string) => {
+        const colonIdx = pair.indexOf(':');
+        if (colonIdx === -1) return null;
+        const key = pair.substring(0, colonIdx).trim();
+        const value = pair.substring(colonIdx + 1).trim();
+        return { label: labelMap[key] || key.replace(/_/g, ' '), value };
+      })
+      .filter(Boolean) as Array<{label: string; value: string}>;
+    feedbackText = '';
+  }
+
+  const hasFeedback = rawFeedback || seg.retroalimentacion || seg.notas;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-[32rem] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-2xl w-[36rem] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
           <div>
             <h3 className="text-sm font-semibold text-[#1F1D3D]">Feedback del Lead</h3>
@@ -56,7 +94,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
           <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div>
               <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Lead</p>
@@ -73,10 +111,8 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
               </p>
             </div>
             <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Fecha Feedback</p>
-              <p className="font-medium text-[#1F1D3D]">
-                {reunion.advisor_feedback_at ? new Date(reunion.advisor_feedback_at).toLocaleString('es-ES') : '—'}
-              </p>
+              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Etapa</p>
+              <p className="font-medium text-[#1F1D3D]">{reunion.opportunity_stage_label || '—'}</p>
             </div>
             <div>
               <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Resultado</p>
@@ -84,35 +120,54 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
                 {isGanada ? 'Cerrada (Ganada)' : isPerdida ? 'Perdida' : resultado || '—'}
               </p>
             </div>
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Min hasta retro</p>
-              <p className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro ?? '—'}</p>
-            </div>
+            {reunion.minutos_hasta_retro != null && (
+              <div>
+                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Min hasta Retro</p>
+                <p className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro} min</p>
+              </div>
+            )}
             {reunion.categoria_cierre && (
               <div>
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Categoría</p>
+                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Categoría Cierre</p>
                 <p className="font-medium text-[#1F1D3D]">{reunion.categoria_cierre}</p>
               </div>
             )}
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Tiene retroalimentación</p>
-              <p className={`font-medium ${reunion.tiene_retro ? 'text-green-600' : 'text-[#B5B5AE]'}`}>
-                {reunion.tiene_retro ? 'Sí' : 'No'}
-              </p>
-            </div>
             {seg.motivo_perdida && (
-              <div className="col-span-2">
+              <div>
                 <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Motivo Pérdida</p>
-                <p className="font-medium text-[#1F1D3D]">{seg.motivo_perdida}</p>
+                <p className="font-medium text-red-600">{seg.motivo_perdida}</p>
               </div>
             )}
           </div>
 
           <div className="pt-4 border-t border-[#EEEEEC]">
-            <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-2">Retroalimentación</p>
-            <div className="bg-[#F5F5ED] rounded-lg p-4 text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
-              {retroalimentacion}
-            </div>
+            <p className="text-xs font-semibold text-[#35325B] uppercase tracking-wider mb-3">Resumen de la Gestión</p>
+            {hasFeedback ? (
+              <div className="bg-[#F5F5ED] rounded-lg p-4 space-y-3">
+                {feedbackFields.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    {feedbackFields.map((f, i) => (
+                      <div key={i}>
+                        <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">{f.label}</p>
+                        <p className="font-medium text-[#1F1D3D] capitalize">{f.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {feedbackText && (
+                  <div>
+                    <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Comentarios</p>
+                    <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
+                      {feedbackText}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-[#F5F5ED] rounded-lg p-4 text-sm text-[#B5B5AE] text-center">
+                Este lead aún no cuenta con feedback registrado.
+              </div>
+            )}
           </div>
         </div>
       </div>
