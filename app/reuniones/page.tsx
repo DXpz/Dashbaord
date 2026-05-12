@@ -44,42 +44,8 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
   const resultadoColor = isGanada ? 'text-green-600' : isPerdida ? 'text-red-600' : 'text-[#1F1D3D]';
 
-  const rawFeedback = reunion.advisor_feedback || seg.retroalimentacion || seg.notas || '';
-
-  const labelMap: Record<string, string> = {
-    industria_sector: 'Industria / Sector',
-    tipo_reunion: 'Tipo de Reunión',
-    interes_producto: 'Interés en Producto',
-    productos_ofrecidos: 'Productos Ofrecidos',
-    requiere_demo: 'Requiere Demo',
-    fecha_reunion: 'Fecha Reunión',
-    cobertura_demo: 'Cobertura Demo',
-    fecha_demo: 'Fecha Demo',
-    retroalimentacion: 'Retroalimentación',
-    notes: 'Notas',
-    resumen_general: 'Resumen General',
-  };
-
-  const isKeyValueFormat = rawFeedback.includes(';') || (rawFeedback.includes(':') && rawFeedback.includes('\n'));
-
-  let feedbackFields: Array<{label: string; value: string}> = [];
-  let feedbackText = rawFeedback;
-
-  if (isKeyValueFormat && rawFeedback.includes(';')) {
-    const pairs = rawFeedback.split(';').map((s: string) => s.trim()).filter(Boolean);
-    feedbackFields = pairs
-      .map((pair: string) => {
-        const colonIdx = pair.indexOf(':');
-        if (colonIdx === -1) return null;
-        const key = pair.substring(0, colonIdx).trim();
-        const value = pair.substring(colonIdx + 1).trim();
-        return { label: labelMap[key] || key.replace(/_/g, ' '), value };
-      })
-      .filter(Boolean) as Array<{label: string; value: string}>;
-    feedbackText = '';
-  }
-
-  const hasFeedback = rawFeedback || seg.retroalimentacion || seg.notas;
+  const advisorFeedback = reunion.advisor_feedback || '';
+  const hasFeedback = !!advisorFeedback;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -141,27 +107,12 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
           </div>
 
           <div className="pt-4 border-t border-[#EEEEEC]">
-            <p className="text-xs font-semibold text-[#35325B] uppercase tracking-wider mb-3">Resumen de la Gestión</p>
+            <p className="text-xs font-semibold text-[#35325B] uppercase tracking-wider mb-3">Retroalimentación</p>
             {hasFeedback ? (
-              <div className="bg-[#F5F5ED] rounded-lg p-4 space-y-3">
-                {feedbackFields.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    {feedbackFields.map((f, i) => (
-                      <div key={i}>
-                        <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">{f.label}</p>
-                        <p className="font-medium text-[#1F1D3D] capitalize">{f.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-                {feedbackText && (
-                  <div>
-                    <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Comentarios</p>
-                    <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
-                      {feedbackText}
-                    </p>
-                  </div>
-                )}
+              <div className="bg-[#F5F5ED] rounded-lg p-4">
+                <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
+                  {advisorFeedback}
+                </p>
               </div>
             ) : (
               <div className="bg-[#F5F5ED] rounded-lg p-4 text-sm text-[#B5B5AE] text-center">
