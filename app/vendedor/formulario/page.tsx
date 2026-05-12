@@ -37,11 +37,6 @@ export default function VendedorFormularioPage() {
         const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
         
         const leadsWithStage = list
-          .filter((r: any) => {
-            const stage = r.opportunity_stage_label || '';
-            const closed = stage.toLowerCase().includes('cierre') || r.resultado_venta === 'cerrada' || r.resultado_venta === 'perdida';
-            return !closed;
-          })
           .map((r: any) => {
             const stage = r.opportunity_stage_label || '';
             return {
