@@ -356,11 +356,7 @@ export default function ReunionesPage() {
                       className={`animate-slide-up delay-${Math.min(i + 1, 8)}`}
                     >
                       <TableCell>
-                        {editMode ? (
-                          <input type="text" value={getEditedValue(reunion.client_id, 'client_id', reunion.client_id || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_id', e.target.value)} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
-                        ) : (
-                          <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
-                        )}
+                        <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
                       </TableCell>
                       <TableCell>
                         {editMode ? (
