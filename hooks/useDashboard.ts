@@ -87,20 +87,15 @@ export function useAdminDashboard(filters: FilterState | null) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!filters || !filters.desde || !filters.hasta) {
-      console.log('[useAdminDashboard] early return - missing filters:', filters);
-      return;
-    }
+    if (!filters || !filters.desde || !filters.hasta) return;
     setLoading(true);
     setError(null);
     try {
-      console.log('[useAdminDashboard] fetching with filters:', filters);
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
         { pais: filters.pais }
       );
-      console.log('[useAdminDashboard] got result:', result);
       setData(result as DashboardData);
     } catch (err: any) {
       const message = err?.message || err?.cause?.message || 'Error al cargar datos';

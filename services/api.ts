@@ -149,7 +149,7 @@ export const API = {
       ...(opts.asesor ? asesorParam(opts.asesor) : nombreParam(opts.nombre)),
       ...paisParam(paisCode)
     };
-    const data = await get('/metrics/dashboard', params);
+    const data = await get('/metrics/admin/dashboard', params);
     _cache = data;
     _cacheKey = key;
     return data;

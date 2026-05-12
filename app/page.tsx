@@ -20,9 +20,6 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
   const { data, loading, error } = useAdminDashboard(filters);
   const connectionStatus = useConnectionStatus();
   const asesoresList = useAsesores(filters);
-  console.log('[Resumen] filters:', filters);
-  console.log('[Resumen] data:', data);
-  console.log('[Resumen] loading:', loading);
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
   const metricas = data?.metricas || {};
