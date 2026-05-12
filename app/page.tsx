@@ -170,7 +170,7 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
 
           <div className="flex-1 flex gap-3">
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Total Comercial</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Leads Gestionados</p>
               <div className="flex-1 flex items-center justify-center w-full">
                 <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorAsesor}</p>
               </div>
