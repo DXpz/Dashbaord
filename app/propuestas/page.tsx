@@ -31,14 +31,12 @@ export default function PropuestasPage() {
 
   const resumen = data?.resumen || {};
   const metricas = data?.metricas || {};
-  const propuestasPorRubro = propuestasPorRubroData || [];
+  const propuestasPorRubro = Array.isArray(propuestasPorRubroData) ? propuestasPorRubroData : [];
   const negociacion = negociacionData?.negociacion || {};
   const decisiones = negociacionData?.decisiones || {};
   const decGlobal = decisiones?.global || {};
 
   const motivosItems = normalizadas ? categorias : motivos;
-  const negociacionGlobal = negociacion?.global || {};
-  const porRubroNeg = negociacion?.por_rubro || [];
 
   const kpis = useMemo(() => ({
     cantidad: metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0,

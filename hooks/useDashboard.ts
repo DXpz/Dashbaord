@@ -315,24 +315,7 @@ export function useMotivosPerdida(filters: FilterState) {
     const fetchMotivos = async () => {
       setLoading(true);
       try {
-        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-        const params = new URLSearchParams();
-        if (filters.desde) params.set('desde', `${filters.desde}T00:00:00`);
-        if (filters.hasta) params.set('hasta', `${filters.hasta}T23:59:59.999`);
-        if (filters.pais) params.set('pais', filters.pais);
-        const qs = params.toString();
-        const suffix = qs ? `&${qs}` : '';
-        const targetPath = 'metrics/motivos-perdida';
-        const url = isHttps
-          ? `/api/proxy?_path=${encodeURIComponent(targetPath)}${suffix}`
-          : `http://200.35.189.139/api/${targetPath}${qs ? '?' + qs : ''}`;
-        const res = await window.fetch(url, {
-          headers: {
-            'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
-            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
-          }
-        });
-        const json = await res.json();
+        const json = await API.motivosPerdida(filters.desde, filters.hasta, 50, filters.asesor || undefined, filters.pais || undefined);
         if (cancelled) return;
         const motivos = Array.isArray(json.motivos) ? json.motivos : (Array.isArray(json.items) ? json.items : []);
         const categorias = Array.isArray(json.categorias_normalizadas) ? json.categorias_normalizadas : [];
@@ -345,7 +328,7 @@ export function useMotivosPerdida(filters: FilterState) {
     };
     fetchMotivos();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
 
   return { motivos: data.motivos, categorias: data.categorias, loading };
 }
@@ -359,24 +342,7 @@ export function useNegociacion(filters: FilterState) {
     const fetchNegociacion = async () => {
       setLoading(true);
       try {
-        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-        const params = new URLSearchParams();
-        if (filters.desde) params.set('desde', filters.desde);
-        if (filters.hasta) params.set('hasta', filters.hasta);
-        if (filters.pais) params.set('pais', filters.pais);
-        const qs = params.toString();
-        const suffix = qs ? `&${qs}` : '';
-        const targetPath = 'metrics/negociacion';
-        const url = isHttps
-          ? `/api/proxy?_path=${encodeURIComponent(targetPath)}${suffix}`
-          : `http://200.35.189.139/api/${targetPath}${qs ? '?' + qs : ''}`;
-        const res = await window.fetch(url, {
-          headers: {
-            'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
-            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
-          }
-        });
-        const json = await res.json();
+        const json = await API.negociacion(filters.desde, filters.hasta, filters.asesor || undefined, filters.pais || undefined);
         if (cancelled) return;
         setData(json);
       } catch (err) {
@@ -387,7 +353,7 @@ export function useNegociacion(filters: FilterState) {
     };
     fetchNegociacion();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
 
   return { data, loading };
 }
@@ -401,24 +367,7 @@ export function usePropuestasPorRubro(filters: FilterState) {
     const fetchPropuestas = async () => {
       setLoading(true);
       try {
-        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-        const params = new URLSearchParams();
-        if (filters.desde) params.set('desde', filters.desde);
-        if (filters.hasta) params.set('hasta', filters.hasta);
-        if (filters.pais) params.set('pais', filters.pais);
-        const qs = params.toString();
-        const suffix = qs ? `&${qs}` : '';
-        const targetPath = 'metrics/propuestas-por-rubro';
-        const url = isHttps
-          ? `/api/proxy?_path=${encodeURIComponent(targetPath)}${suffix}`
-          : `http://200.35.189.139/api/${targetPath}${qs ? '?' + qs : ''}`;
-        const res = await window.fetch(url, {
-          headers: {
-            'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
-            ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' })
-          }
-        });
-        const json = await res.json();
+        const json = await API.propuestasPorRubro(filters.desde, filters.hasta, 'rubro', filters.asesor || undefined, filters.pais || undefined);
         if (cancelled) return;
         const arr = json.propuestas_por_rubro || json.items || json || [];
         setData(Array.isArray(arr) ? arr : []);
@@ -430,7 +379,7 @@ export function usePropuestasPorRubro(filters: FilterState) {
     };
     fetchPropuestas();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
 
   return { data, loading };
 }
