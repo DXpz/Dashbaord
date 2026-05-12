@@ -64,6 +64,8 @@ const REUNION_FIELDS: StageField[] = [
     { value: 'no', label: 'No' },
   ]},
   { id: 'fecha_reunion', label: 'Fecha de Reunión', type: 'date', required: true },
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios de la reunión' },
+  { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
 const DEMO_FIELDS: StageField[] = [
@@ -93,6 +95,8 @@ const DEMO_FIELDS: StageField[] = [
     { value: 'si', label: 'Sí' },
     { value: 'no', label: 'No' },
   ]},
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios de la demo' },
+  { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
 const PROPUESTA_FIELDS: StageField[] = [
@@ -134,6 +138,8 @@ const PROPUESTA_FIELDS: StageField[] = [
     { value: 'whatsapp', label: 'WhatsApp' },
     { value: 'otro', label: 'Otro' },
   ]},
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios de la propuesta' },
+  { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
 const SEGUIMIENTO_FIELDS: StageField[] = [
@@ -160,6 +166,8 @@ const SEGUIMIENTO_FIELDS: StageField[] = [
     { value: 'en_riesgo', label: 'En riesgo' },
   ]},
   { id: 'proximo_paso', label: 'Próximo Paso', type: 'textarea', required: true, placeholder: 'Describe el siguiente paso' },
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios del seguimiento' },
+  { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
 const CIERRE_FIELDS: StageField[] = [
@@ -171,6 +179,8 @@ const CIERRE_FIELDS: StageField[] = [
   ]},
   { id: 'fecha_cierre_real', label: 'Fecha de Cierre', type: 'date', required: true },
   { id: 'razon_cierre', label: 'Razón / Comentario', type: 'textarea', required: true, placeholder: 'Describe por qué ganó, perdió o está en pausa' },
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios del cierre' },
+  { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
 function buildStages(requiresDemo: boolean): StageConfig[] {
