@@ -267,6 +267,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState('');
   const [lostDescription, setLostDescription] = useState('');
+  const [isClosed, setIsClosed] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -308,6 +309,8 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
         const sellerName = auditData?.advisor_name || '';
         const oportunidadId = auditData?.client_id || '';
         const etapaActual = auditData?.opportunity_stage || 2;
+        const resultadoVenta = auditData?.resultado_venta || '';
+        const isLeadClosed = resultadoVenta === 'cerrada' || resultadoVenta === 'perdida' || etapaActual === 6;
         const stageFeedback = auditData?.stage_feedback_json || {};
         const propuestaJson = auditData?.propuesta_json || {};
         const seguimientoJson = auditData?.seguimiento_json || {};
@@ -365,6 +368,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           stageFeedback,
           history: [],
         });
+        setIsClosed(isLeadClosed);
       } catch (err) {
         console.error('Error loading lead data:', err);
         setError('No se pudo cargar los datos del lead');
@@ -718,29 +722,33 @@ const url = isHttps
           </span>
 
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowLostDialog(true)}
-                disabled={closing || loading}
-                className="gap-1.5 border-[#c8151b] text-[#c8151b] hover:bg-red-50"
-              >
-                {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                Cerrar
-              </Button>
-            </div>
+            {!isClosed && (
+              <>
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowLostDialog(true)}
+                    disabled={closing || loading}
+                    className="gap-1.5 border-[#c8151b] text-[#c8151b] hover:bg-red-50"
+                  >
+                    {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                    Cerrar
+                  </Button>
+                </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSave}
-              disabled={saving || loading}
-              className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
-            >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              Guardar
-            </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={saving || loading}
+                  className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  Guardar
+                </Button>
+              </>
+            )}
 
             <Button
               variant="ghost"
