@@ -117,8 +117,8 @@ export default function FormularioPage() {
       const key = process.env.API_KEY || '';
 
       const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/no-agendado`)}`
-        : `${base}audit/${selectedLead.client_id}/no-agendado`;
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/by-client/${selectedLead.client_id}/no-agendada`)}`
+        : `${base}audit/by-client/${selectedLead.client_id}/no-agendada`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -126,10 +126,9 @@ export default function FormularioPage() {
       };
 
       const res = await fetch(url, {
-        method: 'POST',
+        method: 'DELETE',
         headers,
         credentials: 'include',
-        body: JSON.stringify({ reason: deleteReason }),
       });
 
       if (res.ok) {
