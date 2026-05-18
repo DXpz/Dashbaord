@@ -51,28 +51,30 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     ? rawFeedback.substring(0, firstPipeIndex).trim()
     : rawFeedback.trim();
 
-  const detailFields: Record<string, { label: string }> = {
-    industria_sector: { label: 'Industria' },
-    tipo_reunion: { label: 'Tipo de Reunión' },
-    interes_producto: { label: 'Interés en Producto' },
-    productos_ofrecidos: { label: 'Productos' },
-    requiere_demo: { label: 'Requiere Demo' },
+  const detailFields: Record<string, { label: string; wide?: boolean }> = {
+    industria_sector: { label: 'Industria', wide: true },
+    tipo_reunion: { label: 'Tipo Reunión' },
+    interes_producto: { label: 'Interés' },
+    productos_ofrecidos: { label: 'Productos', wide: true },
+    requiere_demo: { label: 'Demo' },
     fecha_reunion: { label: 'Fecha' },
   };
   const detailKeys = Object.keys(detailFields);
 
   const structuredFields: Record<string, string> = {};
-  let clientFeedback = '';
+  let advisorFeedbackText = '';
   let hasStructuredData = false;
 
   if (detailKeys.some(k => rawFeedback.includes(k))) {
     hasStructuredData = true;
     detailKeys.forEach(fk => {
-      const match = rawFeedback.match(new RegExp(`${fk}:\\s*([^;]+)`));
+      const escapedFk = fk.replace(/_/g, '\\w');
+      const regex = new RegExp(`${fk}:\\s*([^;]+?)(?:;\\s*(?:${detailKeys.join('|')}|$)|$)`);
+      const match = rawFeedback.match(new RegExp(`${fk}:\\s*([^;]+?)(?:;\\s*(?:${detailKeys.join('|')})|$)`));
       if (match) structuredFields[fk] = match[1].trim();
     });
-    const retroMatch = rawFeedback.match(/retroalimentacion:\s*([^;]+)/);
-    if (retroMatch) clientFeedback = retroMatch[1].trim();
+    const retroMatch = rawFeedback.match(/retroalimentacion:\s*([^;]+?)(?:;|$)/);
+    if (retroMatch) advisorFeedbackText = retroMatch[1].trim();
   }
 
   const statusColor = isGanada ? 'bg-green-50 text-green-700 border-green-200' : isPerdida ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
@@ -98,9 +100,35 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     return value;
   };
 
+  const renderStructuredFields = () => {
+    const normalFields = detailKeys.filter(k => structuredFields[k] && !detailFields[k].wide);
+    const wideFields = detailKeys.filter(k => structuredFields[k] && detailFields[k].wide);
+
+    return (
+      <div className="space-y-3">
+        {wideFields.map(fk => (
+          <div key={fk} className="flex justify-between text-sm items-start gap-4">
+            <span className="text-[#B5B5AE] shrink-0">{detailFields[fk].label}</span>
+            <span className="font-medium text-[#1F1D3D] text-right">{formatValue(fk, structuredFields[fk])}</span>
+          </div>
+        ))}
+        {normalFields.length > 0 && (
+          <div className="flex flex-wrap gap-4">
+            {normalFields.map(fk => (
+              <div key={fk} className="flex justify-between text-sm items-center gap-2 min-w-[140px]">
+                <span className="text-[#B5B5AE] shrink-0">{detailFields[fk].label}</span>
+                <span className="font-medium text-[#1F1D3D]">{formatValue(fk, structuredFields[fk])}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-[42rem] max-h-[88vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl w-[50rem] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-base">
@@ -156,18 +184,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             {hasStructuredData && (
               <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-3">
                 <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Datos de la Reunión</h4>
-                <div className="space-y-2">
-                  {detailKeys.map(fk => {
-                    const val = structuredFields[fk];
-                    if (!val) return null;
-                    return (
-                      <div key={fk} className="flex justify-between text-sm items-center">
-                        <span className="text-[#B5B5AE]">{detailFields[fk].label}</span>
-                        <span className="font-medium text-[#1F1D3D]">{formatValue(fk, val)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                {renderStructuredFields()}
               </div>
             )}
 
@@ -190,10 +207,10 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </div>
           )}
 
-          {hasStructuredData && clientFeedback && (
+          {hasStructuredData && advisorFeedbackText && (
             <div className="bg-[#1F1D3D] rounded-xl p-5">
-              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-3">Retroalimentación del Cliente</h4>
-              <p className="text-sm text-white leading-relaxed">{clientFeedback}</p>
+              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-3">Retroalimentación del Asesor</h4>
+              <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">{advisorFeedbackText}</p>
             </div>
           )}
         </div>
