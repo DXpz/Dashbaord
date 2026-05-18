@@ -222,7 +222,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </div>
           )}
 
-          {isGanada && reunion.categoria_cierre && (
+                    {isGanada && reunion.categoria_cierre && reunion.categoria_cierre.toLowerCase() !== 'sin categoria' && (
             <div className="rounded-xl p-4 border bg-green-50 border-green-100">
               <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-green-700">
                 Cierre Exitoso
