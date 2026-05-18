@@ -39,8 +39,13 @@ function StageBadge({ stageLabel, stageNum, stages }: { stageLabel?: string; sta
 
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
   const seg = typeof reunion.seguimiento_json === 'string'
-    ? { retroalimentacion: reunion.seguimiento_json }
+    ? JSON.parse(reunion.seguimiento_json)
     : (reunion.seguimiento_json || {});
+  const stageFeedback = typeof reunion.stage_feedback_json === 'string'
+    ? JSON.parse(reunion.stage_feedback_json)
+    : (reunion.stage_feedback_json || {});
+  const stage2 = stageFeedback['2'] || {};
+
   const resultado = reunion.resultado_venta || seg.resultado_propuesta || seg.resultado_cierre || '';
   const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
   const isPerdida = resultado.toLowerCase().includes('perdida');
@@ -51,11 +56,15 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     ? rawFeedback.substring(0, firstPipeIndex).trim()
     : rawFeedback.trim();
 
+  const modeloEquipo = stage2.modelo_equipo || '';
+  const cantidadEquipo = stage2.cantidad_equipo || '';
+
   const detailFields: Record<string, { label: string; wide?: boolean }> = {
     industria_sector: { label: 'Industria', wide: true },
     tipo_reunion: { label: 'Tipo Reunión' },
     interes_producto: { label: 'Interés' },
-    productos_ofrecidos: { label: 'Productos', wide: true },
+    modelo_equipo: { label: 'Modelo Equipo' },
+    cantidad_equipo: { label: 'Cantidad' },
     requiere_demo: { label: 'Demo' },
     fecha_reunion: { label: 'Fecha' },
   };
@@ -65,17 +74,21 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
   let advisorFeedbackText = '';
   let hasStructuredData = false;
 
-  if (detailKeys.some(k => rawFeedback.includes(k))) {
+  const advisorFields = ['industria_sector', 'tipo_reunion', 'interes_producto', 'requiere_demo', 'fecha_reunion', 'retroalimentacion'];
+
+  if (advisorFields.some(k => rawFeedback.includes(k))) {
     hasStructuredData = true;
-    detailKeys.forEach(fk => {
-      const escapedFk = fk.replace(/_/g, '\\w');
-      const regex = new RegExp(`${fk}:\\s*([^;]+?)(?:;\\s*(?:${detailKeys.join('|')}|$)|$)`);
-      const match = rawFeedback.match(new RegExp(`${fk}:\\s*([^;]+?)(?:;\\s*(?:${detailKeys.join('|')})|$)`));
+    advisorFields.forEach(fk => {
+      const match = rawFeedback.match(new RegExp(`${fk}:\\s*([^;]+?)(?:;\\s*(?:${advisorFields.join('|')})|$)`));
       if (match) structuredFields[fk] = match[1].trim();
     });
     const retroMatch = rawFeedback.match(/retroalimentacion:\s*([^;]+?)(?:;|$)/);
     if (retroMatch) advisorFeedbackText = retroMatch[1].trim();
   }
+
+  if (modeloEquipo) structuredFields.modelo_equipo = modeloEquipo;
+  if (cantidadEquipo) structuredFields.cantidad_equipo = cantidadEquipo;
+  if (Object.keys(structuredFields).length > 0) hasStructuredData = true;
 
   const statusColor = isGanada ? 'bg-green-50 text-green-700 border-green-200' : isPerdida ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
   const statusLabel = isGanada ? 'Venta concretada' : isPerdida ? 'Lead perdido' : reunion.opportunity_stage_label || 'En proceso';
@@ -196,13 +209,24 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             )}
           </div>
 
-          {(isPerdida || isGanada) && (
-            <div className={`rounded-xl p-4 border ${isPerdida ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
-              <h4 className={`text-xs font-semibold uppercase tracking-wider mb-1 ${isPerdida ? 'text-red-700' : 'text-green-700'}`}>
-                {isPerdida ? 'Motivo de Pérdida' : 'Cierre Exitoso'}
+          {isPerdida && (
+            <div className="rounded-xl p-4 border bg-red-50 border-red-100">
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-red-700">
+                Motivo de Pérdida
               </h4>
-              <p className={`text-sm leading-relaxed ${isPerdida ? 'text-red-600' : 'text-green-600'}`}>
-                {isPerdida ? (seg.motivo_perdida || reunion.categoria_cierre || 'Lead perdido') : (reunion.categoria_cierre || 'Venta concretada')}
+              <p className="text-sm leading-relaxed text-red-600">
+                {seg.motivo_perdida || reunion.categoria_cierre || 'Lead perdido'}
+              </p>
+            </div>
+          )}
+
+          {isGanada && reunion.categoria_cierre && (
+            <div className="rounded-xl p-4 border bg-green-50 border-green-100">
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-green-700">
+                Cierre Exitoso
+              </h4>
+              <p className="text-sm leading-relaxed text-green-600">
+                {reunion.categoria_cierre}
               </p>
             </div>
           )}
