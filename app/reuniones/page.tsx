@@ -271,8 +271,12 @@ export default function ReunionesPage() {
   const stages = useStages();
 
   const AsesoresOptions = useMemo(() => {
-    const combined = Array.from(new Set([...asesoresList, ...editAdvisors]));
-    return combined.map((a) => ({ value: a, label: a }));
+    const combinedMap = new Map<string, number>();
+    [...asesoresList, ...editAdvisors.map((a: any) => a.name)].forEach((name) => {
+      const advisor = editAdvisors.find((a: any) => a.name === name);
+      if (advisor) combinedMap.set(name, advisor.id);
+    });
+    return Array.from(combinedMap.entries()).map(([name, id]) => ({ value: name, label: name, id }));
   }, [asesoresList, editAdvisors]);
 
   const filteredReuniones = useMemo(() => {
@@ -316,6 +320,7 @@ export default function ReunionesPage() {
         if (changes.client_phone !== undefined) body.client_phone = changes.client_phone;
         if (changes.opportunity_stage !== undefined) body.opportunity_stage = parseInt(changes.opportunity_stage);
         if (changes.advisor_name !== undefined) body.advisor_name = changes.advisor_name;
+        if (changes.advisor_id !== undefined) body.advisor_id = changes.advisor_id;
         if (changes.country !== undefined) body.country = changes.country;
         if (changes.status !== undefined) body.status = changes.status;
         await API.auditPatch(clientId, body);
@@ -457,7 +462,11 @@ export default function ReunionesPage() {
                       </TableCell>
                       <TableCell>
                         {editMode ? (
-                          <select value={getEditedValue(reunion.client_id, 'advisor_name', reunion.advisor_name || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'advisor_name', e.target.value)} className="w-full text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                          <select value={getEditedValue(reunion.client_id, 'advisor_name', reunion.advisor_name || '')} onChange={(e) => {
+                            const selected = AsesoresOptions.find(a => a.value === e.target.value);
+                            handleFieldChange(reunion.client_id, 'advisor_name', e.target.value);
+                            if (selected?.id) handleFieldChange(reunion.client_id, 'advisor_id', selected.id);
+                          }} className="w-full text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
                             <option value="">—</option>
                             {AsesoresOptions.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
                           </select>

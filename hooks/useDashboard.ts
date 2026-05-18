@@ -181,7 +181,7 @@ export function useListaAsesores(filters: FilterState) {
 }
 
 export function useAdvisorsForEdit(filters: FilterState) {
-  const [advisors, setAdvisors] = useState<string[]>([]);
+  const [advisors, setAdvisors] = useState<{id: number; name: string}[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -190,8 +190,11 @@ export function useAdvisorsForEdit(filters: FilterState) {
         const data = await API.advisorsList({ activo: undefined });
         if (cancelled) return;
         const list = Array.isArray(data) ? data : data?.advisors || [];
-        const names: string[] = list.map((a: any) => a.nombre_vendedor || a.nombre || '').filter(Boolean) as string[];
-        setAdvisors(Array.from(new Set(names)).sort());
+        const mapped = list.map((a: any) => ({
+          id: a.id_vendedor || a.id || 0,
+          name: a.nombre_vendedor || a.nombre || ''
+        })).filter((a: any) => a.name);
+        setAdvisors(mapped);
       } catch (err) {
         console.error('Error fetching advisors list:', err);
       }
