@@ -30,8 +30,8 @@ function StatusBadge({ reunion }: { reunion: any }) {
 }
 
 function StageBadge({ stageLabel, stageNum, stages }: { stageLabel?: string; stageNum?: number; stages?: any[] }) {
-  const labelFromNum = stages?.find(s => s.id === stageNum)?.label;
-  const displayLabel = labelFromNum || stageLabel;
+  const labelFromNum = stageNum != null ? stages?.find(s => s.id === stageNum)?.label : undefined;
+  const displayLabel = stageLabel || labelFromNum;
   if (displayLabel) return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{displayLabel}</span>;
   if (stageNum == null) return <span className="text-gray-400">—</span>;
   return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Etapa {stageNum}</span>;
