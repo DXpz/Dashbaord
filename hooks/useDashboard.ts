@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { API } from '@/services/api';
 
 export interface FilterState {
@@ -85,6 +85,7 @@ export function useAdminDashboard(filters: FilterState | null) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchRef = useRef<{ desde: string; hasta: string; pais: string } | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!filters || !filters.desde || !filters.hasta) {
@@ -92,6 +93,15 @@ export function useAdminDashboard(filters: FilterState | null) {
       setData(null);
       return;
     }
+
+    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais: filters.pais };
+    if (lastFetchRef.current?.desde === filterKey.desde &&
+        lastFetchRef.current?.hasta === filterKey.hasta &&
+        lastFetchRef.current?.pais === filterKey.pais) {
+      return;
+    }
+    lastFetchRef.current = filterKey;
+
     setLoading(true);
     setError(null);
     try {
