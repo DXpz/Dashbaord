@@ -113,7 +113,12 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     }
     if (key === 'fecha_reunion') {
       const d = new Date(value);
-      if (!isNaN(d.getTime())) return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+      if (!isNaN(d.getTime())) {
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = d.toLocaleDateString('es-ES', { month: 'long' }).toUpperCase();
+        const year = d.getFullYear();
+        return `${day} ${month} ${year}`;
+      }
     }
     if (key === 'industria_sector') return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     if (key === 'tipo_reunion') return value.charAt(0).toUpperCase() + value.slice(1);
@@ -189,7 +194,16 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
                 <div className="flex justify-between text-sm">
                   <span className="text-[#B5B5AE]">Fecha</span>
                   <span className="font-medium text-[#1F1D3D]">
-                    {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                    {(() => {
+                      const d = new Date(reunion.created_at);
+                      if (!isNaN(d.getTime())) {
+                        const day = d.getDate().toString().padStart(2, '0');
+                        const month = d.toLocaleDateString('es-ES', { month: 'long' }).toUpperCase();
+                        const year = d.getFullYear();
+                        return `${day} ${month} ${year}`;
+                      }
+                      return '—';
+                    })()}
                   </span>
                 </div>
                 {reunion.minutos_hasta_retro != null && (
