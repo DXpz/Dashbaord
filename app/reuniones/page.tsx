@@ -45,13 +45,11 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
   const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
   const isPerdida = resultado.toLowerCase().includes('perdida');
 
-  const advisorFeedback = (reunion.advisor_feedback || '')
-    .replace(/,\s*\|[^|]*\|\s*/g, ', ')
-    .replace(/\s*\|\s*/g, ' ')
-    .replace(/,\s*,/g, ',')
-    .replace(/^\s*,\s*/, '')
-    .replace(/\s*,\s*$/, '')
-    .trim() || '';
+  const rawFeedback = reunion.advisor_feedback || '';
+  const firstPipeIndex = rawFeedback.indexOf('|');
+  const advisorFeedback = firstPipeIndex > -1
+    ? rawFeedback.substring(0, firstPipeIndex).trim()
+    : rawFeedback.trim();
   const hasFeedback = !!advisorFeedback;
 
   const statusColor = isGanada ? 'bg-green-50 text-green-700 border-green-200' : isPerdida ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
