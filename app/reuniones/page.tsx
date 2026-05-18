@@ -38,12 +38,14 @@ function StageBadge({ stageLabel, stageNum, stages }: { stageLabel?: string; sta
 }
 
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
-  const seg = typeof reunion.seguimiento_json === 'string'
-    ? JSON.parse(reunion.seguimiento_json)
-    : (reunion.seguimiento_json || {});
-  const stageFeedback = typeof reunion.stage_feedback_json === 'string'
-    ? JSON.parse(reunion.stage_feedback_json)
-    : (reunion.stage_feedback_json || {});
+  const segRaw = reunion.seguimiento_json;
+  const seg = typeof segRaw === 'string' && segRaw.trim()
+    ? JSON.parse(segRaw)
+    : {};
+  const stageFeedbackRaw = reunion.stage_feedback_json;
+  const stageFeedback = typeof stageFeedbackRaw === 'string' && stageFeedbackRaw.trim()
+    ? JSON.parse(stageFeedbackRaw)
+    : {};
   const stage2 = stageFeedback['2'] || {};
 
   const resultado = reunion.resultado_venta || seg.resultado_propuesta || seg.resultado_cierre || '';
