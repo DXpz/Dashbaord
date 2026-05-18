@@ -47,28 +47,37 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
   const rawFeedback = reunion.advisor_feedback || '';
   const firstPipeIndex = rawFeedback.indexOf('|');
-  const feedbackText = firstPipeIndex > -1
+  const feedbackWithoutPipe = firstPipeIndex > -1
     ? rawFeedback.substring(0, firstPipeIndex).trim()
     : rawFeedback.trim();
 
-  const structuredFields: Record<string, string> = {};
-  const fieldMappings: Record<string, { key: string; label: string }> = {
-    industria_sector: { key: 'industria_sector', label: 'Industria o Sector' },
-    tipo_reunion: { key: 'tipo_reunion', label: 'Tipo de Reunión' },
-    interes_producto: { key: 'interes_producto', label: 'Interés en Producto' },
-    productos_ofrecidos: { key: 'productos_ofrecidos', label: 'Productos Ofrecidos' },
-    requiere_demo: { key: 'requiere_demo', label: 'Requiere Demo' },
-    fecha_reunion: { key: 'fecha_reunion', label: 'Fecha de Reunión' },
+  const detailFields: Record<string, { label: string }> = {
+    industria_sector: { label: 'Industria o Sector' },
+    tipo_reunion: { label: 'Tipo de Reunión' },
+    interes_producto: { label: 'Interés en Producto' },
+    productos_ofrecidos: { label: 'Productos Ofrecidos' },
+    requiere_demo: { label: 'Requiere Demo' },
+    fecha_reunion: { label: 'Fecha de Reunión' },
   };
-  const fieldKeys = Object.keys(fieldMappings);
+  const detailKeys = Object.keys(detailFields);
 
   let isStructured = false;
-  if (fieldKeys.some(k => rawFeedback.includes(k))) {
+  const structuredFields: Record<string, string> = {};
+  let clientFeedback = '';
+
+  if (detailKeys.some(k => rawFeedback.includes(k))) {
     isStructured = true;
-    fieldKeys.forEach(fk => {
+    detailKeys.forEach(fk => {
       const match = rawFeedback.match(new RegExp(`${fk}:\\s*([^;]+)`));
       if (match) structuredFields[fk] = match[1].trim();
     });
+    const retroMatch = rawFeedback.match(/retroalimentacion:\s*([^;]+(?:;[^;]+)*?)(?:;?\s*(?:industria_sector|tipo_reunion|interes_producto|productos_ofrecidos|requiere_demo|fecha_reunion)|;?\s*$)/);
+    if (retroMatch) {
+      clientFeedback = retroMatch[1].trim();
+    } else {
+      const retroAlt = rawFeedback.match(/retroalimentacion:\s*(.+?)(?:;?\s*(?:industria_sector|$))/);
+      if (retroAlt) clientFeedback = retroAlt[1].trim();
+    }
   }
 
   const statusColor = isGanada ? 'bg-green-50 text-green-700 border-green-200' : isPerdida ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
@@ -156,12 +165,12 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-3">
               <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider">Detalles de la Reunión</h4>
               <div className="grid grid-cols-2 gap-y-3 text-sm">
-                {fieldKeys.map(fk => {
+                {detailKeys.map(fk => {
                   const val = structuredFields[fk];
                   if (!val) return null;
                   return (
                     <div key={fk}>
-                      <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">{fieldMappings[fk].label}</p>
+                      <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">{detailFields[fk].label}</p>
                       <div className="font-medium text-[#1F1D3D]">{formatValue(fk, val)}</div>
                     </div>
                   );
@@ -188,18 +197,23 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
           <div className="border-t border-[#EEEEEC] pt-4">
             <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider mb-3">Retroalimentación del Asesor</h4>
-            {feedbackText ? (
-              <div className="bg-[#F5F5ED] rounded-xl p-4">
-                {isStructured && (
-                  <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words mb-3">
-                    {feedbackText}
-                  </p>
-                )}
-                {!isStructured && (
+            {isStructured ? (
+              clientFeedback ? (
+                <div className="bg-[#F5F5ED] rounded-xl p-4">
                   <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
-                    {feedbackText}
+                    {clientFeedback}
                   </p>
-                )}
+                </div>
+              ) : (
+                <div className="bg-[#F5F5ED] rounded-xl p-4 text-center">
+                  <p className="text-sm text-[#B5B5AE]">Este lead aún no cuenta con feedback registrado.</p>
+                </div>
+              )
+            ) : feedbackWithoutPipe ? (
+              <div className="bg-[#F5F5ED] rounded-xl p-4">
+                <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
+                  {feedbackWithoutPipe}
+                </p>
               </div>
             ) : (
               <div className="bg-[#F5F5ED] rounded-xl p-4 text-center">
