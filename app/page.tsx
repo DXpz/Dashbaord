@@ -48,11 +48,16 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
         return { label: s.label, value: leadsAceptados };
       }
       const matching = leadsPorStage.filter((l: any) => l.stage === s.id);
+
+      if (matching.length === 0) {
+        return { label: s.label, value: 0 };
+      }
+
       const hasSubStages = matching.length > 1 || matching.some((l: any) => (l as any).sub_stage);
 
       if (hasSubStages) {
         const subRows = matching.map((l: any) => ({
-          label: l.stage_label,
+          label: l.stage_label || s.label,
           value: l.total,
         }));
         const sum = subRows.reduce((a: number, b: any) => a + b.value, 0);
@@ -60,7 +65,8 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
       }
 
       const entry = matching[0];
-      return { label: s.label, value: entry?.total || 0 };
+      const label = entry?.stage_label || s.label;
+      return { label, value: entry?.total || 0 };
     });
   }, [stagesFromApi, leadsPorStage, leadsAceptados]);
 
