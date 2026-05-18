@@ -47,10 +47,8 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     ? JSON.parse(stageFeedbackRaw)
     : {};
   const stage2 = stageFeedback['2'] || {};
-
-  const resultado = reunion.resultado_venta || seg.resultado_propuesta || seg.resultado_cierre || '';
-  const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
-  const isPerdida = resultado.toLowerCase().includes('perdida');
+  const modeloEquipo = stageFeedback.modelo_equipo_propuesto || stage2.modelo_equipo_propuesto || '';
+  const cantidadEquipo = stageFeedback.cantidad_equipos || stage2.cantidad_equipos || '';
 
   const rawFeedback = reunion.advisor_feedback || '';
   const firstPipeIndex = rawFeedback.indexOf('|');
@@ -58,8 +56,9 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     ? rawFeedback.substring(0, firstPipeIndex).trim()
     : rawFeedback.trim();
 
-  const modeloEquipo = stage2.modelo_equipo || '';
-  const cantidadEquipo = stage2.cantidad_equipo || '';
+  const resultado = reunion.resultado_venta || seg.resultado_propuesta || seg.resultado_cierre || '';
+  const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
+  const isPerdida = resultado.toLowerCase().includes('perdida');
 
   const detailFields: Record<string, { label: string; wide?: boolean }> = {
     industria_sector: { label: 'Industria', wide: true },
