@@ -211,9 +211,11 @@ export function useStages() {
       try {
         const d = await API.dashboard('', '', {});
         const s = d?.stages || [];
-        setStages(s);
+        if (s.length > 0) {
+          setStages(s);
+        }
       } catch (err) {
-        console.error('Error fetching stages:', err);
+        console.error('Error fetching stages from dashboard:', err);
       }
     };
     fetch();
