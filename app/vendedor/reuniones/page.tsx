@@ -33,72 +33,217 @@ function StageBadge({ stageLabel, stageNum }: { stageLabel?: string; stageNum?: 
 }
 
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
-  const seg = reunion.seguimiento_json || {};
+  const segRaw = reunion.seguimiento_json;
+  let seg: any = {};
+  if (typeof segRaw === 'string' && segRaw.trim()) {
+    try { seg = JSON.parse(segRaw); } catch { seg = {}; }
+  } else if (typeof segRaw === 'object' && segRaw !== null) {
+    seg = segRaw;
+  }
+  const stageFeedbackRaw = reunion.stage_feedback_json;
+  let stageFeedback: any = {};
+  if (typeof stageFeedbackRaw === 'string' && stageFeedbackRaw.trim()) {
+    try { stageFeedback = JSON.parse(stageFeedbackRaw); } catch { stageFeedback = {}; }
+  } else if (typeof stageFeedbackRaw === 'object' && stageFeedbackRaw !== null) {
+    stageFeedback = stageFeedbackRaw;
+  }
+  const stage2 = stageFeedback['2'] || {};
+  const modeloEquipo = stageFeedback.modelo_equipo_propuesto || stage2.modelo_equipo_propuesto || '';
+  const cantidadEquipo = stageFeedback.cantidad_equipos || stage2.cantidad_equipos || '';
+
+  const rawFeedback = reunion.advisor_feedback || '';
+  const firstPipeIndex = rawFeedback.indexOf('|');
+  const plainFeedback = firstPipeIndex > -1
+    ? rawFeedback.substring(0, firstPipeIndex).trim()
+    : rawFeedback.trim();
+
   const resultado = reunion.resultado_venta || seg.resultado_propuesta || seg.resultado_cierre || '';
   const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
   const isPerdida = resultado.toLowerCase().includes('perdida');
-  const resultadoColor = isGanada ? 'text-green-600' : isPerdida ? 'text-red-600' : 'text-[#1F1D3D]';
-  const retroalimentacion = reunion.advisor_feedback || 'Sin retroalimentación registrada';
+
+  const detailFields: Record<string, { label: string; order: number }> = {
+    fecha_reunion: { label: 'Fecha', order: 1 },
+    tipo_reunion: { label: 'Tipo Reunión', order: 2 },
+    industria_sector: { label: 'Industria', order: 3 },
+    modelo_equipo: { label: 'Modelos Ofrecidos', order: 4 },
+    cantidad_equipo: { label: 'Cantidad', order: 5 },
+    interes_producto: { label: 'Interés', order: 6 },
+    requiere_demo: { label: 'Requiere Demo', order: 7 },
+  };
+  const detailKeys = Object.keys(detailFields).sort((a, b) => detailFields[a].order - detailFields[b].order);
+
+  const structuredFields: Record<string, string> = {};
+  let advisorFeedbackText = '';
+  let hasStructuredData = false;
+
+  const advisorFields = ['industria_sector', 'tipo_reunion', 'interes_producto', 'requiere_demo', 'fecha_reunion', 'retroalimentacion'];
+
+  if (advisorFields.some(k => rawFeedback.includes(k))) {
+    hasStructuredData = true;
+    advisorFields.forEach(fk => {
+      const match = rawFeedback.match(new RegExp(`${fk}:\\s*([^;]+?)(?:;\\s*(?:${advisorFields.join('|')})|$)`));
+      if (match) structuredFields[fk] = match[1].trim();
+    });
+    const retroMatch = rawFeedback.match(/retroalimentacion:\s*([^;]+?)(?:;|$)/);
+    if (retroMatch) advisorFeedbackText = retroMatch[1].trim();
+  }
+
+  if (modeloEquipo) structuredFields.modelo_equipo = modeloEquipo;
+  if (cantidadEquipo) structuredFields.cantidad_equipo = cantidadEquipo;
+  if (Object.keys(structuredFields).length > 0) hasStructuredData = true;
+
+  const statusColor = isGanada ? 'bg-green-50 text-green-700 border-green-200' : isPerdida ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
+  const statusLabel = isGanada ? 'Venta concretada' : isPerdida ? 'Lead perdido' : reunion.opportunity_stage_label || 'En proceso';
+
+  const formatValue = (key: string, value: string) => {
+    if (key === 'interes_producto') {
+      const map: Record<string, string> = { si: 'Sí', no: 'No', evaluando: 'Evaluando' };
+      const label = map[value.toLowerCase()] || value;
+      const isPos = value.toLowerCase() === 'si';
+      return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isPos ? 'bg-green-100 text-green-700' : value.toLowerCase() === 'no' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{label}</span>;
+    }
+    if (key === 'requiere_demo') {
+      const isSi = value.toLowerCase() === 'si';
+      return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isSi ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isSi ? 'Sí' : 'No'}</span>;
+    }
+    if (key === 'fecha_reunion') {
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) {
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = d.toLocaleDateString('es-ES', { month: 'long' }).toUpperCase();
+        const year = d.getFullYear();
+        return `${day} ${month} ${year}`;
+      }
+    }
+    if (key === 'industria_sector') return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    if (key === 'tipo_reunion') return value.charAt(0).toUpperCase() + value.slice(1);
+    return value;
+  };
+
+  const renderStructuredFields = () => {
+    return (
+      <div className="space-y-2">
+        {detailKeys.map(fk => {
+          const val = structuredFields[fk];
+          if (!val) return null;
+          return (
+            <div key={fk} className="flex justify-between text-sm items-center">
+              <span className="text-[#B5B5AE]">{detailFields[fk].label}</span>
+              <span className="font-medium text-[#1F1D3D]">{formatValue(fk, val)}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-[32rem] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl w-[50rem] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
-          <div>
-            <h3 className="text-sm font-semibold text-[#1F1D3D]">Feedback del Lead</h3>
-            <p className="text-xs text-[#B5B5AE] mt-0.5">{reunion.client_id} · {reunion.client_name || reunion.cliente}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-base">
+              {reunion.client_id?.replace('LD', '') || '?'}
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</h3>
+              <p className="text-xs text-[#B5B5AE]">{reunion.client_id} · {reunion.advisor_name || '—'}</p>
+            </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded transition-colors">
-            <X className="h-4 w-4" />
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded-lg transition-colors">
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Lead</p>
-              <p className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</p>
+
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+          <div className="flex items-center gap-3">
+            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusColor}`}>
+              {statusLabel}
+            </span>
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#F5F5ED] text-[#35325B] border border-[#EEEEEC]">
+              {reunion.opportunity_stage_label || '—'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[#F5F5ED] rounded-xl p-4 space-y-3">
+              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Información</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#B5B5AE]">País</span>
+                  <span className="font-medium text-[#1F1D3D]">{reunion.country || reunion.pais || '—'}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#B5B5AE]">Teléfono</span>
+                  <span className="font-medium text-[#1F1D3D]">{reunion.client_phone || '—'}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#B5B5AE]">Fecha</span>
+                  <span className="font-medium text-[#1F1D3D]">
+                    {(() => {
+                      const d = new Date(reunion.created_at);
+                      if (!isNaN(d.getTime())) {
+                        const day = d.getDate().toString().padStart(2, '0');
+                        const month = d.toLocaleDateString('es-ES', { month: 'long' }).toUpperCase();
+                        const year = d.getFullYear();
+                        return `${day} ${month} ${year}`;
+                      }
+                      return '—';
+                    })()}
+                  </span>
+                </div>
+                {reunion.minutos_hasta_retro != null && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#B5B5AE]">Próxima retro</span>
+                    <span className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro} min</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Fecha Creación</p>
-              <p className="font-medium text-[#1F1D3D]">
-                {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES') : '—'}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Resultado</p>
-              <p className={`font-semibold ${resultadoColor}`}>
-                {isGanada ? 'Cerrada (Ganada)' : isPerdida ? 'Perdida' : resultado || '—'}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Min hasta retro</p>
-              <p className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro ?? '—'}</p>
-            </div>
-            {reunion.categoria_cierre && (
-              <div>
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Categoría</p>
-                <p className="font-medium text-[#1F1D3D]">{reunion.categoria_cierre}</p>
+
+            {hasStructuredData && (
+              <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-3">
+                <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Datos de la Reunión</h4>
+                {renderStructuredFields()}
               </div>
             )}
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Tiene retroalimentación</p>
-              <p className={`font-medium ${reunion.tiene_retro ? 'text-green-600' : 'text-[#B5B5AE]'}`}>
-                {reunion.tiene_retro ? 'Sí' : 'No'}
-              </p>
-            </div>
-            {seg.motivo_perdida && (
-              <div className="col-span-2">
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Motivo Pérdida</p>
-                <p className="font-medium text-[#1F1D3D]">{seg.motivo_perdida}</p>
+
+            {!hasStructuredData && plainFeedback && (
+              <div className="bg-[#F5F5ED] rounded-xl p-4">
+                <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-2">Feedback</h4>
+                <p className="text-sm text-[#35325B] leading-relaxed">{plainFeedback}</p>
               </div>
             )}
           </div>
-          <div className="pt-4 border-t border-[#EEEEEC]">
-            <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-2">Retroalimentación</p>
-            <div className="bg-[#F5F5ED] rounded-lg p-4 text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
-              {retroalimentacion}
+
+          {isPerdida && (
+            <div className="rounded-xl p-4 border bg-red-50 border-red-100">
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-red-700">
+                Motivo de Pérdida
+              </h4>
+              <p className="text-sm leading-relaxed text-red-600">
+                {seg.motivo_perdida || reunion.categoria_cierre || 'Lead perdido'}
+              </p>
             </div>
-          </div>
+          )}
+
+          {isGanada && reunion.categoria_cierre && reunion.categoria_cierre.toLowerCase() !== 'sin categoria' && (
+            <div className="rounded-xl p-4 border bg-green-50 border-green-100">
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-green-700">
+                Cierre Exitoso
+              </h4>
+              <p className="text-sm leading-relaxed text-green-600">
+                {reunion.categoria_cierre}
+              </p>
+            </div>
+          )}
+
+          {hasStructuredData && advisorFeedbackText && (
+            <div className="bg-[#1F1D3D] rounded-xl p-5">
+              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-3">Retroalimentación del Asesor</h4>
+              <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">{advisorFeedbackText}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
