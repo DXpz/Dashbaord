@@ -47,13 +47,56 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
   const rawFeedback = reunion.advisor_feedback || '';
   const firstPipeIndex = rawFeedback.indexOf('|');
-  const advisorFeedback = firstPipeIndex > -1
+  const feedbackText = firstPipeIndex > -1
     ? rawFeedback.substring(0, firstPipeIndex).trim()
     : rawFeedback.trim();
-  const hasFeedback = !!advisorFeedback;
+
+  const structuredFields: Record<string, string> = {};
+  const fieldMappings: Record<string, { key: string; label: string }> = {
+    industria_sector: { key: 'industria_sector', label: 'Industria o Sector' },
+    tipo_reunion: { key: 'tipo_reunion', label: 'Tipo de Reunión' },
+    interes_producto: { key: 'interes_producto', label: 'Interés en Producto' },
+    productos_ofrecidos: { key: 'productos_ofrecidos', label: 'Productos Ofrecidos' },
+    requiere_demo: { key: 'requiere_demo', label: 'Requiere Demo' },
+    fecha_reunion: { key: 'fecha_reunion', label: 'Fecha de Reunión' },
+  };
+  const fieldKeys = Object.keys(fieldMappings);
+
+  let isStructured = false;
+  if (fieldKeys.some(k => rawFeedback.includes(k))) {
+    isStructured = true;
+    fieldKeys.forEach(fk => {
+      const match = rawFeedback.match(new RegExp(`${fk}:\\s*([^;]+)`));
+      if (match) structuredFields[fk] = match[1].trim();
+    });
+  }
 
   const statusColor = isGanada ? 'bg-green-50 text-green-700 border-green-200' : isPerdida ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
   const statusLabel = isGanada ? 'Venta concretada' : isPerdida ? 'Lead perdido' : reunion.opportunity_stage_label || 'En proceso';
+
+  const formatValue = (key: string, value: string) => {
+    if (['interes_producto', 'requiere_demo'].includes(key)) {
+      const isSi = value.toLowerCase() === 'si';
+      return (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isSi ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          {isSi ? 'Sí' : value}
+        </span>
+      );
+    }
+    if (key === 'fecha_reunion') {
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+    }
+    if (key === 'industria_sector') {
+      return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+    if (key === 'tipo_reunion') {
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+    return value;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -109,6 +152,24 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </div>
           </div>
 
+          {isStructured ? (
+            <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-3">
+              <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider">Detalles de la Reunión</h4>
+              <div className="grid grid-cols-2 gap-y-3 text-sm">
+                {fieldKeys.map(fk => {
+                  const val = structuredFields[fk];
+                  if (!val) return null;
+                  return (
+                    <div key={fk}>
+                      <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">{fieldMappings[fk].label}</p>
+                      <div className="font-medium text-[#1F1D3D]">{formatValue(fk, val)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
           {isPerdida && seg.motivo_perdida && (
             <div className="bg-red-50 rounded-xl p-4 border border-red-100">
               <h4 className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-2">Motivo de Pérdida</h4>
@@ -127,11 +188,18 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
           <div className="border-t border-[#EEEEEC] pt-4">
             <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider mb-3">Retroalimentación del Asesor</h4>
-            {hasFeedback ? (
+            {feedbackText ? (
               <div className="bg-[#F5F5ED] rounded-xl p-4">
-                <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
-                  {advisorFeedback}
-                </p>
+                {isStructured && (
+                  <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words mb-3">
+                    {feedbackText}
+                  </p>
+                )}
+                {!isStructured && (
+                  <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
+                    {feedbackText}
+                  </p>
+                )}
               </div>
             ) : (
               <div className="bg-[#F5F5ED] rounded-xl p-4 text-center">
