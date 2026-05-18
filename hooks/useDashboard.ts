@@ -87,21 +87,26 @@ export function useAdminDashboard(filters: FilterState | null) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!filters || !filters.desde || !filters.hasta) return;
+    if (!filters || !filters.desde || !filters.hasta) {
+      setLoading(true);
+      setData(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais: filters.pais });
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
         { pais: filters.pais }
       );
+      console.log('[useAdminDashboard] result keys:', Object.keys(result || {}));
       setData(result as DashboardData);
     } catch (err: any) {
       const message = err?.message || err?.cause?.message || 'Error al cargar datos';
       console.error('[useAdminDashboard] error:', message);
       setError(message);
-      throw new Error(message);
     } finally {
       setLoading(false);
     }
@@ -140,6 +145,7 @@ export function useAsesores(filters: FilterState) {
   const [asesores, setAsesores] = useState<string[]>([]);
 
   useEffect(() => {
+    if (!filters.desde || !filters.hasta) return;
     const fetchAsesores = async () => {
       try {
         const result = await API.listaAsesores(filters.desde, filters.hasta, filters.asesor || undefined, filters.pais || undefined);
