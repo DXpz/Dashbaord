@@ -233,14 +233,15 @@ export function useReuniones(filters: FilterState) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!filters.desde || !filters.hasta) return;
     const fetchReuniones = async () => {
       setLoading(true);
       setError(null);
       try {
-        const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
-        const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
+        const desde = `${filters.desde}T00:00:00`;
+        const hasta = `${filters.hasta}T23:59:59.999`;
         console.log('[useReuniones] fetching:', { desde, hasta, pais: filters.pais });
-        const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, {});
+        const result = await API.reuniones(desde, hasta, 200, 0, {});
         console.log('[useReuniones] raw result:', result);
         const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
         console.log('[useReuniones] setReuniones:', list.length, 'items');
