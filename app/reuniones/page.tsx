@@ -66,16 +66,16 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
   const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
   const isPerdida = resultado.toLowerCase().includes('perdida');
 
-  const detailFields: Record<string, { label: string; wide?: boolean }> = {
-    industria_sector: { label: 'Industria', wide: true },
-    tipo_reunion: { label: 'Tipo Reunión' },
-    interes_producto: { label: 'Interés' },
-    modelo_equipo: { label: 'Modelo Equipo' },
-    cantidad_equipo: { label: 'Cantidad' },
-    requiere_demo: { label: 'Demo' },
-    fecha_reunion: { label: 'Fecha' },
+  const detailFields: Record<string, { label: string; order: number }> = {
+    fecha_reunion: { label: 'Fecha', order: 1 },
+    tipo_reunion: { label: 'Tipo Reunión', order: 2 },
+    industria_sector: { label: 'Industria', order: 3 },
+    modelo_equipo: { label: 'Modelos Ofrecidos', order: 4 },
+    cantidad_equipo: { label: 'Cantidad', order: 5 },
+    interes_producto: { label: 'Interés', order: 6 },
+    requiere_demo: { label: 'Requiere Demo', order: 7 },
   };
-  const detailKeys = Object.keys(detailFields);
+  const detailKeys = Object.keys(detailFields).sort((a, b) => detailFields[a].order - detailFields[b].order);
 
   const structuredFields: Record<string, string> = {};
   let advisorFeedbackText = '';
@@ -126,27 +126,18 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
   };
 
   const renderStructuredFields = () => {
-    const normalFields = detailKeys.filter(k => structuredFields[k] && !detailFields[k].wide);
-    const wideFields = detailKeys.filter(k => structuredFields[k] && detailFields[k].wide);
-
     return (
-      <div className="space-y-3">
-        {wideFields.map(fk => (
-          <div key={fk} className="flex justify-between text-sm items-start gap-4">
-            <span className="text-[#B5B5AE] shrink-0">{detailFields[fk].label}</span>
-            <span className="font-medium text-[#1F1D3D] text-right">{formatValue(fk, structuredFields[fk])}</span>
-          </div>
-        ))}
-        {normalFields.length > 0 && (
-          <div className="flex flex-wrap gap-4">
-            {normalFields.map(fk => (
-              <div key={fk} className="flex justify-between text-sm items-center gap-2 min-w-[140px]">
-                <span className="text-[#B5B5AE] shrink-0">{detailFields[fk].label}</span>
-                <span className="font-medium text-[#1F1D3D]">{formatValue(fk, structuredFields[fk])}</span>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="space-y-2">
+        {detailKeys.map(fk => {
+          const val = structuredFields[fk];
+          if (!val) return null;
+          return (
+            <div key={fk} className="flex justify-between text-sm items-center">
+              <span className="text-[#B5B5AE]">{detailFields[fk].label}</span>
+              <span className="font-medium text-[#1F1D3D]">{formatValue(fk, val)}</span>
+            </div>
+          );
+        })}
       </div>
     );
   };
