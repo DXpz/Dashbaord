@@ -15,11 +15,13 @@ const PAGE_SIZE = 20;
 function StatusBadge({ reunion }: { reunion: any }) {
   const status = reunion.status || reunion.reunion_status || '';
   const resultado = reunion.resultado_venta || '';
+  const categoriaCierre = reunion.categoria_cierre || '';
   const s = status.toLowerCase();
 
-  if (resultado === 'cerrada') return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Cerrada (Ganada)</span>;
-  if (resultado === 'perdida') return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Perdida</span>;
+  if (resultado === 'cerrada') return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Venta concretada</span>;
+  if (resultado === 'perdida') return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Lead perdido</span>;
   if (resultado === 'en_seguimiento') return <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">En Seguimiento</span>;
+  if (categoriaCierre && categoriaCierre.includes('sin_contacto')) return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Lead perdido</span>;
   if (s === 'pending') return <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">Pendiente</span>;
   if (s === 'en_proceso') return <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">En Proceso</span>;
   if (s === 'cerrado') return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Cerrado</span>;
