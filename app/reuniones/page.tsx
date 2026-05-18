@@ -39,13 +39,19 @@ function StageBadge({ stageLabel, stageNum, stages }: { stageLabel?: string; sta
 
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
   const segRaw = reunion.seguimiento_json;
-  const seg = typeof segRaw === 'string' && segRaw.trim()
-    ? JSON.parse(segRaw)
-    : {};
+  let seg: any = {};
+  if (typeof segRaw === 'string' && segRaw.trim()) {
+    try { seg = JSON.parse(segRaw); } catch { seg = {}; }
+  } else if (typeof segRaw === 'object' && segRaw !== null) {
+    seg = segRaw;
+  }
   const stageFeedbackRaw = reunion.stage_feedback_json;
-  const stageFeedback = typeof stageFeedbackRaw === 'string' && stageFeedbackRaw.trim()
-    ? JSON.parse(stageFeedbackRaw)
-    : {};
+  let stageFeedback: any = {};
+  if (typeof stageFeedbackRaw === 'string' && stageFeedbackRaw.trim()) {
+    try { stageFeedback = JSON.parse(stageFeedbackRaw); } catch { stageFeedback = {}; }
+  } else if (typeof stageFeedbackRaw === 'object' && stageFeedbackRaw !== null) {
+    stageFeedback = stageFeedbackRaw;
+  }
   const stage2 = stageFeedback['2'] || {};
   const modeloEquipo = stageFeedback.modelo_equipo_propuesto || stage2.modelo_equipo_propuesto || '';
   const cantidadEquipo = stageFeedback.cantidad_equipos || stage2.cantidad_equipos || '';
