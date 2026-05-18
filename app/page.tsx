@@ -70,7 +70,7 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
     });
   }, [stagesFromApi, leadsPorStage, leadsAceptados]);
 
-  const flatData = useMemo(() => {
+const flatData = useMemo(() => {
     const seen = new Set<string>();
     return stageData.flatMap((s: any) => {
       if (s.subs) {
@@ -80,7 +80,7 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
           return true;
         });
       }
-      if (seen.has(s.label)) return [];
+      if (seen.has(s.label) && s.value > 0) return [];
       seen.add(s.label);
       return [{ label: s.label, value: s.value }];
     });
@@ -176,21 +176,21 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
 
           <div className="flex-1 flex gap-3">
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Leads Gestionados</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Leads gestionados por comercial</p>
               <div className="flex-1 flex items-center justify-center w-full">
                 <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorAsesor}</p>
               </div>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Líder de Ventas</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Leads gestionados por lider de ventas</p>
               <div className="flex-1 flex items-center justify-center w-full">
                 <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorLider}</p>
               </div>
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Gerencial</p>
+              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Leads gestionados por Gerencial</p>
               <div className="flex-1 flex items-center justify-center w-full">
                 <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorGerente}</p>
               </div>
