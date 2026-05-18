@@ -47,87 +47,78 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
   const rawFeedback = reunion.advisor_feedback || '';
   const firstPipeIndex = rawFeedback.indexOf('|');
-  const feedbackWithoutPipe = firstPipeIndex > -1
+  const plainFeedback = firstPipeIndex > -1
     ? rawFeedback.substring(0, firstPipeIndex).trim()
     : rawFeedback.trim();
 
   const detailFields: Record<string, { label: string }> = {
-    industria_sector: { label: 'Industria o Sector' },
+    industria_sector: { label: 'Industria' },
     tipo_reunion: { label: 'Tipo de Reunión' },
     interes_producto: { label: 'Interés en Producto' },
-    productos_ofrecidos: { label: 'Productos Ofrecidos' },
+    productos_ofrecidos: { label: 'Productos' },
     requiere_demo: { label: 'Requiere Demo' },
-    fecha_reunion: { label: 'Fecha de Reunión' },
+    fecha_reunion: { label: 'Fecha' },
   };
   const detailKeys = Object.keys(detailFields);
 
-  let isStructured = false;
   const structuredFields: Record<string, string> = {};
   let clientFeedback = '';
+  let hasStructuredData = false;
 
   if (detailKeys.some(k => rawFeedback.includes(k))) {
-    isStructured = true;
+    hasStructuredData = true;
     detailKeys.forEach(fk => {
       const match = rawFeedback.match(new RegExp(`${fk}:\\s*([^;]+)`));
       if (match) structuredFields[fk] = match[1].trim();
     });
-    const retroMatch = rawFeedback.match(/retroalimentacion:\s*([^;]+(?:;[^;]+)*?)(?:;?\s*(?:industria_sector|tipo_reunion|interes_producto|productos_ofrecidos|requiere_demo|fecha_reunion)|;?\s*$)/);
-    if (retroMatch) {
-      clientFeedback = retroMatch[1].trim();
-    } else {
-      const retroAlt = rawFeedback.match(/retroalimentacion:\s*(.+?)(?:;?\s*(?:industria_sector|$))/);
-      if (retroAlt) clientFeedback = retroAlt[1].trim();
-    }
+    const retroMatch = rawFeedback.match(/retroalimentacion:\s*([^;]+)/);
+    if (retroMatch) clientFeedback = retroMatch[1].trim();
   }
 
   const statusColor = isGanada ? 'bg-green-50 text-green-700 border-green-200' : isPerdida ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
   const statusLabel = isGanada ? 'Venta concretada' : isPerdida ? 'Lead perdido' : reunion.opportunity_stage_label || 'En proceso';
 
   const formatValue = (key: string, value: string) => {
-    if (['interes_producto', 'requiere_demo'].includes(key)) {
+    if (key === 'interes_producto') {
+      const map: Record<string, string> = { si: 'Sí', no: 'No', evaluando: 'Evaluando' };
+      const label = map[value.toLowerCase()] || value;
+      const isPos = value.toLowerCase() === 'si';
+      return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isPos ? 'bg-green-100 text-green-700' : value.toLowerCase() === 'no' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{label}</span>;
+    }
+    if (key === 'requiere_demo') {
       const isSi = value.toLowerCase() === 'si';
-      return (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isSi ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-          {isSi ? 'Sí' : value}
-        </span>
-      );
+      return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isSi ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isSi ? 'Sí' : 'No'}</span>;
     }
     if (key === 'fecha_reunion') {
       const d = new Date(value);
-      if (!isNaN(d.getTime())) {
-        return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-      }
+      if (!isNaN(d.getTime())) return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
     }
-    if (key === 'industria_sector') {
-      return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    }
-    if (key === 'tipo_reunion') {
-      return value.charAt(0).toUpperCase() + value.slice(1);
-    }
+    if (key === 'industria_sector') return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    if (key === 'tipo_reunion') return value.charAt(0).toUpperCase() + value.slice(1);
     return value;
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-[38rem] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl w-[42rem] max-h-[88vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-sm">
+            <div className="w-11 h-11 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-base">
               {reunion.client_id?.replace('LD', '') || '?'}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</h3>
+              <h3 className="text-base font-semibold text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</h3>
               <p className="text-xs text-[#B5B5AE]">{reunion.client_id} · {reunion.advisor_name || '—'}</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded transition-colors">
-            <X className="h-4 w-4" />
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded-lg transition-colors">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-          <div className="flex gap-2">
-            <span className={`px-3 py-1.5 rounded-full text-xs font-medium border ${statusColor}`}>
+          <div className="flex items-center gap-3">
+            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusColor}`}>
               {statusLabel}
             </span>
             <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#F5F5ED] text-[#35325B] border border-[#EEEEEC]">
@@ -135,92 +126,76 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </span>
           </div>
 
-          <div className="bg-[#F5F5ED] rounded-xl p-4 space-y-3">
-            <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider">Información del Lead</h4>
-            <div className="grid grid-cols-2 gap-y-2 text-sm">
-              <div>
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">País</p>
-                <p className="font-medium text-[#1F1D3D]">{reunion.country || reunion.pais || '—'}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">Teléfono</p>
-                <p className="font-medium text-[#1F1D3D]">{reunion.client_phone || '—'}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">Fecha Creación</p>
-                <p className="font-medium text-[#1F1D3D]">
-                  {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
-                </p>
-              </div>
-              {reunion.minutos_hasta_retro != null && (
-                <div>
-                  <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">Min hasta Retro</p>
-                  <p className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro} min</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[#F5F5ED] rounded-xl p-4 space-y-3">
+              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Información</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#B5B5AE]">País</span>
+                  <span className="font-medium text-[#1F1D3D]">{reunion.country || reunion.pais || '—'}</span>
                 </div>
-              )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#B5B5AE]">Teléfono</span>
+                  <span className="font-medium text-[#1F1D3D]">{reunion.client_phone || '—'}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#B5B5AE]">Fecha</span>
+                  <span className="font-medium text-[#1F1D3D]">
+                    {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                  </span>
+                </div>
+                {reunion.minutos_hasta_retro != null && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#B5B5AE]">Próxima retro</span>
+                    <span className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro} min</span>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {hasStructuredData && (
+              <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-3">
+                <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Datos de la Reunión</h4>
+                <div className="space-y-2">
+                  {detailKeys.map(fk => {
+                    const val = structuredFields[fk];
+                    if (!val) return null;
+                    return (
+                      <div key={fk} className="flex justify-between text-sm items-center">
+                        <span className="text-[#B5B5AE]">{detailFields[fk].label}</span>
+                        <span className="font-medium text-[#1F1D3D]">{formatValue(fk, val)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {!hasStructuredData && plainFeedback && (
+              <div className="bg-[#F5F5ED] rounded-xl p-4">
+                <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-2">Feedback</h4>
+                <p className="text-sm text-[#35325B] leading-relaxed">{plainFeedback}</p>
+              </div>
+            )}
           </div>
 
-          {isStructured ? (
-            <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-3">
-              <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider">Detalles de la Reunión</h4>
-              <div className="grid grid-cols-2 gap-y-3 text-sm">
-                {detailKeys.map(fk => {
-                  const val = structuredFields[fk];
-                  if (!val) return null;
-                  return (
-                    <div key={fk}>
-                      <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">{detailFields[fk].label}</p>
-                      <div className="font-medium text-[#1F1D3D]">{formatValue(fk, val)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          {isPerdida && seg.motivo_perdida && (
-            <div className="bg-red-50 rounded-xl p-4 border border-red-100">
-              <h4 className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-2">Motivo de Pérdida</h4>
-              <p className="text-sm text-red-600 leading-relaxed">{seg.motivo_perdida}</p>
-            </div>
-          )}
-
-          {isGanada && (
-            <div className="bg-green-50 rounded-xl p-4 border border-green-100">
-              <h4 className="text-xs font-semibold text-green-700 uppercase tracking-wider mb-2">Cierre Exitoso</h4>
-              <p className="text-sm text-green-600 leading-relaxed">
-                {reunion.categoria_cierre || 'Venta concretada'}
+          {(isPerdida || isGanada) && (
+            <div className={`rounded-xl p-4 border ${isPerdida ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
+              <h4 className={`text-xs font-semibold uppercase tracking-wider mb-1 ${isPerdida ? 'text-red-700' : 'text-green-700'}`}>
+                {isPerdida ? 'Motivo de Pérdida' : 'Cierre Exitoso'}
+              </h4>
+              <p className={`text-sm leading-relaxed ${isPerdida ? 'text-red-600' : 'text-green-600'}`}>
+                {isPerdida ? (seg.motivo_perdida || reunion.categoria_cierre || 'Lead perdido') : (reunion.categoria_cierre || 'Venta concretada')}
               </p>
             </div>
           )}
 
-          <div className="border-t border-[#EEEEEC] pt-4">
-            <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider mb-3">Retroalimentación del Asesor</h4>
-            {isStructured ? (
-              clientFeedback ? (
-                <div className="bg-[#F5F5ED] rounded-xl p-4">
-                  <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
-                    {clientFeedback}
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-[#F5F5ED] rounded-xl p-4 text-center">
-                  <p className="text-sm text-[#B5B5AE]">Este lead aún no cuenta con feedback registrado.</p>
-                </div>
-              )
-            ) : feedbackWithoutPipe ? (
-              <div className="bg-[#F5F5ED] rounded-xl p-4">
-                <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
-                  {feedbackWithoutPipe}
-                </p>
-              </div>
-            ) : (
-              <div className="bg-[#F5F5ED] rounded-xl p-4 text-center">
-                <p className="text-sm text-[#B5B5AE]">Este lead aún no cuenta con feedback registrado.</p>
-              </div>
-            )}
-          </div>
+          {hasStructuredData && clientFeedback && (
+            <div className="bg-[#1F1D3D] rounded-xl p-5">
+              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-3">Retroalimentación del Cliente</h4>
+              <p className="text-sm text-white leading-relaxed">{clientFeedback}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
