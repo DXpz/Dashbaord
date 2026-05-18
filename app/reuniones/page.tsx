@@ -45,8 +45,6 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
   const isGanada = resultado.toLowerCase().includes('ganada') || resultado.toLowerCase().includes('cerrada');
   const isPerdida = resultado.toLowerCase().includes('perdida');
 
-  const resultadoColor = isGanada ? 'text-green-600' : isPerdida ? 'text-red-600' : 'text-[#1F1D3D]';
-
   const advisorFeedback = (reunion.advisor_feedback || '')
     .replace(/,\s*\|[^|]*\|\s*/g, ', ')
     .replace(/\s*\|\s*/g, ' ')
@@ -56,13 +54,21 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     .trim() || '';
   const hasFeedback = !!advisorFeedback;
 
+  const statusColor = isGanada ? 'bg-green-50 text-green-700 border-green-200' : isPerdida ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
+  const statusLabel = isGanada ? 'Venta concretada' : isPerdida ? 'Lead perdido' : reunion.opportunity_stage_label || 'En proceso';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-[36rem] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-2xl w-[38rem] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
-          <div>
-            <h3 className="text-sm font-semibold text-[#1F1D3D]">Feedback del Lead</h3>
-            <p className="text-xs text-[#B5B5AE] mt-0.5">{reunion.client_id} · {reunion.client_name || reunion.cliente}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-sm">
+              {reunion.client_id?.replace('LD', '') || '?'}
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</h3>
+              <p className="text-xs text-[#B5B5AE]">{reunion.client_id} · {reunion.advisor_name || '—'}</p>
+            </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded transition-colors">
             <X className="h-4 w-4" />
@@ -70,62 +76,68 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
         </div>
 
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Lead</p>
-              <p className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Asesor</p>
-              <p className="font-medium text-[#1F1D3D]">{reunion.advisor_name || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Fecha Creación</p>
-              <p className="font-medium text-[#1F1D3D]">
-                {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES') : '—'}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Etapa</p>
-              <p className="font-medium text-[#1F1D3D]">{reunion.opportunity_stage_label || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Resultado</p>
-              <p className={`font-semibold ${resultadoColor}`}>
-                {isGanada ? 'Cerrada (Ganada)' : isPerdida ? 'Perdida' : resultado || '—'}
-              </p>
-            </div>
-            {reunion.minutos_hasta_retro != null && (
-              <div>
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Min hasta Retro</p>
-                <p className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro} min</p>
-              </div>
-            )}
-            {reunion.categoria_cierre && (
-              <div>
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Categoría Cierre</p>
-                <p className="font-medium text-[#1F1D3D]">{reunion.categoria_cierre}</p>
-              </div>
-            )}
-            {seg.motivo_perdida && (
-              <div>
-                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider mb-1">Motivo Pérdida</p>
-                <p className="font-medium text-red-600">{seg.motivo_perdida}</p>
-              </div>
-            )}
+          <div className="flex gap-2">
+            <span className={`px-3 py-1.5 rounded-full text-xs font-medium border ${statusColor}`}>
+              {statusLabel}
+            </span>
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#F5F5ED] text-[#35325B] border border-[#EEEEEC]">
+              {reunion.opportunity_stage_label || '—'}
+            </span>
           </div>
 
-          <div className="pt-4 border-t border-[#EEEEEC]">
-            <p className="text-xs font-semibold text-[#35325B] uppercase tracking-wider mb-3">Retroalimentación</p>
+          <div className="bg-[#F5F5ED] rounded-xl p-4 space-y-3">
+            <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider">Información del Lead</h4>
+            <div className="grid grid-cols-2 gap-y-2 text-sm">
+              <div>
+                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">País</p>
+                <p className="font-medium text-[#1F1D3D]">{reunion.country || reunion.pais || '—'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">Teléfono</p>
+                <p className="font-medium text-[#1F1D3D]">{reunion.client_phone || '—'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">Fecha Creación</p>
+                <p className="font-medium text-[#1F1D3D]">
+                  {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                </p>
+              </div>
+              {reunion.minutos_hasta_retro != null && (
+                <div>
+                  <p className="text-[10px] text-[#B5B5AE] uppercase tracking-wider">Min hasta Retro</p>
+                  <p className="font-medium text-[#1F1D3D]">{reunion.minutos_hasta_retro} min</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {isPerdida && seg.motivo_perdida && (
+            <div className="bg-red-50 rounded-xl p-4 border border-red-100">
+              <h4 className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-2">Motivo de Pérdida</h4>
+              <p className="text-sm text-red-600 leading-relaxed">{seg.motivo_perdida}</p>
+            </div>
+          )}
+
+          {isGanada && (
+            <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+              <h4 className="text-xs font-semibold text-green-700 uppercase tracking-wider mb-2">Cierre Exitoso</h4>
+              <p className="text-sm text-green-600 leading-relaxed">
+                {reunion.categoria_cierre || 'Venta concretada'}
+              </p>
+            </div>
+          )}
+
+          <div className="border-t border-[#EEEEEC] pt-4">
+            <h4 className="text-xs font-semibold text-[#35325B] uppercase tracking-wider mb-3">Retroalimentación del Asesor</h4>
             {hasFeedback ? (
-              <div className="bg-[#F5F5ED] rounded-lg p-4">
+              <div className="bg-[#F5F5ED] rounded-xl p-4">
                 <p className="text-sm text-[#35325B] leading-relaxed whitespace-pre-wrap break-words">
                   {advisorFeedback}
                 </p>
               </div>
             ) : (
-              <div className="bg-[#F5F5ED] rounded-lg p-4 text-sm text-[#B5B5AE] text-center">
-                Este lead aún no cuenta con feedback registrado.
+              <div className="bg-[#F5F5ED] rounded-xl p-4 text-center">
+                <p className="text-sm text-[#B5B5AE]">Este lead aún no cuenta con feedback registrado.</p>
               </div>
             )}
           </div>
