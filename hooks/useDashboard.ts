@@ -248,31 +248,32 @@ export function useReuniones(filters: FilterState) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchReuniones = useCallback(async () => {
     if (!filters.desde || !filters.hasta) return;
-    const fetchReuniones = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const desde = `${filters.desde}T00:00:00`;
-        const hasta = `${filters.hasta}T23:59:59.999`;
-        console.log('[useReuniones] fetching:', { desde, hasta, pais: filters.pais });
-        const result = await API.reuniones(desde, hasta, 200, 0, {});
-        console.log('[useReuniones] raw result:', result);
-        const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
-        console.log('[useReuniones] setReuniones:', list.length, 'items');
-        setReuniones(Array.isArray(list) ? list : []);
-      } catch (err: any) {
-        console.error('[useReuniones] error:', err);
-        setError(err.message || 'Error al cargar reuniones');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchReuniones();
+    setLoading(true);
+    setError(null);
+    try {
+      const desde = `${filters.desde}T00:00:00`;
+      const hasta = `${filters.hasta}T23:59:59.999`;
+      console.log('[useReuniones] fetching:', { desde, hasta, pais: filters.pais });
+      const result = await API.reuniones(desde, hasta, 200, 0, {});
+      console.log('[useReuniones] raw result:', result);
+      const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
+      console.log('[useReuniones] setReuniones:', list.length, 'items');
+      setReuniones(Array.isArray(list) ? list : []);
+    } catch (err: any) {
+      console.error('[useReuniones] error:', err);
+      setError(err.message || 'Error al cargar reuniones');
+    } finally {
+      setLoading(false);
+    }
   }, [filters.desde, filters.hasta, filters.pais]);
 
-  return { reuniones, loading, error };
+  useEffect(() => {
+    fetchReuniones();
+  }, [fetchReuniones]);
+
+  return { reuniones, loading, error, refetch: fetchReuniones };
 }
 
 export function useAllLeads(filters: FilterState) {

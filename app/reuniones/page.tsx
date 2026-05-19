@@ -7,7 +7,7 @@ import { API } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, Search, FileText, X, Pencil, Check, Slash, ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, FileText, X, Pencil, Check, Slash, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
@@ -257,7 +257,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
 export default function ReunionesPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const { reuniones, loading } = useReuniones(filters);
+  const { reuniones, loading, error, refetch } = useReuniones(filters);
   const connectionStatus = useConnectionStatus();
   const asesoresList = useAsesores(filters);
   const [searchTerm, setSearchTerm] = useState('');
@@ -327,6 +327,7 @@ export default function ReunionesPage() {
       }
       setEditedRows({});
       setEditMode(false);
+      await refetch();
     } catch (err) {
       console.error('Error saving edits:', err);
     } finally {
@@ -379,9 +380,23 @@ export default function ReunionesPage() {
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                   />
                 </div>
-                <Button variant="outline" size="sm" onClick={() => { if (editMode) handleSave(); else setEditMode(true); }} disabled={saving} className={`gap-1.5 text-xs h-8 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED] ${editMode ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : ''}`}>
-                  <Pencil className="h-3.5 w-3.5" />
-                  {saving ? 'Guardando...' : editMode ? 'Guardar' : 'Editar'}
+                <Button variant="outline" size="sm" onClick={() => { if (editMode) handleSave(); else setEditMode(true); }} disabled={saving || loading} className={`gap-1.5 text-xs h-8 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED] ${editMode ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : ''} ${saving ? 'opacity-70' : ''}`}>
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : editMode ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" />
+                      <span>Guardar</span>
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>Editar</span>
+                    </>
+                  )}
                 </Button>
                 {editMode && (
                   <Button variant="ghost" size="sm" onClick={() => { setEditMode(false); setEditedRows({}); }} className="gap-1.5 text-xs h-8 text-[#B5B5AE] hover:text-[#35325B]">
