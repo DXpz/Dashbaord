@@ -7,7 +7,7 @@ import { API } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, Search, FileText, X, Pencil, Check, Slash, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, FileText, X, Pencil, Check, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
@@ -142,26 +142,26 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     );
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-[50rem] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-base">
+return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEEEEC] shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-sm shrink-0">
               {reunion.client_id?.replace('LD', '') || '?'}
             </div>
-            <div>
-              <h3 className="text-base font-semibold text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</h3>
-              <p className="text-xs text-[#B5B5AE]">{reunion.client_id} · {reunion.advisor_name || '—'}</p>
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-[#1F1D3D] truncate">{reunion.client_name || reunion.cliente || '—'}</h3>
+              <p className="text-xs text-[#B5B5AE] truncate">{reunion.client_id} · {reunion.advisor_name || '—'}</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded-lg transition-colors">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded-lg transition-colors shrink-0">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-          <div className="flex items-center gap-3">
+        <div className="overflow-y-auto flex-1 px-4 py-4 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
             <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusColor}`}>
               {statusLabel}
             </span>
@@ -170,8 +170,8 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#F5F5ED] rounded-xl p-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="bg-[#F5F5ED] rounded-xl p-4 space-y-2">
               <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Información</h4>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -207,7 +207,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </div>
 
             {hasStructuredData && (
-              <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-3">
+              <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-2">
                 <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Datos de la Reunión</h4>
                 {renderStructuredFields()}
               </div>
@@ -223,29 +223,21 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
           {isPerdida && (
             <div className="rounded-xl p-4 border bg-red-50 border-red-100">
-              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-red-700">
-                Motivo de Pérdida
-              </h4>
-              <p className="text-sm leading-relaxed text-red-600">
-                {seg.motivo_perdida || reunion.categoria_cierre || 'Lead perdido'}
-              </p>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-red-700">Motivo de Pérdida</h4>
+              <p className="text-sm leading-relaxed text-red-600">{seg.motivo_perdida || reunion.categoria_cierre || 'Lead perdido'}</p>
             </div>
           )}
 
-                    {isGanada && reunion.categoria_cierre && reunion.categoria_cierre.toLowerCase() !== 'sin categoria' && (
+          {isGanada && reunion.categoria_cierre && reunion.categoria_cierre.toLowerCase() !== 'sin categoria' && (
             <div className="rounded-xl p-4 border bg-green-50 border-green-100">
-              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-green-700">
-                Cierre Exitoso
-              </h4>
-              <p className="text-sm leading-relaxed text-green-600">
-                {reunion.categoria_cierre}
-              </p>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-green-700">Cierre Exitoso</h4>
+              <p className="text-sm leading-relaxed text-green-600">{reunion.categoria_cierre}</p>
             </div>
           )}
 
           {hasStructuredData && advisorFeedbackText && (
-            <div className="bg-[#1F1D3D] rounded-xl p-5">
-              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-3">Retroalimentación del Asesor</h4>
+            <div className="bg-[#1F1D3D] rounded-xl p-4">
+              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-2">Retroalimentación del Asesor</h4>
               <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">{advisorFeedbackText}</p>
             </div>
           )}
@@ -358,24 +350,24 @@ export default function ReunionesPage() {
       connectionStatus={connectionStatus}
     >
       {loading ? (
-        <Skeleton className="h-96 w-full" />
+        <Skeleton className="h-64 w-full" />
       ) : (
         <>
           {feedbackReunion && (
             <FeedbackModal reunion={feedbackReunion} onClose={() => setFeedbackReunion(null)} />
           )}
-          <div className="bg-white border border-[#EEEEEC]">
-            <div className="px-5 py-4 flex items-center justify-between gap-4 border-b border-[#EEEEEC]">
+          <div className="bg-white border border-[#EEEEEC] overflow-x-auto">
+            <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EEEEEC] min-w-[800px]">
               <div>
                 <h3 className="text-sm font-medium text-[#1F1D3D]">Listado</h3>
                 <p className="text-xs text-[#B5B5AE] mt-0.5">{filteredReuniones.length} reuniones</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center flex-wrap gap-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B5B5AE]" />
                   <Input
                     placeholder="Buscar..."
-                    className="pl-9 w-48"
+                    className="pl-8 w-36 sm:w-48"
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                   />
@@ -384,7 +376,7 @@ export default function ReunionesPage() {
                   {saving ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>Guardando...</span>
+                      <span className="hidden sm:inline">Guardando...</span>
                     </>
                   ) : editMode ? (
                     <>
@@ -394,7 +386,7 @@ export default function ReunionesPage() {
                   ) : (
                     <>
                       <Pencil className="h-3.5 w-3.5" />
-                      <span>Editar</span>
+                      <span className="hidden sm:inline">Editar</span>
                     </>
                   )}
                 </Button>
@@ -404,12 +396,12 @@ export default function ReunionesPage() {
                   </Button>
                 )}
                 
-                <div className="flex items-center gap-1 bg-[#F5F5ED] p-1 rounded">
+                <div className="flex items-center gap-1 bg-[#F5F5ED] p-1 rounded ml-auto">
                   <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 px-2">
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-[#35325B] px-2 min-w-[60px] text-center">
-                    {currentPage} / {totalPages}
+                  <span className="text-xs text-[#35325B] px-1.5 min-w-[50px] text-center">
+                    {currentPage}/{totalPages}
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="h-8 px-2">
                     <ChevronRight className="h-4 w-4" />
@@ -420,32 +412,16 @@ export default function ReunionesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>
-                        <div className="flex items-center gap-1.5">
-                          <span>Lead #</span>
-                          <button
-                            onClick={() => setSortAsc(true)}
-                            className={`p-0.5 rounded hover:bg-[#EEEEEC] transition-colors ${sortAsc ? 'text-[#1F1D3D]' : 'text-[#B5B5AE]'}`}
-                          >
-                            <ArrowUp className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setSortAsc(false)}
-                            className={`p-0.5 rounded hover:bg-[#EEEEEC] transition-colors ${!sortAsc ? 'text-[#1F1D3D]' : 'text-[#B5B5AE]'}`}
-                          >
-                            <ArrowDown className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Fecha Agendado</TableHead>
-                  <TableHead>Teléfono</TableHead>
-                  <TableHead>Asesor</TableHead>
-                  <TableHead>País</TableHead>
-                  <TableHead>Etapa</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Prop</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="whitespace-nowrap">Lead #</TableHead>
+                  <TableHead className="whitespace-nowrap">Cliente</TableHead>
+                  <TableHead className="hidden sm:table-cell whitespace-nowrap">Fecha</TableHead>
+                  <TableHead className="hidden md:table-cell whitespace-nowrap">Teléfono</TableHead>
+                  <TableHead className="hidden lg:table-cell whitespace-nowrap">Asesor</TableHead>
+                  <TableHead className="hidden lg:table-cell whitespace-nowrap">País</TableHead>
+                  <TableHead className="whitespace-nowrap">Etapa</TableHead>
+                  <TableHead className="whitespace-nowrap">Estado</TableHead>
+                  <TableHead className="whitespace-nowrap">Prop</TableHead>
+                  <TableHead className="whitespace-nowrap"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
