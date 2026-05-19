@@ -9,7 +9,6 @@ import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Target, TrendingUp, Users, CheckCircle } from 'lucide-react';
-import { usePathname } from 'next/navigation';
 
 const COLORS = {
   dark: '#1F1D3D',
@@ -21,38 +20,31 @@ const COLORS = {
 export default function VendedorDashboard() {
   const { user, loading: authLoading } = useAuth();
   const { desde, hasta } = useVendedorFilters();
-  const pathname = usePathname();
 
-const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (!user?.full_name) return;
     if (authLoading) return;
-    setIsReady(true);
-  }, [user?.full_name, authLoading]);
-
-  useEffect(() => {
-    if (!isReady || !user?.full_name) return;
-    API.asesor(
-      user.full_name,
-      desde, hasta,
-      user.country_code
-    ).then(result => {
-      setData(result);
-      setLoading(false);
-    }).catch(err => {
-      console.error('Error:', err);
-      setLoading(false);
-    });
-  }, [isReady, user?.full_name, desde, hasta, refreshKey]);
-
-  useEffect(() => {
-    setRefreshKey(k => k + 1);
-    setIsReady(false);
-  }, [pathname]);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const result = await API.asesor(
+          user.full_name,
+          desde, hasta,
+          user.country_code
+        );
+        setData(result);
+      } catch (err) {
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [user?.full_name, authLoading, desde, hasta, refreshKey]);
 
   const metricas = data?.metricas || {};
 
