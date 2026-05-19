@@ -29,6 +29,9 @@ const navItems = [
   { href: '/formulario', label: 'Formulario', icon: FileText },
 ];
 
+const EDGE_TRIGGER_WIDTH = 40;
+const LEAVE_DELAY_MS = 1500;
+
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -37,6 +40,8 @@ interface SidebarProps {
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
+  const [isOpenDesktop, setIsOpenDesktop] = useState(false);
+  const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const clearLeaveTimeout = useCallback(() => {
@@ -46,10 +51,30 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     }
   }, []);
 
-  const handleClose = useCallback(() => {
+  const showSidebar = useCallback(() => {
     clearLeaveTimeout();
-    onClose?.();
-  }, [clearLeaveTimeout, onClose]);
+    setIsOpenDesktop(true);
+  }, [clearLeaveTimeout]);
+
+  const scheduleHide = useCallback(() => {
+    leaveTimeoutRef.current = setTimeout(() => {
+      setIsOpenDesktop(false);
+    }, LEAVE_DELAY_MS);
+  }, [clearLeaveTimeout]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (e.clientX < EDGE_TRIGGER_WIDTH && !isHoveringSidebar) {
+        showSidebar();
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      clearLeaveTimeout();
+    };
+  }, [showSidebar, clearLeaveTimeout, isHoveringSidebar]);
 
   useEffect(() => {
     return () => {
@@ -58,13 +83,22 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   }, [clearLeaveTimeout]);
 
   const handleMouseEnter = () => {
+    setIsHoveringSidebar(true);
     clearLeaveTimeout();
   };
 
   const handleMouseLeave = () => {
+    setIsHoveringSidebar(false);
+    scheduleHide();
   };
 
-  const isVisible = isOpen;
+  const handleClose = useCallback(() => {
+    clearLeaveTimeout();
+    setIsOpenDesktop(false);
+    onClose?.();
+  }, [clearLeaveTimeout, onClose]);
+
+  const isVisible = isOpen || isOpenDesktop;
 
   return (
     <>
@@ -76,18 +110,16 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       )}
 
       <aside
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={cn(
-          'fixed top-0 left-0 z-40 h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
+          'h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
           'transform transition-transform duration-200 ease-out',
-          'lg:relative lg:translate-x-0 lg:h-auto lg:min-h-screen lg:block lg:z-auto',
+          'lg:relative lg:h-auto lg:min-h-screen lg:block lg:translate-x-0',
           isVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:block'
         )}
       >
-        <div
-          className="flex flex-col h-full p-4"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
+        <div className="flex flex-col h-full p-4">
           <div className="flex items-center justify-between mb-8 px-2">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-[#1F1D3D] rounded-lg flex items-center justify-center">
