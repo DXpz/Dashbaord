@@ -113,10 +113,9 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          'h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
+          'fixed top-0 left-0 z-40 h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
           'transform transition-transform duration-200 ease-out',
-          'lg:fixed lg:top-0 lg:left-0 lg:h-screen',
-          isVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          isVisible ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex flex-col h-full p-4">
