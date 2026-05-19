@@ -114,13 +114,13 @@ const flatData = useMemo(() => {
         asesores={AsesoresOptions}
         connectionStatus={connectionStatus}
       >
-        <div className="space-y-8">
-          <div className="flex gap-4">
-            <div className="w-44 flex flex-col gap-3">
+        <div className="space-y-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="grid grid-cols-3 lg:flex lg:flex-col lg:w-44 gap-3">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
             </div>
-            <div className="flex-1 flex gap-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 flex-1" />)}
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 lg:flex gap-3">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
             </div>
           </div>
           <Skeleton className="h-[280px]" />
@@ -157,66 +157,66 @@ const flatData = useMemo(() => {
       asesores={AsesoresOptions}
       connectionStatus={connectionStatus}
     >
-      <div className="space-y-8">
-        <div className="flex gap-4">
-          <div className="w-44 flex flex-col gap-3">
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
-              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead No Calificado</p>
-              <p className="text-lg font-bold text-[#1F1D3D]">{leadsNoAgendados}</p>
+      <div className="space-y-6">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="grid grid-cols-3 lg:flex lg:flex-col lg:w-44 gap-3">
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex flex-col items-center justify-center">
+              <p className="text-[9px] lg:text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5 text-center">Lead No Calificado</p>
+              <p className="text-lg lg:text-xl font-bold text-[#1F1D3D]">{leadsNoAgendados}</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
-              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Lead Calificado</p>
-              <p className="text-lg font-bold text-[#1F1D3D]">{leadsAceptados}</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex flex-col items-center justify-center">
+              <p className="text-[9px] lg:text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5 text-center">Lead Calificado</p>
+              <p className="text-lg lg:text-xl font-bold text-[#1F1D3D]">{leadsAceptados}</p>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex-1 flex flex-col items-center justify-center">
-              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">Total Leads</p>
-              <p className="text-lg font-bold text-[#1F1D3D]">{totalLeads}</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex flex-col items-center justify-center">
+              <p className="text-[9px] lg:text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5 text-center">Total Leads</p>
+              <p className="text-lg lg:text-xl font-bold text-[#1F1D3D]">{totalLeads}</p>
             </div>
           </div>
 
-          <div className="flex-1 flex gap-3">
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Leads gestionados por comercial</p>
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 lg:flex gap-3">
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex flex-col items-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1 text-center">Leads gestionados por comercial</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorAsesor}</p>
+                <p className="text-4xl lg:text-6xl font-bold text-[#1F1D3D]">{atendidosPorAsesor}</p>
               </div>
               {leadsNoAceptados > 0 && (
-                <p className="text-xs text-red-600 mt-0.5">Leads pendientes de aceptar por Comercial: {leadsNoAceptados}</p>
+                <p className="text-[10px] text-red-600 mt-0.5 text-center">Leads pendientes de aceptar por Comercial: {leadsNoAceptados}</p>
               )}
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Leads gestionados por lider de ventas</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex flex-col items-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1 text-center">Leads gestionados por lider de ventas</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorLider}</p>
+                <p className="text-4xl lg:text-6xl font-bold text-[#1F1D3D]">{atendidosPorLider}</p>
               </div>
             </div>
 
-            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
-              <p className="text-xs font-medium text-[#B5B5AE] uppercase tracking-wider mb-1">Leads gestionados por Gerencial</p>
+            <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex flex-col items-center">
+              <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1 text-center">Leads gestionados por Gerencial</p>
               <div className="flex-1 flex items-center justify-center w-full">
-                <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorGerente}</p>
+                <p className="text-4xl lg:text-6xl font-bold text-[#1F1D3D]">{atendidosPorGerente}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-[#EEEEEC] rounded-xl p-6">
+        <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 lg:p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-base font-semibold text-[#1F1D3D]">Pipeline de Ventas</h2>
-              <p className="text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
+              <h2 className="text-sm lg:text-base font-semibold text-[#1F1D3D]">Pipeline de Ventas</h2>
+              <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
             </div>
             <div className="text-right">
-              <span className="text-2xl font-bold text-[#1F1D3D]">{totalLeads}</span>
-              <p className="text-xs text-[#B5B5AE]">Total leads</p>
+              <span className="text-xl lg:text-2xl font-bold text-[#1F1D3D]">{totalLeads}</span>
+              <p className="text-[10px] lg:text-xs text-[#B5B5AE]">Total leads</p>
             </div>
           </div>
 
           {stageData.length === 0 && (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-8 lg:py-12">
               <p className="text-sm text-[#B5B5AE]">Sin datos de etapas disponibles</p>
             </div>
           )}
