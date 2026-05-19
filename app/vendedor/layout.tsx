@@ -118,7 +118,7 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
       <div className="flex min-h-screen bg-[#EEEEEC]">
         {isOpen && (
           <div
-            className="fixed inset-0 bg-black/30 z-30"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30"
             onClick={handleClose}
           />
         )}
