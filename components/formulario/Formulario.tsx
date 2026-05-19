@@ -633,9 +633,9 @@ const url = isHttps
   const maxIndex = stages.length - 1;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-[50rem] max-h-[94vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEEEEC] shrink-0">
           <div>
             <h3 className="text-sm font-semibold text-[#1F1D3D]">Actualizar Lead</h3>
             <p className="text-xs text-[#B5B5AE]">Lead: {clientId}</p>
@@ -646,13 +646,13 @@ const url = isHttps
         </div>
 
         {!loading && (
-          <div className="flex border-b border-[#EEEEEC]">
+          <div className="flex border-b border-[#EEEEEC] overflow-x-auto">
             {stages.map((stage, idx) => (
               <button
                 key={stage.id}
                 onClick={() => setCurrentStageIndex(idx)}
                 className={cn(
-                  'flex-1 py-3 text-xs font-medium transition-colors border-b-2',
+                  'py-3 px-3 text-xs font-medium transition-colors border-b-2 whitespace-nowrap',
                   idx === currentStageIndex
                     ? 'text-[#1F1D3D]'
                     : 'border-transparent text-[#B5B5AE] hover:text-[#35325B]',
@@ -665,7 +665,7 @@ const url = isHttps
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-[#B5B5AE]" />
@@ -709,7 +709,7 @@ const url = isHttps
           )}
         </div>
 
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#EEEEEC] shrink-0 bg-[#F5F5ED]">
+        <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-[#EEEEEC] shrink-0 bg-[#F5F5ED] gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -725,7 +725,7 @@ const url = isHttps
             {currentStageIndex + 1} de {stages.length}
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {!isClosed && (
               <>
                 <div className="relative">
@@ -775,7 +775,7 @@ const url = isHttps
             setLostDescription('');
           }
         }}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="w-full max-w-[90vw] sm:max-w-[425px] p-4">
           <div onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Cerrar como perdido</DialogTitle>
@@ -810,7 +810,7 @@ const url = isHttps
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
               onClick={() => { setShowLostDialog(false); setLostReason(''); setLostDescription(''); }}

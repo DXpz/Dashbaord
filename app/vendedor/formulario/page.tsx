@@ -88,12 +88,12 @@ export default function VendedorFormularioPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white border border-[#EEEEEC] p-6">
-        <h2 className="text-lg font-semibold text-[#1F1D3D] mb-4">Actualizar Lead</h2>
+    <div className="space-y-4">
+      <div className="bg-white border border-[#EEEEEC] p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-[#1F1D3D] mb-4">Actualizar Lead</h2>
 
         <div className="space-y-4">
-          <div>
+          <div className="relative">
             <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide mb-1.5 block">
               Selecciona el Lead
             </label>
@@ -111,7 +111,7 @@ export default function VendedorFormularioPage() {
                   if (!e.target.value) setSelectedLead(null);
                 }}
                 onFocus={() => setShowDropdown(true)}
-                className="w-full max-w-xs pl-9 pr-8 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] transition-colors"
+                className="w-full pl-9 pr-8 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] transition-colors"
                 disabled={loading}
               />
               {searchTerm && (
@@ -125,18 +125,18 @@ export default function VendedorFormularioPage() {
             </div>
 
             {showDropdown && searchTerm && filteredLeads.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full max-w-xs bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
+              <div className="absolute z-10 mt-1 w-full bg-white border border-[#EEEEEC] rounded-lg shadow-lg max-h-64 overflow-y-auto">
                 {filteredLeads.map((lead) => (
                   <button
                     key={lead.client_id}
                     onClick={() => handleSelectLead(lead)}
-                    className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex items-center justify-between"
+                    className="w-full px-3 py-2 text-left hover:bg-[#F5F5ED] transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
                   >
                     <div>
                       <p className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</p>
                       <p className="text-xs text-[#B5B5AE]">{lead.client_name}</p>
                     </div>
-                    <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">
+                    <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded whitespace-nowrap">
                       {lead.opportunity_stage_label}
                     </span>
                   </button>
@@ -145,7 +145,7 @@ export default function VendedorFormularioPage() {
             )}
 
             {showDropdown && searchTerm && filteredLeads.length === 0 && !loading && (
-              <div className="absolute z-10 mt-1 w-full max-w-xs bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
+              <div className="absolute z-10 mt-1 w-full bg-white border border-[#EEEEEC] rounded-lg shadow-lg px-3 py-2 text-sm text-[#B5B5AE]">
                 No se encontraron leads
               </div>
             )}
@@ -156,7 +156,7 @@ export default function VendedorFormularioPage() {
           </div>
 
         {selectedLead && (
-          <div className="bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <p className="text-xs text-[#B5B5AE] uppercase tracking-wide">Lead seleccionado</p>
               <p className="text-sm font-semibold text-[#1F1D3D]">{selectedLead.client_id}</p>
