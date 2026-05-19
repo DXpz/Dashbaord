@@ -88,6 +88,8 @@ const flatData = useMemo(() => {
 
   const leadsNoAceptados = metricas.leads_pendientes ?? 0;
 
+  console.log('[ADMIN] metricas leads_pendientes:', metricas.leads_pendientes, 'atendidosPorAsesor:', atendidosPorAsesor);
+
   const chartData = useMemo(() => {
     const values = flatData.map((s: any) => s.value);
     const total = values.reduce((a: number, b: number) => a + b, 0) || 1;
@@ -182,8 +184,10 @@ const flatData = useMemo(() => {
               <div className="flex-1 flex items-center justify-center w-full">
                 <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorAsesor}</p>
               </div>
-              {leadsNoAceptados > 0 && (
+              {leadsNoAceptados > 0 ? (
                 <p className="text-xs text-red-600 mt-0.5">Leads pendientes de aceptar por Comercial: {leadsNoAceptados}</p>
+              ) : (
+                <p className="text-xs text-gray-400 mt-0.5">DEBUG: leads_pendientes={String(leadsNoAceptados)} metricas={JSON.stringify(Object.keys(metricas))}</p>
               )}
             </div>
 
