@@ -39,11 +39,11 @@ export default function PropuestasPage() {
   const motivosItems = viewMode === 'asesor' ? motivos : categorias_globales;
 
   const kpis = useMemo(() => ({
-    cantidad: metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0,
+    cantidad: metricas.total_propuestas ?? metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0,
     cerradas: metricas.ventas_cerradas ?? resumen.ventas_cerradas ?? 0,
     perdidas: metricas.ventas_perdidas ?? resumen.ventas_perdidas ?? 0,
-    tasaCierre: (metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0) > 0
-      ? ((metricas.ventas_cerradas ?? resumen.ventas_cerradas ?? 0) / (metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 1) * 100).toFixed(1)
+    tasaCierre: (metricas.total_propuestas ?? metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0) > 0
+      ? ((metricas.ventas_cerradas ?? resumen.ventas_cerradas ?? 0) / (metricas.total_propuestas ?? metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 1) * 100).toFixed(1)
       : '0.0',
   }), [metricas, resumen]);
 
