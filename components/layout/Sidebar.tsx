@@ -29,14 +29,15 @@ const navItems = [
   { href: '/formulario', label: 'Formulario', icon: FileText },
 ];
 
-const EDGE_TRIGGER_WIDTH = 40;
-const LEAVE_DELAY_MS = 1500;
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
 
-export function Sidebar() {
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const clearLeaveTimeout = useCallback(() => {
@@ -46,30 +47,11 @@ export function Sidebar() {
     }
   }, []);
 
-  const showSidebar = useCallback(() => {
+  const handleClose = useCallback(() => {
     clearLeaveTimeout();
-    setIsOpen(true);
-  }, [clearLeaveTimeout]);
-
-  const scheduleHide = useCallback(() => {
-    leaveTimeoutRef.current = setTimeout(() => {
-      setIsOpen(false);
-    }, LEAVE_DELAY_MS);
-  }, [clearLeaveTimeout]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (e.clientX < EDGE_TRIGGER_WIDTH && !isHoveringSidebar) {
-        showSidebar();
-      }
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      clearLeaveTimeout();
-    };
-  }, [showSidebar, clearLeaveTimeout, isHoveringSidebar]);
+    setMobileOpen(false);
+    onClose?.();
+  }, [clearLeaveTimeout, onClose]);
 
   useEffect(() => {
     return () => {
@@ -78,40 +60,40 @@ export function Sidebar() {
   }, [clearLeaveTimeout]);
 
   const handleMouseEnter = () => {
-    setIsHoveringSidebar(true);
     clearLeaveTimeout();
-    setIsOpen(true);
   };
 
   const handleMouseLeave = () => {
-    setIsHoveringSidebar(false);
-    scheduleHide();
+    leaveTimeoutRef.current = setTimeout(() => {
+      setMobileOpen(false);
+      onClose?.();
+    }, 1500);
   };
 
-  const handleClose = () => {
-    clearLeaveTimeout();
-    setIsOpen(false);
-  };
+  const isVisible = isOpen || mobileOpen;
 
   return (
     <>
-      {isOpen && (
+      {isVisible && (
         <div
-          className="fixed inset-0 bg-black/30 z-30"
+          className="fixed inset-0 bg-black/30 z-30 lg:hidden"
           onClick={handleClose}
         />
       )}
 
       <aside
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         className={cn(
           'fixed top-0 left-0 z-40 h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
           'transform transition-transform duration-200 ease-out',
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          'lg:relative lg:translate-x-0 lg:h-auto lg:min-h-screen lg:block',
+          isVisible ? 'translate-x-0' : '-translate-x-full lg:block'
         )}
       >
-        <div className="flex flex-col h-full p-4">
+        <div
+          className="flex flex-col h-full p-4"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <div className="flex items-center justify-between mb-8 px-2">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-[#1F1D3D] rounded-lg flex items-center justify-center">
@@ -124,7 +106,7 @@ export function Sidebar() {
             </div>
             <button
               onClick={handleClose}
-              className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B]"
+              className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] lg:hidden"
             >
               <X className="w-4 h-4" />
             </button>
@@ -145,7 +127,7 @@ export function Sidebar() {
                       : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
                   )}
                 >
-                  <item.icon className="w-4 h-4 stroke-width={isActive ? 2 : 1.5}" />
+                  <item.icon className="w-4 h-4" />
                   <span>{item.label}</span>
                 </Link>
               );
