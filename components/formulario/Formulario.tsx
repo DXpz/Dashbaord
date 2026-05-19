@@ -646,13 +646,13 @@ const url = isHttps
         </div>
 
         {!loading && (
-          <div className="flex border-b border-[#EEEEEC] overflow-x-auto">
+          <div className="flex border-b border-[#EEEEEC] overflow-x-auto min-h-[44px]">
             {stages.map((stage, idx) => (
               <button
                 key={stage.id}
                 onClick={() => setCurrentStageIndex(idx)}
                 className={cn(
-                  'py-3 px-3 text-xs font-medium transition-colors border-b-2 whitespace-nowrap',
+                  'py-3 px-4 text-xs font-medium transition-colors border-b-2 whitespace-nowrap shrink-0',
                   idx === currentStageIndex
                     ? 'text-[#1F1D3D]'
                     : 'border-transparent text-[#B5B5AE] hover:text-[#35325B]',
