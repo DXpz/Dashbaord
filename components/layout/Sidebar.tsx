@@ -115,8 +115,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         className={cn(
           'h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
           'transform transition-transform duration-200 ease-out',
-          'lg:relative lg:h-auto lg:min-h-screen lg:block lg:translate-x-0',
-          isVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:block'
+          'lg:fixed lg:top-0 lg:left-0 lg:h-screen',
+          isVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         <div className="flex flex-col h-full p-4">
