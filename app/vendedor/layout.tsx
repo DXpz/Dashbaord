@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { VendedorFiltersProvider, useVendedorFilters } from '@/lib/vendedor-filters';
-import { LayoutDashboard, Calendar, FileText, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, LogOut, X, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -187,14 +187,21 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
 
         <main className="flex-1 min-w-0">
           <header className="bg-[#F5F5ED] border-b border-[#EEEEEC]">
-            <div className="px-6 pt-5 pb-0">
+            <div className="flex items-center justify-between px-4 pt-4 pb-0 lg:px-6 lg:pt-5">
+              <button
+                onClick={() => setIsOpen(true)}
+                className="lg:hidden w-10 h-10 flex items-center justify-center text-[#1F1D3D]"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
               <h1 className="text-base font-semibold text-[#1F1D3D]">
                 {NAV_ITEMS.find(n => n.href === pathname)?.label ?? 'Dashboard'}
               </h1>
+              <div className="w-10 lg:hidden" />
             </div>
             <FilterBar />
           </header>
-          <div className="p-6">
+          <div className="p-4 lg:p-6">
             {children}
           </div>
         </main>
