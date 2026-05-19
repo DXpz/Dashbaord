@@ -329,19 +329,21 @@ export function useFuentes(filters: FilterState) {
 }
 
 export function useMotivosPerdida(filters: FilterState) {
-  const [data, setData] = useState<{ motivos: any[]; categorias: any[] }>({ motivos: [], categorias: [] });
+  const [data, setData] = useState<{ motivos: any[]; categorias: any[]; categorias_globales: any[] }>({ motivos: [], categorias: [], categorias_globales: [] });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!filters.desde || !filters.hasta) return;
     let cancelled = false;
     const fetchMotivos = async () => {
       setLoading(true);
       try {
         const json = await API.motivosPerdida(filters.desde, filters.hasta, 50, filters.asesor || undefined, filters.pais || undefined);
         if (cancelled) return;
-        const motivos = Array.isArray(json.motivos) ? json.motivos : (Array.isArray(json.items) ? json.items : []);
-        const categorias = Array.isArray(json.categorias_normalizadas) ? json.categorias_normalizadas : [];
-        setData({ motivos, categorias });
+        const motivos = Array.isArray(json.motivos) ? json.motivos : [];
+        const categorias = Array.isArray(json.categorias) ? json.categorias : [];
+        const categorias_globales = Array.isArray(json.categorias_globales) ? json.categorias_globales : [];
+        setData({ motivos, categorias, categorias_globales });
       } catch (err) {
         console.error('Error fetching motivos:', err);
       } finally {
@@ -352,7 +354,7 @@ export function useMotivosPerdida(filters: FilterState) {
     return () => { cancelled = true; };
   }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
 
-  return { motivos: data.motivos, categorias: data.categorias, loading };
+  return { motivos: data.motivos, categorias: data.categorias, categorias_globales: data.categorias_globales, loading };
 }
 
 export function useNegociacion(filters: FilterState) {

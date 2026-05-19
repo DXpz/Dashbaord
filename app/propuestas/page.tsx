@@ -23,9 +23,9 @@ export default function PropuestasPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading, error } = useAdminDashboard(filters);
   const { data: propuestasPorRubroData, loading: propuestasLoading } = usePropuestasPorRubro(filters);
-  const { motivos, categorias, loading: motivosLoading } = useMotivosPerdida(filters);
+  const { motivos, categorias, categorias_globales, loading: motivosLoading } = useMotivosPerdida(filters);
   const { data: negociacionData, loading: negociacionLoading } = useNegociacion(filters);
-  const [normalizadas, setNormalizadas] = useState(false);
+  const [viewMode, setViewMode] = useState<'asesor' | 'global'>('asesor');
   const connectionStatus = useConnectionStatus();
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
 
@@ -36,7 +36,7 @@ export default function PropuestasPage() {
   const decisiones = negociacionData?.decisiones || {};
   const decGlobal = decisiones?.global || {};
 
-  const motivosItems = normalizadas ? categorias : motivos;
+  const motivosItems = viewMode === 'asesor' ? motivos : categorias_globales;
 
   const kpis = useMemo(() => ({
     cantidad: metricas.propuestas_registradas ?? resumen.propuestas_registradas ?? 0,
@@ -65,7 +65,7 @@ export default function PropuestasPage() {
     };
   }, [propuestasPorRubro]);
 
-const motivosChartData = useMemo(() => {
+  const motivosChartData = useMemo(() => {
     if (!motivosItems.length) return null;
     const sorted = [...motivosItems].sort((a: any, b: any) => (b.total || b.veces || 0) - (a.total || a.veces || 0)).slice(0, 15);
     return {
@@ -149,20 +149,20 @@ const motivosChartData = useMemo(() => {
               actions={
                 <div className="flex gap-1">
                   <Button
-                    variant={normalizadas ? 'outline' : 'default'}
+                    variant={viewMode === 'asesor' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setNormalizadas(false)}
-                    className={`h-7 px-2 text-xs ${!normalizadas ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : 'border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]'}`}
+                    onClick={() => setViewMode('asesor')}
+                    className={`h-7 px-2 text-xs ${viewMode === 'asesor' ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : 'border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]'}`}
                   >
                     Por Asesor
                   </Button>
                   <Button
-                    variant={normalizadas ? 'default' : 'outline'}
+                    variant={viewMode === 'global' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setNormalizadas(true)}
-                    className={`h-7 px-2 text-xs ${normalizadas ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : 'border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]'}`}
+                    onClick={() => setViewMode('global')}
+                    className={`h-7 px-2 text-xs ${viewMode === 'global' ? 'bg-[#1F1D3D] text-white border-[#1F1D3D]' : 'border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED]'}`}
                   >
-                    Normalizados
+                    Global
                   </Button>
                 </div>
               }
