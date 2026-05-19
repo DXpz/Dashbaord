@@ -169,12 +169,10 @@ export default function GestionAsesoresPage() {
             </div>
             <select
               className="h-9 px-3 text-sm border border-[#EEEEEC] rounded-lg bg-white text-[#35325B] cursor-pointer"
-              value={filters.pais}
-              onChange={(e) => handleFilterChange('pais', e.target.value)}
+              value={user?.country_code || ''}
+              disabled
             >
-              <option value="">Todos</option>
-              <option value="SV">SV</option>
-              <option value="GT">GT</option>
+              <option value={user?.country_code || ''}>{user?.country_code === 'SV' ? 'El Salvador (SV)' : user?.country_code === 'GT' ? 'Guatemala (GT)' : 'Todos'}</option>
             </select>
             <Button size="sm" onClick={() => setShowCreateModal(true)} className="gap-2 bg-[#1F1D3D] hover:bg-[#35325B]">
               <UserPlus className="h-4 w-4" />
