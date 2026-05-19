@@ -37,7 +37,6 @@ interface SidebarProps {
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const clearLeaveTimeout = useCallback(() => {
@@ -49,7 +48,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   const handleClose = useCallback(() => {
     clearLeaveTimeout();
-    setMobileOpen(false);
     onClose?.();
   }, [clearLeaveTimeout, onClose]);
 
@@ -64,13 +62,9 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   };
 
   const handleMouseLeave = () => {
-    leaveTimeoutRef.current = setTimeout(() => {
-      setMobileOpen(false);
-      onClose?.();
-    }, 1500);
   };
 
-  const isVisible = isOpen || mobileOpen;
+  const isVisible = isOpen;
 
   return (
     <>
@@ -85,8 +79,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         className={cn(
           'fixed top-0 left-0 z-40 h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
           'transform transition-transform duration-200 ease-out',
-          'lg:relative lg:translate-x-0 lg:h-auto lg:min-h-screen lg:block',
-          isVisible ? 'translate-x-0' : '-translate-x-full lg:block'
+          'lg:relative lg:translate-x-0 lg:h-auto lg:min-h-screen lg:block lg:z-auto',
+          isVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:block'
         )}
       >
         <div
