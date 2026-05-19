@@ -3,13 +3,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { useConnectionStatus, useAsesores, useFilters } from '@/hooks';
+import { useAuth } from '@/lib/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { API } from '@/services/api';
-import { Plus, RefreshCw, Trash2, Power, Users, UserPlus, Search } from 'lucide-react';
+import { Plus, RefreshCw, Trash2, Power, Users, UserPlus, Search, Copy, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Advisor {
@@ -21,6 +22,7 @@ interface Advisor {
 }
 
 export default function GestionAsesoresPage() {
+  const { user } = useAuth();
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const [advisors, setAdvisors] = useState<Advisor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,8 @@ export default function GestionAsesoresPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [newAdvisor, setNewAdvisor] = useState({ nombre: '', correo: '', pais: '', activo: true });
   const [searchTerm, setSearchTerm] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ correo: string; password: string } | null>(null);
 
   const connectionStatus = useConnectionStatus();
   const asesoresList = useAsesores(filters);
@@ -39,7 +43,11 @@ export default function GestionAsesoresPage() {
   const fetchAdvisors = async () => {
     setLoading(true);
     try {
-      const data = await API.advisorsList({ activo: undefined });
+      const params: Record<string, any> = { activo: undefined };
+      if (user?.country_code) {
+        params.pais = user.country_code;
+      }
+      const data = await API.advisorsList(params);
       setAdvisors(Array.isArray(data) ? data : data?.advisors || []);
     } catch (err) {
       console.error('Error:', err);
@@ -48,7 +56,7 @@ export default function GestionAsesoresPage() {
     }
   };
 
-  useEffect(() => { fetchAdvisors(); }, []);
+  useEffect(() => { fetchAdvisors(); }, [user?.country_code]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -58,13 +66,20 @@ export default function GestionAsesoresPage() {
 
   const handleCreateAdvisor = async () => {
     if (!newAdvisor.nombre || !newAdvisor.correo || !newAdvisor.pais) return;
+    setCreating(true);
     try {
-      await API.advisorsCreate({ nombre_vendedor: newAdvisor.nombre, correo_vendedor: newAdvisor.correo, pais: newAdvisor.pais, activo: newAdvisor.activo });
-      setShowCreateModal(false);
-      setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true });
+      const result = await API.advisorsCreate({ nombre_vendedor: newAdvisor.nombre, correo_vendedor: newAdvisor.correo, pais: newAdvisor.pais, activo: newAdvisor.activo });
+      if (result?.credentials) {
+        setCreatedCredentials(result.credentials);
+      } else {
+        setShowCreateModal(false);
+        setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true });
+      }
       await fetchAdvisors();
     } catch (err) {
       console.error('Error:', err);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -246,77 +261,126 @@ export default function GestionAsesoresPage() {
         )}
       </div>
 
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+      <Dialog open={showCreateModal} onOpenChange={(open) => {
+          if (!open) {
+            setShowCreateModal(false);
+            setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true });
+            setCreatedCredentials(null);
+          }
+        }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Nuevo Asesor</DialogTitle>
-            <DialogDescription>Crea un perfil nuevo para un asesor.</DialogDescription>
+            <DialogTitle>{createdCredentials ? 'Asesor Creado' : 'Nuevo Asesor'}</DialogTitle>
+            <DialogDescription>
+              {createdCredentials ? 'Estas son las credenciales del nuevo asesor. Guárdalas bien.' : 'Crea un perfil nuevo para un asesor.'}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#35325B]">Nombre completo</label>
-              <Input
-                placeholder="Ej: Juan Pérez"
-                value={newAdvisor.nombre}
-                onChange={(e) => setNewAdvisor((p) => ({ ...p, nombre: e.target.value }))}
-                className="border-[#EEEEEC]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#35325B]">Correo</label>
-              <Input
-                type="email"
-                placeholder="correo@ejemplo.com"
-                value={newAdvisor.correo}
-                onChange={(e) => setNewAdvisor((p) => ({ ...p, correo: e.target.value }))}
-                className="border-[#EEEEEC]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#35325B]">País</label>
-              <select
-                className="h-10 w-full rounded-lg border border-[#EEEEEC] bg-white px-4 text-sm text-[#35325B]"
-                value={newAdvisor.pais}
-                onChange={(e) => setNewAdvisor((p) => ({ ...p, pais: e.target.value }))}
-              >
-                <option value="">Seleccionar país</option>
-                <option value="SV">El Salvador (SV)</option>
-                <option value="GT">Guatemala (GT)</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#35325B]">Estado inicial</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    checked={newAdvisor.activo}
-                    onChange={() => setNewAdvisor((p) => ({ ...p, activo: true }))}
-                    className="w-4 h-4 text-[#1F1D3D]"
-                  />
-                  <span className="text-sm text-[#35325B]">Activo</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    checked={!newAdvisor.activo}
-                    onChange={() => setNewAdvisor((p) => ({ ...p, activo: false }))}
-                    className="w-4 h-4 text-[#1F1D3D]"
-                  />
-                  <span className="text-sm text-[#35325B]">Inactivo</span>
-                </label>
+          
+          {createdCredentials ? (
+            <div className="space-y-4 py-4">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-green-800">Correo</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(createdCredentials.correo)}
+                    className="text-green-600 hover:text-green-700 p-1"
+                    title="Copiar"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-lg font-bold text-green-900">{createdCredentials.correo}</p>
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-amber-800">Contraseña</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(createdCredentials.password)}
+                    className="text-amber-600 hover:text-amber-700 p-1"
+                    title="Copiar"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-lg font-bold text-amber-900 font-mono">{createdCredentials.password}</p>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#35325B]">Nombre completo</label>
+                <Input
+                  placeholder="Ej: Juan Pérez"
+                  value={newAdvisor.nombre}
+                  onChange={(e) => setNewAdvisor((p) => ({ ...p, nombre: e.target.value }))}
+                  className="border-[#EEEEEC]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#35325B]">Correo</label>
+                <Input
+                  type="email"
+                  placeholder="correo@ejemplo.com"
+                  value={newAdvisor.correo}
+                  onChange={(e) => setNewAdvisor((p) => ({ ...p, correo: e.target.value }))}
+                  className="border-[#EEEEEC]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#35325B]">País</label>
+                <select
+                  className="h-10 w-full rounded-lg border border-[#EEEEEC] bg-white px-4 text-sm text-[#35325B]"
+                  value={newAdvisor.pais}
+                  onChange={(e) => setNewAdvisor((p) => ({ ...p, pais: e.target.value }))}
+                >
+                  <option value="">Seleccionar país</option>
+                  <option value="SV">El Salvador (SV)</option>
+                  <option value="GT">Guatemala (GT)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#35325B]">Estado inicial</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={newAdvisor.activo}
+                      onChange={() => setNewAdvisor((p) => ({ ...p, activo: true }))}
+                      className="w-4 h-4 text-[#1F1D3D]"
+                    />
+                    <span className="text-sm text-[#35325B]">Activo</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={!newAdvisor.activo}
+                      onChange={() => setNewAdvisor((p) => ({ ...p, activo: false }))}
+                      className="w-4 h-4 text-[#1F1D3D]"
+                    />
+                    <span className="text-sm text-[#35325B]">Inactivo</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancelar</Button>
-            <Button
-              onClick={handleCreateAdvisor}
-              disabled={!newAdvisor.nombre || !newAdvisor.correo || !newAdvisor.pais}
-              className="bg-[#1F1D3D] hover:bg-[#35325B]"
-            >
-              Crear
-            </Button>
+            {createdCredentials ? (
+              <Button onClick={() => { setShowCreateModal(false); setCreatedCredentials(null); setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true }); }} className="bg-[#1F1D3D] hover:bg-[#35325B] w-full">
+                Cerrar
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => { setShowCreateModal(false); setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true }); }}>Cancelar</Button>
+                <Button
+                  onClick={handleCreateAdvisor}
+                  disabled={!newAdvisor.nombre || !newAdvisor.correo || !newAdvisor.pais || creating}
+                  className="bg-[#1F1D3D] hover:bg-[#35325B]"
+                >
+                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear'}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
