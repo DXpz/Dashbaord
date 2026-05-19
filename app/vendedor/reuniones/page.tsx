@@ -7,7 +7,7 @@ import { API } from '@/services/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, ChevronLeft, ChevronRight, Search, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { FileText, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
@@ -141,15 +141,15 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-[50rem] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#EEEEEC] shrink-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-4 py-4 border-b border-[#EEEEEC] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-base">
+            <div className="w-10 h-10 rounded-full bg-[#1F1D3D] flex items-center justify-center text-white font-semibold text-sm">
               {reunion.client_id?.replace('LD', '') || '?'}
             </div>
             <div>
-              <h3 className="text-base font-semibold text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</h3>
+              <h3 className="text-sm font-semibold text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</h3>
               <p className="text-xs text-[#B5B5AE]">{reunion.client_id} · {reunion.advisor_name || '—'}</p>
             </div>
           </div>
@@ -158,8 +158,8 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-          <div className="flex items-center gap-3">
+        <div className="overflow-y-auto flex-1 px-4 py-5 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
             <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusColor}`}>
               {statusLabel}
             </span>
@@ -168,8 +168,8 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#F5F5ED] rounded-xl p-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="bg-[#F5F5ED] rounded-xl p-4 space-y-2">
               <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Información</h4>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -205,7 +205,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
             </div>
 
             {hasStructuredData && (
-              <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-3">
+              <div className="border border-[#EEEEEC] rounded-xl p-4 space-y-2">
                 <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider">Datos de la Reunión</h4>
                 {renderStructuredFields()}
               </div>
@@ -221,29 +221,21 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
 
           {isPerdida && (
             <div className="rounded-xl p-4 border bg-red-50 border-red-100">
-              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-red-700">
-                Motivo de Pérdida
-              </h4>
-              <p className="text-sm leading-relaxed text-red-600">
-                {seg.motivo_perdida || reunion.categoria_cierre || 'Lead perdido'}
-              </p>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-red-700">Motivo de Pérdida</h4>
+              <p className="text-sm leading-relaxed text-red-600">{seg.motivo_perdida || reunion.categoria_cierre || 'Lead perdido'}</p>
             </div>
           )}
 
           {isGanada && reunion.categoria_cierre && reunion.categoria_cierre.toLowerCase() !== 'sin categoria' && (
             <div className="rounded-xl p-4 border bg-green-50 border-green-100">
-              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-green-700">
-                Cierre Exitoso
-              </h4>
-              <p className="text-sm leading-relaxed text-green-600">
-                {reunion.categoria_cierre}
-              </p>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-1 text-green-700">Cierre Exitoso</h4>
+              <p className="text-sm leading-relaxed text-green-600">{reunion.categoria_cierre}</p>
             </div>
           )}
 
           {hasStructuredData && advisorFeedbackText && (
-            <div className="bg-[#1F1D3D] rounded-xl p-5">
-              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-3">Retroalimentación del Asesor</h4>
+            <div className="bg-[#1F1D3D] rounded-xl p-4">
+              <h4 className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-2">Retroalimentación del Asesor</h4>
               <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">{advisorFeedbackText}</p>
             </div>
           )}
@@ -312,18 +304,18 @@ export default function VendedorReunionesPage() {
       {feedbackReunion && (
         <FeedbackModal reunion={feedbackReunion} onClose={() => setFeedbackReunion(null)} />
       )}
-      <div className="bg-white border border-[#EEEEEC]">
-        <div className="px-5 py-4 flex items-center justify-between gap-4 border-b border-[#EEEEEC]">
+      <div className="bg-white border border-[#EEEEEC] overflow-x-auto">
+        <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EEEEEC]">
           <div>
             <h3 className="text-sm font-medium text-[#1F1D3D]">Mis Reuniones</h3>
             <p className="text-xs text-[#B5B5AE] mt-0.5">{filteredReuniones.length} reuniones</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B5B5AE]" />
               <Input
                 placeholder="Buscar..."
-                className="pl-9 w-48"
+                className="pl-8 w-36 sm:w-48"
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
@@ -332,8 +324,8 @@ export default function VendedorReunionesPage() {
               <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 px-2">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm text-[#35325B] px-2 min-w-[60px] text-center">
-                {currentPage} / {totalPages}
+              <span className="text-xs text-[#35325B] px-1.5 min-w-[50px] text-center">
+                {currentPage}/{totalPages}
               </span>
               <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="h-8 px-2">
                 <ChevronRight className="h-4 w-4" />
@@ -344,84 +336,70 @@ export default function VendedorReunionesPage() {
         {loading ? (
           <Skeleton className="h-96 w-full" />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <div className="flex items-center gap-1.5">
-                    <span>Lead #</span>
-                    <button
-                      onClick={() => setSortAsc(true)}
-                      className={`p-0.5 rounded hover:bg-[#EEEEEC] transition-colors ${sortAsc ? 'text-[#1F1D3D]' : 'text-[#B5B5AE]'}`}
-                    >
-                      <ArrowUp className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setSortAsc(false)}
-                      className={`p-0.5 rounded hover:bg-[#EEEEEC] transition-colors ${!sortAsc ? 'text-[#1F1D3D]' : 'text-[#B5B5AE]'}`}
-                    >
-                      <ArrowDown className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Fecha Agendado</TableHead>
-                <TableHead>Teléfono</TableHead>
-                <TableHead>País</TableHead>
-                <TableHead>Etapa</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Prop</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedReuniones.length > 0 ? (
-                paginatedReuniones.map((reunion: any) => (
-                  <TableRow key={reunion.id || reunion.client_id || Math.random()}>
-                    <TableCell>
-                      <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</span>
-                    </TableCell>
-                    <TableCell className="text-[#B5B5AE] text-xs">
-                      {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
-                    </TableCell>
-                    <TableCell>
-                      <span>{reunion.client_phone || reunion.telefono || '—'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} />
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge reunion={reunion} />
-                    </TableCell>
-                    <TableCell>
-                      {reunion.propuesta || reunion.has_propuesta ? (
-                        <span className="text-green-600 font-medium text-sm">Sí</span>
-                      ) : (
-                        <span className="text-[#B5B5AE] text-sm">No</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => setFeedbackReunion(reunion)} className="text-[#35325B] hover:bg-[#F5F5ED] p-1">
-                        <FileText className="h-4 w-4" />
-                      </Button>
+          <div className="min-w-[700px] sm:min-w-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16">Lead #</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead className="hidden sm:table-cell">Fecha</TableHead>
+                  <TableHead className="hidden md:table-cell">Teléfono</TableHead>
+                  <TableHead className="hidden lg:table-cell">País</TableHead>
+                  <TableHead>Etapa</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="w-10">Prop</TableHead>
+                  <TableHead className="w-10"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedReuniones.length > 0 ? (
+                  paginatedReuniones.map((reunion: any) => (
+                    <TableRow key={reunion.id || reunion.client_id || Math.random()}>
+                      <TableCell>
+                        <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</span>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-[#B5B5AE] text-xs">
+                        {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <span>{reunion.client_phone || reunion.telefono || '—'}</span>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
+                      </TableCell>
+                      <TableCell>
+                        <StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge reunion={reunion} />
+                      </TableCell>
+                      <TableCell>
+                        {reunion.propuesta || reunion.has_propuesta ? (
+                          <span className="text-green-600 font-medium text-sm">Sí</span>
+                        ) : (
+                          <span className="text-[#B5B5AE] text-sm">No</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => setFeedbackReunion(reunion)} className="text-[#35325B] hover:bg-[#F5F5ED] p-1">
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-12 text-[#B5B5AE]">
+                      Sin reuniones
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center py-12 text-[#B5B5AE]">
-                    Sin reuniones
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </div>
     </div>
