@@ -178,9 +178,7 @@ const CIERRE_FIELDS: StageField[] = [
     { value: 'en_pausa', label: 'En pausa' },
   ]},
   { id: 'fecha_cierre_real', label: 'Fecha de Cierre', type: 'date', required: true },
-  { id: 'razon_cierre', label: 'Razón / Comentario', type: 'textarea', required: true, placeholder: 'Describe por qué ganó, perdió o está en pausa' },
-  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios del cierre' },
-  { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
+  { id: 'retroalimentacion', label: 'Retroalimentación / Razón', type: 'textarea', required: false, placeholder: 'Razón del cierre o comentarios finales' },
 ];
 
 function buildStages(requiresDemo: boolean): StageConfig[] {
@@ -460,10 +458,16 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
           : `${base}audit/client/${clientId}/cierre`;
 
         const resultadoCierre = data.resultado_cierre || '';
+        const cierreData: Record<string, any> = {
+          resultado_cierre: resultadoCierre,
+          fecha_cierre_real: data.fecha_cierre_real || '',
+        };
+        if (data.retroalimentacion) {
+          cierreData.retroalimentacion = data.retroalimentacion;
+        }
 
         body = {
-          resumen_general: data.resumen_general || '',
-          stage_feedback_json: { [`${current.stageNumber}`]: data },
+          stage_feedback_json: { [`${current.stageNumber}`]: cierreData },
         };
 
         if (resultadoCierre === 'ganado') {
