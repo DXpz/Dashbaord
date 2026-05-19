@@ -86,6 +86,8 @@ const flatData = useMemo(() => {
     });
   }, [stageData]);
 
+  const leadsNoAceptados = metricas.leads_pendientes ?? 0;
+
   const chartData = useMemo(() => {
     const values = flatData.map((s: any) => s.value);
     const total = values.reduce((a: number, b: number) => a + b, 0) || 1;
@@ -180,6 +182,9 @@ const flatData = useMemo(() => {
               <div className="flex-1 flex items-center justify-center w-full">
                 <p className="text-6xl font-bold text-[#1F1D3D]">{atendidosPorAsesor}</p>
               </div>
+              {leadsNoAceptados > 0 && (
+                <p className="text-xs text-red-600 mt-0.5">Leads pendientes de aceptar por Comercial: {leadsNoAceptados}</p>
+              )}
             </div>
 
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex-1 flex flex-col items-center">
