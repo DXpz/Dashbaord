@@ -56,7 +56,9 @@ export default function GestionAsesoresPage() {
     }
   };
 
-  useEffect(() => { fetchAdvisors(); }, [user?.country_code]);
+  useEffect(() => { 
+    if (user) fetchAdvisors(); 
+  }, [user]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
