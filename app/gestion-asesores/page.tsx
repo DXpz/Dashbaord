@@ -31,7 +31,7 @@ export default function GestionAsesoresPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [advisorToDelete, setAdvisorToDelete] = useState<Advisor | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [newAdvisor, setNewAdvisor] = useState({ nombre: '', correo: '', pais: '', activo: true });
+  const [newAdvisor, setNewAdvisor] = useState({ nombre: '', correo: '', pais: user?.country_code || '', rol: 'asesor' });
   const [searchTerm, setSearchTerm] = useState('');
   const [creating, setCreating] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{ correo: string; password: string } | null>(null);
@@ -68,12 +68,12 @@ export default function GestionAsesoresPage() {
     if (!newAdvisor.nombre || !newAdvisor.correo || !newAdvisor.pais) return;
     setCreating(true);
     try {
-      const result = await API.advisorsCreate({ nombre_vendedor: newAdvisor.nombre, correo_vendedor: newAdvisor.correo, pais: newAdvisor.pais, activo: newAdvisor.activo });
+      const result = await API.advisorsCreate({ nombre_vendedor: newAdvisor.nombre, correo_vendedor: newAdvisor.correo, pais: newAdvisor.pais, rol: newAdvisor.rol });
       if (result?.credentials) {
         setCreatedCredentials(result.credentials);
       } else {
         setShowCreateModal(false);
-        setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true });
+        setNewAdvisor({ nombre: '', correo: '', pais: user?.country_code || '', rol: 'asesor' });
       }
       await fetchAdvisors();
     } catch (err) {
@@ -262,7 +262,7 @@ export default function GestionAsesoresPage() {
       <Dialog open={showCreateModal} onOpenChange={(open) => {
           if (!open) {
             setShowCreateModal(false);
-            setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true });
+            setNewAdvisor({ nombre: '', correo: '', pais: user?.country_code || '', rol: 'asesor' });
             setCreatedCredentials(null);
           }
         }}>
@@ -334,42 +334,34 @@ export default function GestionAsesoresPage() {
                   <option value="">Seleccionar país</option>
                   <option value="SV">El Salvador (SV)</option>
                   <option value="GT">Guatemala (GT)</option>
+                  <option value="HN">Honduras (HN)</option>
+                  <option value="CR">Costa Rica (CR)</option>
+                  <option value="PA">Panamá (PA)</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#35325B]">Estado inicial</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={newAdvisor.activo}
-                      onChange={() => setNewAdvisor((p) => ({ ...p, activo: true }))}
-                      className="w-4 h-4 text-[#1F1D3D]"
-                    />
-                    <span className="text-sm text-[#35325B]">Activo</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={!newAdvisor.activo}
-                      onChange={() => setNewAdvisor((p) => ({ ...p, activo: false }))}
-                      className="w-4 h-4 text-[#1F1D3D]"
-                    />
-                    <span className="text-sm text-[#35325B]">Inactivo</span>
-                  </label>
-                </div>
+                <label className="text-sm font-medium text-[#35325B]">Rol</label>
+                <select
+                  className="h-10 w-full rounded-lg border border-[#EEEEEC] bg-white px-4 text-sm text-[#35325B]"
+                  value={newAdvisor.rol}
+                  onChange={(e) => setNewAdvisor((p) => ({ ...p, rol: e.target.value }))}
+                >
+                  <option value="asesor">Asesor</option>
+                  <option value="jefe">Jefe de ventas</option>
+                  <option value="admin">Administrador</option>
+                </select>
               </div>
             </div>
           )}
           
           <DialogFooter>
             {createdCredentials ? (
-              <Button onClick={() => { setShowCreateModal(false); setCreatedCredentials(null); setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true }); }} className="bg-[#1F1D3D] hover:bg-[#35325B] w-full">
+              <Button onClick={() => { setShowCreateModal(false); setCreatedCredentials(null); setNewAdvisor({ nombre: '', correo: '', pais: user?.country_code || '', rol: 'asesor' }); }} className="bg-[#1F1D3D] hover:bg-[#35325B] w-full">
                 Cerrar
               </Button>
             ) : (
               <>
-                <Button variant="outline" onClick={() => { setShowCreateModal(false); setNewAdvisor({ nombre: '', correo: '', pais: '', activo: true }); }}>Cancelar</Button>
+                <Button variant="outline" onClick={() => { setShowCreateModal(false); setNewAdvisor({ nombre: '', correo: '', pais: user?.country_code || '', rol: 'asesor' }); }}>Cancelar</Button>
                 <Button
                   onClick={handleCreateAdvisor}
                   disabled={!newAdvisor.nombre || !newAdvisor.correo || !newAdvisor.pais || creating}
