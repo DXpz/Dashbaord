@@ -116,10 +116,10 @@ const flatData = useMemo(() => {
       >
         <div className="space-y-6">
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="grid grid-cols-3 lg:flex lg:flex-col lg:w-44 gap-3">
+            <div className="grid grid-cols-3 lg:grid-cols-3 lg:flex-1 gap-3">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
             </div>
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 lg:flex gap-3">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 lg:grid lg:grid-cols-3 gap-3">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
             </div>
           </div>
@@ -159,7 +159,7 @@ const flatData = useMemo(() => {
     >
       <div className="space-y-6">
         <div className="flex flex-col lg:flex-row gap-4">
-          <div className="grid grid-cols-3 lg:flex lg:flex-col lg:w-44 gap-3">
+          <div className="grid grid-cols-3 lg:grid-cols-3 lg:flex-1 gap-3">
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex flex-col items-center justify-center">
               <p className="text-[9px] lg:text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5 text-center">Lead No Calificado</p>
               <p className="text-lg lg:text-xl font-bold text-[#1F1D3D]">{leadsNoAgendados}</p>
@@ -176,7 +176,7 @@ const flatData = useMemo(() => {
             </div>
           </div>
 
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 lg:flex gap-3">
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 lg:grid lg:grid-cols-3 gap-3">
             <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex flex-col items-center">
               <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-1 text-center">Leads gestionados por comercial</p>
               <div className="flex-1 flex items-center justify-center w-full">
