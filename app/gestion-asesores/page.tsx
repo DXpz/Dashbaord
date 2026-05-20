@@ -42,12 +42,10 @@ export default function GestionAsesoresPage() {
 
   const fetchAdvisors = async () => {
     setLoading(true);
-    console.log('user?.country_code:', user?.country_code);
     try {
       const params: Record<string, any> = {};
       if (user?.country_code) {
         params.pais = user.country_code;
-        console.log('Fetching advisors with params:', params);
       }
       const data = await API.advisorsList(params);
       setAdvisors(Array.isArray(data) ? data : data?.advisors || []);
@@ -59,8 +57,8 @@ export default function GestionAsesoresPage() {
   };
 
   useEffect(() => { 
-    if (user) fetchAdvisors(); 
-  }, [user]);
+    fetchAdvisors();
+  }, [user?.country_code]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
