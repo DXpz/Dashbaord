@@ -101,6 +101,8 @@ const flatData = useMemo(() => {
     const ventasCerradasMetric = metricas.ventas_cerradas ?? cierreStage?.cerradas ?? 0;
     const ventasPerdidasMetric = metricas.ventas_perdidas ?? cierreStage?.perdidas ?? 0;
 
+    const showToggle = hasCierreSegment;
+
     if (hasCierreSegment) {
       const cierreIndex = flatData.findIndex((s: any) => s.label === 'CIERRE');
 
@@ -117,6 +119,7 @@ const flatData = useMemo(() => {
           }],
           total,
           isStacked: false,
+          showToggle: true,
           ventasCerradas: ventasCerradasMetric,
           ventasPerdidas: ventasPerdidasMetric,
         };
@@ -135,6 +138,7 @@ const flatData = useMemo(() => {
           }],
           total,
           isStacked: false,
+          showToggle: true,
           ventasCerradas: ventasCerradasMetric,
           ventasPerdidas: ventasPerdidasMetric,
         };
@@ -174,6 +178,7 @@ const flatData = useMemo(() => {
         ],
         total,
         isStacked: true,
+        showToggle: true,
         ventasCerradas: ventasCerradasMetric,
         ventasPerdidas: ventasPerdidasMetric,
       };
@@ -189,6 +194,7 @@ const flatData = useMemo(() => {
       }],
       total,
       isStacked: false,
+      showToggle: false,
     };
   }, [flatData, metricas, showCerradas, showPerdidas]);
 
@@ -299,7 +305,7 @@ const flatData = useMemo(() => {
               <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
             </div>
             <div className="flex items-center gap-4">
-              {chartData.isStacked ? (
+              {chartData.showToggle ? (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowCerradas(!showCerradas)}
