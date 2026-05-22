@@ -94,15 +94,17 @@ const flatData = useMemo(() => {
     const values = flatData.map((s: any) => s.value);
     const total = values.reduce((a: number, b: number) => a + b, 0) || 1;
 
-    const hasCierreSegment = flatData.some((s: any) => s.cerradas !== undefined || s.perdidas !== undefined);
-    const cierreIndex = flatData.findIndex((s: any) => s.label === 'CIERRE');
+    const cierreStage = flatData.find((s: any) => s.label === 'CIERRE');
+    const hasCierreSegment = cierreStage && (cierreStage.cerradas !== undefined || cierreStage.perdidas !== undefined);
+    const ventasCerradas = metricas.ventas_cerradas ?? cierreStage?.cerradas ?? 0;
+    const ventasPerdidas = metricas.ventas_perdidas ?? cierreStage?.perdidas ?? 0;
 
     if (hasCierreSegment) {
       const cerradas = new Array(flatData.length).fill(0);
       const perdidas = new Array(flatData.length).fill(0);
       flatData.forEach((s: any, i: number) => {
-        if (i === cierreIndex && s.cerradas !== undefined) {
-          cerradas[i] = s.cerradas;
+        if (s.label === 'CIERRE') {
+          cerradas[i] = s.cerradas || 0;
           perdidas[i] = s.perdidas || 0;
         } else {
           cerradas[i] = s.value;
@@ -116,23 +118,25 @@ const flatData = useMemo(() => {
             label: 'Cerradas',
             data: cerradas,
             backgroundColor: flatData.map((s: any, i: number) =>
-              i === cierreIndex ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]
+              s.label === 'CIERRE' ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]
             ),
-            borderRadius: 6,
+            borderRadius: 0,
             borderSkipped: false,
           },
           {
             label: 'Perdidas',
             data: perdidas,
             backgroundColor: flatData.map((s: any, i: number) =>
-              i === cierreIndex ? '#ef4444' : STAGE_COLORS[i % STAGE_COLORS.length]
+              s.label === 'CIERRE' ? '#ef4444' : STAGE_COLORS[i % STAGE_COLORS.length]
             ),
-            borderRadius: 6,
+            borderRadius: 0,
             borderSkipped: false,
           },
         ],
         total,
         isStacked: true,
+        ventasCerradas,
+        ventasPerdidas,
       };
     }
 
@@ -147,7 +151,7 @@ const flatData = useMemo(() => {
       total,
       isStacked: false,
     };
-  }, [flatData]);
+  }, [flatData, metricas]);
 
   if (loading) {
     return (
@@ -255,9 +259,26 @@ const flatData = useMemo(() => {
               <h2 className="text-sm lg:text-base font-semibold text-[#1F1D3D]">Pipeline de Ventas</h2>
               <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
             </div>
-            <div className="text-right">
-              <span className="text-xl lg:text-2xl font-bold text-[#1F1D3D]">{totalLeads}</span>
-              <p className="text-[10px] lg:text-xs text-[#B5B5AE]">Total leads</p>
+            <div className="flex items-center gap-4">
+              {chartData.isStacked ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-sm bg-[#22c55e]" />
+                    <span className="text-xs text-[#35325B]">Ganadas</span>
+                    <span className="text-sm font-bold text-[#1F1D3D]">{chartData.ventasCerradas}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-sm bg-[#ef4444]" />
+                    <span className="text-xs text-[#35325B]">Perdidas</span>
+                    <span className="text-sm font-bold text-[#1F1D3D]">{chartData.ventasPerdidas}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-right">
+                  <span className="text-xl lg:text-2xl font-bold text-[#1F1D3D]">{totalLeads}</span>
+                  <p className="text-[10px] lg:text-xs text-[#B5B5AE]">Total leads</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -277,7 +298,7 @@ const flatData = useMemo(() => {
               options={{
                 indexAxis: 'y' as const,
                 plugins: {
-                  legend: { display: chartData.isStacked },
+                  legend: { display: false },
                   tooltip: {
                     callbacks: {
                       label: (ctx: any) => {
