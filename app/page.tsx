@@ -102,45 +102,78 @@ const flatData = useMemo(() => {
     const ventasPerdidasMetric = metricas.ventas_perdidas ?? cierreStage?.perdidas ?? 0;
 
     if (hasCierreSegment) {
-      const cerradas = new Array(flatData.length).fill(0);
-      const perdidas = new Array(flatData.length).fill(0);
-      flatData.forEach((s: any, i: number) => {
-        if (s.label === 'CIERRE') {
-          cerradas[i] = s.cerradas || 0;
-          perdidas[i] = s.perdidas || 0;
-        } else {
-          cerradas[i] = s.value;
-          perdidas[i] = s.value;
-        }
-      });
-      const datasets = [];
-      if (showCerradas) {
-        datasets.push({
-          label: 'Cerradas',
-          data: cerradas,
-          backgroundColor: flatData.map((s: any, i: number) =>
-            s.label === 'CIERRE' ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]
-          ),
-          borderRadius: 0,
-          borderSkipped: false,
-        });
+      const singleValues = flatData.map((s: any) => s.value);
+      const cierreIndex = flatData.findIndex((s: any) => s.label === 'CIERRE');
+
+      if (!showCerradas && !showPerdidas) {
+        return {
+          labels: flatData.map((s: any) => s.label),
+          datasets: [{
+            data: flatData.map((s: any, i: number) => i === cierreIndex ? 0 : s.value),
+            backgroundColor: STAGE_COLORS.slice(0, flatData.length),
+            borderRadius: 6,
+            borderSkipped: false,
+          }],
+          total,
+          isStacked: false,
+          ventasCerradas: ventasCerradasMetric,
+          ventasPerdidas: ventasPerdidasMetric,
+        };
       }
-      if (showPerdidas) {
-        datasets.push({
-          label: 'Perdidas',
-          data: perdidas,
-          backgroundColor: flatData.map((s: any, i: number) =>
-            s.label === 'CIERRE' ? '#ef4444' : STAGE_COLORS[i % STAGE_COLORS.length]
-          ),
-          borderRadius: 0,
-          borderSkipped: false,
+
+      if (showCerradas && showPerdidas) {
+        const cerradas = new Array(flatData.length).fill(0);
+        const perdidas = new Array(flatData.length).fill(0);
+        flatData.forEach((s: any, i: number) => {
+          if (i === cierreIndex) {
+            cerradas[i] = s.cerradas || 0;
+            perdidas[i] = s.perdidas || 0;
+          } else {
+            cerradas[i] = s.value;
+          }
         });
+        return {
+          labels: flatData.map((s: any) => s.label),
+          datasets: [
+            {
+              label: 'Cerradas',
+              data: cerradas,
+              backgroundColor: flatData.map((s: any, i: number) =>
+                i === cierreIndex ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]
+              ),
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Perdidas',
+              data: perdidas,
+              backgroundColor: flatData.map((s: any, i: number) =>
+                i === cierreIndex ? '#ef4444' : 'transparent'
+              ),
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+          total,
+          isStacked: true,
+          ventasCerradas: ventasCerradasMetric,
+          ventasPerdidas: ventasPerdidasMetric,
+        };
       }
+
+      const bgColor = showCerradas ? '#22c55e' : '#ef4444';
       return {
         labels: flatData.map((s: any) => s.label),
-        datasets,
+        datasets: [{
+          data: flatData.map((s: any, i: number) => i === cierreIndex ? s.value : s.value),
+          backgroundColor: flatData.map((s: any, i: number) =>
+            i === cierreIndex ? bgColor : STAGE_COLORS[i % STAGE_COLORS.length]
+          ),
+          borderRadius: 6,
+          borderSkipped: false,
+        }],
         total,
-        isStacked: datasets.length > 1,
+        isStacked: false,
         ventasCerradas: ventasCerradasMetric,
         ventasPerdidas: ventasPerdidasMetric,
       };
