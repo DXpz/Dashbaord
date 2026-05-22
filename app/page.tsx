@@ -106,6 +106,23 @@ const flatData = useMemo(() => {
     if (hasCierreSegment) {
       const cierreIndex = flatData.findIndex((s: any) => s.label === 'CIERRE');
 
+      if (!showCerradas && !showPerdidas) {
+        return {
+          labels: flatData.map((s: any) => s.label),
+          datasets: [{
+            data: flatData.map((s: any, i: number) => i === cierreIndex ? 0 : s.value),
+            backgroundColor: STAGE_COLORS.slice(0, flatData.length),
+            borderRadius: 0,
+            borderSkipped: false,
+          }],
+          total,
+          isStacked: false,
+          showToggle: true,
+          ventasCerradas: ventasCerradasMetric,
+          ventasPerdidas: ventasPerdidasMetric,
+        };
+      }
+
       if (showCerradas && !showPerdidas) {
         return {
           labels: flatData.map((s: any) => s.label),
