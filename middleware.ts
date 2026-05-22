@@ -23,16 +23,19 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const res = await fetch(`${req.url.origin}/api/auth/me`, {
-    headers: { cookie: req.headers.get('cookie') || '' }
-  });
+  const token = req.cookies.get('api_token')?.value;
+  let userRole = null;
 
-  if (!res.ok) {
-    return NextResponse.redirect(new URL('/login', req.url));
+  if (token) {
+    const payload = parseJwtPayload(token);
+    if (payload && Date.now() / 1000 < payload.exp) {
+      userRole = payload.role;
+    }
   }
 
-  const data = await res.json();
-  const userRole = data?.user?.role;
+  if (!userRole) {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
 
   if (pathname.startsWith('/vendedor')) {
     if (userRole !== 'advisor') {
