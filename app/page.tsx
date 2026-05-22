@@ -114,7 +114,7 @@ const flatData = useMemo(() => {
             backgroundColor: flatData.map((s: any, i: number) =>
               i === cierreIndex ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]
             ),
-            borderRadius: 6,
+            borderRadius: 0,
             borderSkipped: false,
           }],
           total,
@@ -133,7 +133,7 @@ const flatData = useMemo(() => {
             backgroundColor: flatData.map((s: any, i: number) =>
               i === cierreIndex ? '#ef4444' : STAGE_COLORS[i % STAGE_COLORS.length]
             ),
-            borderRadius: 6,
+            borderRadius: 0,
             borderSkipped: false,
           }],
           total,
@@ -172,7 +172,7 @@ const flatData = useMemo(() => {
             backgroundColor: flatData.map((s: any, i: number) =>
               i === cierreIndex ? '#ef4444' : 'transparent'
             ),
-            borderRadius: 6,
+            borderRadius: 0,
             borderSkipped: false,
           },
         ],
@@ -189,7 +189,7 @@ const flatData = useMemo(() => {
       datasets: [{
         data: values,
         backgroundColor: STAGE_COLORS.slice(0, flatData.length),
-        borderRadius: 6,
+        borderRadius: 0,
         borderSkipped: false,
       }],
       total,
