@@ -59,6 +59,8 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
         const subRows = matching.map((l: any) => ({
           label: l.stage_label || s.label,
           value: l.total,
+          cerradas: l.cerradas,
+          perdidas: l.perdidas,
         }));
         const sum = subRows.reduce((a: number, b: any) => a + b.value, 0);
         return { label: s.label, value: sum, subs: subRows };
@@ -91,6 +93,47 @@ const flatData = useMemo(() => {
   const chartData = useMemo(() => {
     const values = flatData.map((s: any) => s.value);
     const total = values.reduce((a: number, b: number) => a + b, 0) || 1;
+
+    const hasCierreSegment = flatData.some((s: any) => s.cerradas !== undefined || s.perdidas !== undefined);
+    const cierreIndex = flatData.findIndex((s: any) => s.label === 'CIERRE');
+
+    if (hasCierreSegment) {
+      const cerradas = new Array(flatData.length).fill(0);
+      const perdidas = new Array(flatData.length).fill(0);
+      flatData.forEach((s: any, i: number) => {
+        if (s.cerradas !== undefined) {
+          cerradas[i] = s.cerradas;
+          perdidas[i] = s.perdidas || 0;
+        } else {
+          cerradas[i] = s.value;
+        }
+      });
+      return {
+        labels: flatData.map((s: any) => s.label),
+        datasets: [
+          {
+            label: 'Cerradas',
+            data: cerradas,
+            backgroundColor: flatData.map((s: any, i: number) =>
+              i === cierreIndex ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]
+            ),
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Perdidas',
+            data: perdidas,
+            backgroundColor: flatData.map((s: any, i: number) =>
+              i === cierreIndex ? '#ef4444' : 'transparent'
+            ),
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+        total,
+      };
+    }
+
     return {
       labels: flatData.map((s: any) => s.label),
       datasets: [{
@@ -224,32 +267,29 @@ const flatData = useMemo(() => {
             <ChartWrapper
               type="bar"
               data={{
-                labels: flatData.map((s: any) => s.label),
-                datasets: [{
-                  data: flatData.map((s: any) => s.value),
-                  backgroundColor: STAGE_COLORS.slice(0, flatData.length),
-                  borderRadius: 6,
-                  borderSkipped: false,
-                }],
+                labels: chartData.labels,
+                datasets: chartData.datasets,
               }}
               height="280px"
               options={{
                 indexAxis: 'y' as const,
                 plugins: {
-                  legend: { display: false },
+                  legend: { display: chartData.datasets.length > 1 },
                   tooltip: {
                     callbacks: {
                       label: (ctx: any) => {
                         const total = chartData.total;
                         const val = ctx.raw;
                         const pct = total > 0 ? Math.round((val / total) * 100) : 0;
-                        return ` ${val} leads (${pct}%)`;
+                        const datasetLabel = ctx.dataset.label || '';
+                        return ` ${val} ${datasetLabel} (${pct}%)`;
                       },
                     },
                   },
                 },
                 scales: {
                   x: {
+                    stacked: chartData.datasets.length > 1,
                     grid: { color: 'rgba(0,0,0,0.04)' },
                     ticks: {
                       font: { size: 11, family: 'Inter' },
@@ -257,6 +297,7 @@ const flatData = useMemo(() => {
                     },
                   },
                   y: {
+                    stacked: chartData.datasets.length > 1,
                     grid: { display: false },
                     ticks: {
                       font: { size: 12, family: 'Inter', weight: '500' },
