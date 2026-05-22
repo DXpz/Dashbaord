@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 export interface ApiUser {
@@ -15,6 +15,7 @@ export interface ApiUser {
 interface AuthContextType {
   user: ApiUser | null;
   loading: boolean;
+  checked: boolean;
   login: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
@@ -24,13 +25,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<ApiUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checked, setChecked] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  async function checkAuth() {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me', { cache: 'no-store' });
       if (res.ok) {
@@ -43,10 +41,15 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     } finally {
       setLoading(false);
+      setChecked(true);
     }
-  }
+  }, []);
 
-const login = async (username: string, password: string): Promise<{ ok: boolean; error?: string }> => {
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  const login = async (username: string, password: string): Promise<{ ok: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -64,13 +67,17 @@ const login = async (username: string, password: string): Promise<{ ok: boolean;
   };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
+    setLoading(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+    }
     router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, checked, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
