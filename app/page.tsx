@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +19,8 @@ export default function HomePage() {
 const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading, error } = useAdminDashboard(filters);
   const connectionStatus = useConnectionStatus();
+  const [showCerradas, setShowCerradas] = useState(true);
+  const [showPerdidas, setShowPerdidas] = useState(true);
   const asesoresList = useAsesores(filters);
   const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
 
@@ -96,8 +98,8 @@ const flatData = useMemo(() => {
 
     const cierreStage = flatData.find((s: any) => s.label === 'CIERRE');
     const hasCierreSegment = cierreStage && (cierreStage.cerradas !== undefined || cierreStage.perdidas !== undefined);
-    const ventasCerradas = metricas.ventas_cerradas ?? cierreStage?.cerradas ?? 0;
-    const ventasPerdidas = metricas.ventas_perdidas ?? cierreStage?.perdidas ?? 0;
+    const ventasCerradasMetric = metricas.ventas_cerradas ?? cierreStage?.cerradas ?? 0;
+    const ventasPerdidasMetric = metricas.ventas_perdidas ?? cierreStage?.perdidas ?? 0;
 
     if (hasCierreSegment) {
       const cerradas = new Array(flatData.length).fill(0);
@@ -108,35 +110,39 @@ const flatData = useMemo(() => {
           perdidas[i] = s.perdidas || 0;
         } else {
           cerradas[i] = s.value;
-          perdidas[i] = 0;
+          perdidas[i] = s.value;
         }
       });
+      const datasets = [];
+      if (showCerradas) {
+        datasets.push({
+          label: 'Cerradas',
+          data: cerradas,
+          backgroundColor: flatData.map((s: any, i: number) =>
+            s.label === 'CIERRE' ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]
+          ),
+          borderRadius: 0,
+          borderSkipped: false,
+        });
+      }
+      if (showPerdidas) {
+        datasets.push({
+          label: 'Perdidas',
+          data: perdidas,
+          backgroundColor: flatData.map((s: any, i: number) =>
+            s.label === 'CIERRE' ? '#ef4444' : STAGE_COLORS[i % STAGE_COLORS.length]
+          ),
+          borderRadius: 0,
+          borderSkipped: false,
+        });
+      }
       return {
         labels: flatData.map((s: any) => s.label),
-        datasets: [
-          {
-            label: 'Cerradas',
-            data: cerradas,
-            backgroundColor: flatData.map((s: any, i: number) =>
-              s.label === 'CIERRE' ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]
-            ),
-            borderRadius: 0,
-            borderSkipped: false,
-          },
-          {
-            label: 'Perdidas',
-            data: perdidas,
-            backgroundColor: flatData.map((s: any, i: number) =>
-              s.label === 'CIERRE' ? '#ef4444' : STAGE_COLORS[i % STAGE_COLORS.length]
-            ),
-            borderRadius: 0,
-            borderSkipped: false,
-          },
-        ],
+        datasets,
         total,
-        isStacked: true,
-        ventasCerradas,
-        ventasPerdidas,
+        isStacked: datasets.length > 1,
+        ventasCerradas: ventasCerradasMetric,
+        ventasPerdidas: ventasPerdidasMetric,
       };
     }
 
@@ -151,7 +157,7 @@ const flatData = useMemo(() => {
       total,
       isStacked: false,
     };
-  }, [flatData, metricas]);
+  }, [flatData, metricas, showCerradas, showPerdidas]);
 
   if (loading) {
     return (
@@ -262,16 +268,22 @@ const flatData = useMemo(() => {
             <div className="flex items-center gap-4">
               {chartData.isStacked ? (
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setShowCerradas(!showCerradas)}
+                    className={`flex items-center gap-1.5 transition-opacity ${showCerradas ? 'opacity-100' : 'opacity-40'}`}
+                  >
                     <div className="w-3 h-3 rounded-sm bg-[#22c55e]" />
                     <span className="text-xs text-[#35325B]">Ganadas</span>
                     <span className="text-sm font-bold text-[#1F1D3D]">{chartData.ventasCerradas}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
+                  </button>
+                  <button
+                    onClick={() => setShowPerdidas(!showPerdidas)}
+                    className={`flex items-center gap-1.5 transition-opacity ${showPerdidas ? 'opacity-100' : 'opacity-40'}`}
+                  >
                     <div className="w-3 h-3 rounded-sm bg-[#ef4444]" />
                     <span className="text-xs text-[#35325B]">Perdidas</span>
                     <span className="text-sm font-bold text-[#1F1D3D]">{chartData.ventasPerdidas}</span>
-                  </div>
+                  </button>
                 </div>
               ) : (
                 <div className="text-right">
