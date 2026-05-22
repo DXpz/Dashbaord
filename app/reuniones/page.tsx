@@ -165,9 +165,6 @@ return (
             <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusColor}`}>
               {statusLabel}
             </span>
-            <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#F5F5ED] text-[#35325B] border border-[#EEEEEC]">
-              {reunion.opportunity_stage_label || '—'}
-            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -418,7 +415,6 @@ export default function ReunionesPage() {
                   <TableHead className="hidden md:table-cell whitespace-nowrap">Teléfono</TableHead>
                   <TableHead className="hidden lg:table-cell whitespace-nowrap">Asesor</TableHead>
                   <TableHead className="hidden lg:table-cell whitespace-nowrap">País</TableHead>
-                  <TableHead className="whitespace-nowrap">Etapa</TableHead>
                   <TableHead className="whitespace-nowrap">Estado</TableHead>
                   <TableHead className="whitespace-nowrap">Prop</TableHead>
                   <TableHead className="whitespace-nowrap"></TableHead>
@@ -473,15 +469,6 @@ export default function ReunionesPage() {
                           </select>
                         ) : (
                           <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editMode ? (
-                          <select value={getEditedValue(reunion.client_id, 'opportunity_stage', String(reunion.opportunity_stage || ''))} onChange={(e) => handleFieldChange(reunion.client_id, 'opportunity_stage', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
-                            {stages.map(s => <option key={s.id} value={String(s.id)}>{s.label}</option>)}
-                          </select>
-                        ) : (
-                          <StageBadge stageLabel={reunion.opportunity_stage_label} stageNum={reunion.opportunity_stage} stages={stages} />
                         )}
                       </TableCell>
                       <TableCell>
