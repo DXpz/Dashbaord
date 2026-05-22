@@ -101,11 +101,12 @@ const flatData = useMemo(() => {
       const cerradas = new Array(flatData.length).fill(0);
       const perdidas = new Array(flatData.length).fill(0);
       flatData.forEach((s: any, i: number) => {
-        if (s.cerradas !== undefined) {
+        if (i === cierreIndex && s.cerradas !== undefined) {
           cerradas[i] = s.cerradas;
           perdidas[i] = s.perdidas || 0;
         } else {
           cerradas[i] = s.value;
+          perdidas[i] = 0;
         }
       });
       return {
@@ -124,13 +125,14 @@ const flatData = useMemo(() => {
             label: 'Perdidas',
             data: perdidas,
             backgroundColor: flatData.map((s: any, i: number) =>
-              i === cierreIndex ? '#ef4444' : 'transparent'
+              i === cierreIndex ? '#ef4444' : STAGE_COLORS[i % STAGE_COLORS.length]
             ),
             borderRadius: 6,
             borderSkipped: false,
           },
         ],
         total,
+        isStacked: true,
       };
     }
 
@@ -143,6 +145,7 @@ const flatData = useMemo(() => {
         borderSkipped: false,
       }],
       total,
+      isStacked: false,
     };
   }, [flatData]);
 
@@ -274,7 +277,7 @@ const flatData = useMemo(() => {
               options={{
                 indexAxis: 'y' as const,
                 plugins: {
-                  legend: { display: chartData.datasets.length > 1 },
+                  legend: { display: chartData.isStacked },
                   tooltip: {
                     callbacks: {
                       label: (ctx: any) => {
@@ -289,7 +292,7 @@ const flatData = useMemo(() => {
                 },
                 scales: {
                   x: {
-                    stacked: chartData.datasets.length > 1,
+                    stacked: chartData.isStacked,
                     grid: { color: 'rgba(0,0,0,0.04)' },
                     ticks: {
                       font: { size: 11, family: 'Inter' },
@@ -297,7 +300,7 @@ const flatData = useMemo(() => {
                     },
                   },
                   y: {
-                    stacked: chartData.datasets.length > 1,
+                    stacked: chartData.isStacked,
                     grid: { display: false },
                     ticks: {
                       font: { size: 12, family: 'Inter', weight: '500' },
