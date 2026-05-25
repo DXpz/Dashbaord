@@ -90,6 +90,7 @@ export function useAdminDashboard(filters: FilterState | null) {
   const lastFetchRef = useRef<{ desde: string; hasta: string; pais: string } | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (!user) return;
     if (!filters || !filters.desde || !filters.hasta) {
       setLoading(true);
       setData(null);
@@ -159,6 +160,7 @@ export function useAsesores(filters: FilterState) {
   const [asesores, setAsesores] = useState<string[]>([]);
 
   useEffect(() => {
+    if (!user) return;
     if (!filters.desde || !filters.hasta) return;
     const fetchAsesores = async () => {
       try {
@@ -183,10 +185,12 @@ export function useListaAsesores(filters: FilterState) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     const fetch = async () => {
       setLoading(true);
       try {
         const pais = filters.pais || user?.country_code || undefined;
+        console.log('[useListaAsesores] fetching with pais:', pais);
         const result = await API.listaAsesores(filters.desde, filters.hasta, undefined, pais);
         const arr = Array.isArray(result) ? result : (result?.asesores || result?.items || []);
         setData(arr);
@@ -262,6 +266,7 @@ export function useReuniones(filters: FilterState) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchReuniones = useCallback(async () => {
+    if (!user) return;
     if (!filters.desde || !filters.hasta) return;
     setLoading(true);
     setError(null);
@@ -297,6 +302,7 @@ export function useAllLeads(filters: FilterState) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user) return;
     const fetchLeads = async () => {
       setLoading(true);
       setError(null);
@@ -325,6 +331,7 @@ export function useFuentes(filters: FilterState) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     const fetchFuentes = async () => {
       setLoading(true);
       try {
@@ -353,6 +360,7 @@ export function useMotivosPerdida(filters: FilterState) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     if (!filters.desde || !filters.hasta) return;
     let cancelled = false;
     const fetchMotivos = async () => {
@@ -384,6 +392,7 @@ export function useNegociacion(filters: FilterState) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
     const fetchNegociacion = async () => {
       setLoading(true);
@@ -411,6 +420,7 @@ export function usePropuestasPorRubro(filters: FilterState) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
     const fetchPropuestas = async () => {
       setLoading(true);
@@ -428,7 +438,7 @@ export function usePropuestasPorRubro(filters: FilterState) {
     };
     fetchPropuestas();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.country_code]);
 
   return { data, loading };
 }
