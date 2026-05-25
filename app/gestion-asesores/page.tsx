@@ -41,12 +41,14 @@ export default function GestionAsesoresPage() {
   const AsesoresOptions = useMemo(() => asesoresList.map((a: string) => ({ value: a, label: a })), [asesoresList]);
 
   const fetchAdvisors = async () => {
+    if (!user) return;
     setLoading(true);
     try {
       const params: Record<string, any> = {};
       if (user?.country_code) {
         params.pais = user.country_code;
       }
+      console.log('Fetching advisors with params:', params);
       const data = await API.advisorsList(params);
       setAdvisors(Array.isArray(data) ? data : data?.advisors || []);
     } catch (err) {
@@ -58,7 +60,7 @@ export default function GestionAsesoresPage() {
 
   useEffect(() => { 
     fetchAdvisors();
-  }, [user?.country_code]);
+  }, [user?.country_code, user]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
