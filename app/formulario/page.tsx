@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Search, X, RotateCcw, Plus, Trash2 } from 'lucide-react';
 import { Shell } from '@/components/layout/Shell';
 import { useAdminDashboard, useConnectionStatus, useFilters, useAllLeads } from '@/hooks';
+import { useAuth } from '@/lib/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNotification } from '@/components/ui/notification';
 
@@ -20,6 +21,7 @@ interface LeadOption {
 }
 
 export default function FormularioPage() {
+  const { user } = useAuth();
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading: dashboardLoading } = useAdminDashboard(filters);
   const connectionStatus = useConnectionStatus();
@@ -35,7 +37,7 @@ export default function FormularioPage() {
   const [deleteReason, setDeleteReason] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: 'SV' });
+  const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: user?.country_code || 'SV' });
   const [showReopenDialog, setShowReopenDialog] = useState(false);
 
   const { showSuccess, showError } = useNotification();
@@ -196,7 +198,7 @@ const url = isHttps
       if (res.ok && data.ok) {
         showSuccess(`Lead ${data.client_id} creado - Asesor: ${data.advisor_name || 'Asignado'}`);
         setShowCreateModal(false);
-        setNewLead({ nombre: '', correo: '', telefono: '', pais: 'SV' });
+        setNewLead({ nombre: '', correo: '', telefono: '', pais: user?.country_code || 'SV' });
       } else if (data.already_existed) {
         showSuccess(`Lead ${data.client_id} ya existía`);
         setShowCreateModal(false);
