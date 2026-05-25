@@ -329,9 +329,6 @@ export default function GestionAsesoresPage() {
                   <option value="">Seleccionar país</option>
                   <option value="SV">El Salvador (SV)</option>
                   <option value="GT">Guatemala (GT)</option>
-                  <option value="HN">Honduras (HN)</option>
-                  <option value="CR">Costa Rica (CR)</option>
-                  <option value="PA">Panamá (PA)</option>
                 </select>
               </div>
               <div className="space-y-2">
