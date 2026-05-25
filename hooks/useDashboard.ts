@@ -155,13 +155,15 @@ export function useConnectionStatus() {
 }
 
 export function useAsesores(filters: FilterState) {
+  const { user } = useAuth();
   const [asesores, setAsesores] = useState<string[]>([]);
 
   useEffect(() => {
     if (!filters.desde || !filters.hasta) return;
     const fetchAsesores = async () => {
       try {
-        const result = await API.listaAsesores(filters.desde, filters.hasta, filters.asesor || undefined, filters.pais || undefined);
+        const pais = filters.pais || user?.country_code || undefined;
+        const result = await API.listaAsesores(filters.desde, filters.hasta, filters.asesor || undefined, pais);
         if (Array.isArray(result)) {
           setAsesores(result.map((a: any) => typeof a === 'string' ? a : a.nombre || a.nombre_vendedor || '').filter(Boolean));
         }
@@ -170,12 +172,13 @@ export function useAsesores(filters: FilterState) {
       }
     };
     fetchAsesores();
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.country_code]);
 
   return asesores;
 }
 
 export function useListaAsesores(filters: FilterState) {
+  const { user } = useAuth();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -183,7 +186,8 @@ export function useListaAsesores(filters: FilterState) {
     const fetch = async () => {
       setLoading(true);
       try {
-        const result = await API.listaAsesores(filters.desde, filters.hasta, undefined, filters.pais || undefined);
+        const pais = filters.pais || user?.country_code || undefined;
+        const result = await API.listaAsesores(filters.desde, filters.hasta, undefined, pais);
         const arr = Array.isArray(result) ? result : (result?.asesores || result?.items || []);
         setData(arr);
       } catch (err) {
@@ -194,7 +198,7 @@ export function useListaAsesores(filters: FilterState) {
       }
     };
     fetch();
-  }, [filters.desde, filters.hasta, filters.pais]);
+  }, [filters.desde, filters.hasta, filters.pais, user?.country_code]);
 
   return { data, loading };
 }
@@ -287,6 +291,7 @@ export function useReuniones(filters: FilterState) {
 }
 
 export function useAllLeads(filters: FilterState) {
+  const { user } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -298,7 +303,8 @@ export function useAllLeads(filters: FilterState) {
       try {
         const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
         const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
-        const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, {});
+        const pais = filters.pais || user?.country_code;
+        const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, { pais });
         const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
         setLeads(Array.isArray(list) ? list : []);
       } catch (err: any) {
@@ -308,12 +314,13 @@ export function useAllLeads(filters: FilterState) {
       }
     };
     fetchLeads();
-  }, [filters.desde, filters.hasta, filters.pais]);
+  }, [filters.desde, filters.hasta, filters.pais, user?.country_code]);
 
   return { leads, loading, error };
 }
 
 export function useFuentes(filters: FilterState) {
+  const { user } = useAuth();
   const [fuentes, setFuentes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -323,7 +330,8 @@ export function useFuentes(filters: FilterState) {
       try {
         const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
         const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
-        const result = await API.fuentes(desde ?? '', hasta ?? '', {});
+        const pais = filters.pais || user?.country_code;
+        const result = await API.fuentes(desde ?? '', hasta ?? '', { pais });
         const list = result?.fuentes || result?.items || result || [];
         setFuentes(Array.isArray(list) ? list : []);
       } catch (err) {
@@ -334,12 +342,13 @@ export function useFuentes(filters: FilterState) {
       }
     };
     fetchFuentes();
-  }, [filters.desde, filters.hasta, filters.pais]);
+  }, [filters.desde, filters.hasta, filters.pais, user?.country_code]);
 
   return { fuentes, loading };
 }
 
 export function useMotivosPerdida(filters: FilterState) {
+  const { user } = useAuth();
   const [data, setData] = useState<{ motivos: any[]; categorias: any[]; categorias_globales: any[] }>({ motivos: [], categorias: [], categorias_globales: [] });
   const [loading, setLoading] = useState(false);
 
@@ -349,7 +358,8 @@ export function useMotivosPerdida(filters: FilterState) {
     const fetchMotivos = async () => {
       setLoading(true);
       try {
-        const json = await API.motivosPerdida(filters.desde, filters.hasta, 50, filters.asesor || undefined, filters.pais || undefined);
+        const pais = filters.pais || user?.country_code || undefined;
+        const json = await API.motivosPerdida(filters.desde, filters.hasta, 50, filters.asesor || undefined, pais);
         if (cancelled) return;
         const motivos = Array.isArray(json.motivos) ? json.motivos : [];
         const categorias = Array.isArray(json.categorias) ? json.categorias : [];
@@ -363,12 +373,13 @@ export function useMotivosPerdida(filters: FilterState) {
     };
     fetchMotivos();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.country_code]);
 
   return { motivos: data.motivos, categorias: data.categorias, categorias_globales: data.categorias_globales, loading };
 }
 
 export function useNegociacion(filters: FilterState) {
+  const { user } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -377,7 +388,8 @@ export function useNegociacion(filters: FilterState) {
     const fetchNegociacion = async () => {
       setLoading(true);
       try {
-        const json = await API.negociacion(filters.desde, filters.hasta, filters.asesor || undefined, filters.pais || undefined);
+        const pais = filters.pais || user?.country_code || undefined;
+        const json = await API.negociacion(filters.desde, filters.hasta, filters.asesor || undefined, pais);
         if (cancelled) return;
         setData(json);
       } catch (err) {
@@ -388,12 +400,13 @@ export function useNegociacion(filters: FilterState) {
     };
     fetchNegociacion();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.country_code]);
 
   return { data, loading };
 }
 
 export function usePropuestasPorRubro(filters: FilterState) {
+  const { user } = useAuth();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -402,7 +415,8 @@ export function usePropuestasPorRubro(filters: FilterState) {
     const fetchPropuestas = async () => {
       setLoading(true);
       try {
-        const json = await API.propuestasPorRubro(filters.desde, filters.hasta, 'rubro', filters.asesor || undefined, filters.pais || undefined);
+        const pais = filters.pais || user?.country_code || undefined;
+        const json = await API.propuestasPorRubro(filters.desde, filters.hasta, 'rubro', filters.asesor || undefined, pais);
         if (cancelled) return;
         const arr = json.propuestas_por_rubro || json.items || json || [];
         setData(Array.isArray(arr) ? arr : []);
