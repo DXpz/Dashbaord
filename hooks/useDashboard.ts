@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { API } from '@/services/api';
+import { useAuth } from '@/lib/auth-context';
 
 export interface FilterState {
   desde: string;
@@ -82,6 +83,7 @@ export function useDashboard(filters: FilterState | null) {
 }
 
 export function useAdminDashboard(filters: FilterState | null) {
+  const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +96,8 @@ export function useAdminDashboard(filters: FilterState | null) {
       return;
     }
 
-    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais: filters.pais };
+    const pais = filters.pais || user?.country_code || '';
+    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais };
     if (lastFetchRef.current?.desde === filterKey.desde &&
         lastFetchRef.current?.hasta === filterKey.hasta &&
         lastFetchRef.current?.pais === filterKey.pais) {
@@ -105,11 +108,11 @@ export function useAdminDashboard(filters: FilterState | null) {
     setLoading(true);
     setError(null);
     try {
-      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais: filters.pais });
+      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais });
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
-        { pais: filters.pais }
+        { pais }
       );
       console.log('[useAdminDashboard] result keys:', Object.keys(result || {}));
       setData(result as DashboardData);
@@ -120,7 +123,7 @@ export function useAdminDashboard(filters: FilterState | null) {
     } finally {
       setLoading(false);
     }
-  }, [filters?.desde, filters?.hasta, filters?.pais]);
+  }, [filters?.desde, filters?.hasta, filters?.pais, user?.country_code]);
 
   useEffect(() => {
     fetchData();
@@ -249,6 +252,7 @@ export function useStages() {
 }
 
 export function useReuniones(filters: FilterState) {
+  const { user } = useAuth();
   const [reuniones, setReuniones] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -260,8 +264,9 @@ export function useReuniones(filters: FilterState) {
     try {
       const desde = `${filters.desde}T00:00:00`;
       const hasta = `${filters.hasta}T23:59:59.999`;
-      console.log('[useReuniones] fetching:', { desde, hasta, pais: filters.pais });
-      const result = await API.reuniones(desde, hasta, 200, 0, {});
+      const pais = filters.pais || user?.country_code;
+      console.log('[useReuniones] fetching:', { desde, hasta, pais });
+      const result = await API.reuniones(desde, hasta, 200, 0, { pais });
       console.log('[useReuniones] raw result:', result);
       const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
       console.log('[useReuniones] setReuniones:', list.length, 'items');
@@ -272,7 +277,7 @@ export function useReuniones(filters: FilterState) {
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais]);
+  }, [filters.desde, filters.hasta, filters.pais, user?.country_code]);
 
   useEffect(() => {
     fetchReuniones();
