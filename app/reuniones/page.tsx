@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { useReuniones, useConnectionStatus, useAsesores, useFilters, useAdvisorsForEdit, useStages } from '@/hooks';
+import { useAuth } from '@/lib/auth-context';
 import { API } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -246,6 +247,7 @@ return (
 
 export default function ReunionesPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
+  const { user } = useAuth();
   const { reuniones, loading, error, refetch } = useReuniones(filters);
   const connectionStatus = useConnectionStatus();
   const asesoresList = useAsesores(filters);
@@ -256,7 +258,7 @@ export default function ReunionesPage() {
   const [saving, setSaving] = useState(false);
   const [editedRows, setEditedRows] = useState<Record<string, any>>({});
   const [sortAsc, setSortAsc] = useState(false);
-  const editAdvisors = useAdvisorsForEdit(filters);
+  const editAdvisors = useAdvisorsForEdit(filters, user?.country_code);
   const stages = useStages();
 
   const AsesoresOptions = useMemo(() => {

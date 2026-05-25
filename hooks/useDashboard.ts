@@ -196,14 +196,19 @@ export function useListaAsesores(filters: FilterState) {
   return { data, loading };
 }
 
-export function useAdvisorsForEdit(filters: FilterState) {
+export function useAdvisorsForEdit(filters: FilterState, countryCode?: string) {
   const [advisors, setAdvisors] = useState<{id: number; name: string}[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     const fetchAdvisors = async () => {
       try {
-        const data = await API.advisorsList({ activo: undefined });
+        const params: Record<string, any> = { activo: undefined };
+        const pais = countryCode || filters.pais;
+        if (pais) {
+          params.pais = pais;
+        }
+        const data = await API.advisorsList(params);
         if (cancelled) return;
         const list = Array.isArray(data) ? data : data?.advisors || [];
         const mapped = list.map((a: any) => ({
@@ -217,7 +222,7 @@ export function useAdvisorsForEdit(filters: FilterState) {
     };
     fetchAdvisors();
     return () => { cancelled = true; };
-  }, []);
+  }, [filters.pais, countryCode]);
 
   return advisors;
 }
