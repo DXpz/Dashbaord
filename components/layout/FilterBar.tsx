@@ -66,8 +66,6 @@ export function FilterBar({
         const parsed = JSON.parse(saved);
         if (parsed.desde) onFilterChange('desde', parsed.desde);
         if (parsed.hasta) onFilterChange('hasta', parsed.hasta);
-        if (parsed.pais) onFilterChange('pais', parsed.pais);
-        if (parsed.asesor) onFilterChange('asesor', parsed.asesor);
       } catch {}
     }
   }, []);
@@ -116,27 +114,6 @@ export function FilterBar({
           ))}
         </select>
       </div>
-
-      <select
-        value={filters.pais}
-        onChange={(e) => persistFilters('pais', e.target.value)}
-        className="text-sm text-[#35325B] bg-transparent outline-none cursor-pointer"
-      >
-        <option value="">País</option>
-        <option value="SV">El Salvador</option>
-        <option value="GT">Guatemala</option>
-      </select>
-
-      <select
-        value={filters.asesor}
-        onChange={(e) => persistFilters('asesor', e.target.value)}
-        className="text-sm text-[#35325B] bg-transparent outline-none cursor-pointer"
-      >
-        <option value="">Asesor</option>
-        {asesores.map((a) => (
-          <option key={a.value} value={a.value}>{a.label}</option>
-        ))}
-      </select>
 
       <div className="flex items-center gap-2 ml-auto">
         <button
