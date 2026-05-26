@@ -5,8 +5,7 @@ import { Shell } from '@/components/layout/Shell';
 import { API } from '@/services/api';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFilters } from '@/hooks';
-import { useConnectionStatus } from '@/hooks/useDashboard';
+import { useFilters, useConnectionStatus, useAuth } from '@/hooks';
 
 interface Advisor {
   id: number;
@@ -67,15 +66,17 @@ function AdvisorRow({ advisor, showEmail = false }: { advisor: Advisor; showEmai
 export default function RoundRobinPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const connectionStatus = useConnectionStatus();
+  const { user } = useAuth();
   const [data, setData] = useState<RoundRobinData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const result = await API.roundRobin('SV', true);
+      const result = await API.roundRobin(user.country_code, true);
       setData(result as RoundRobinData);
     } catch (err: any) {
       setError(err.message || 'Error al cargar datos');
@@ -86,7 +87,7 @@ export default function RoundRobinPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]);
 
   const chartData = useMemo(() => {
     if (!data) return null;
