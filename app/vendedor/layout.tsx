@@ -1,16 +1,18 @@
 'use client';
 
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { VendedorFiltersProvider, useVendedorFilters } from '@/lib/vendedor-filters';
-import { LayoutDashboard, Calendar, FileText, LogOut, X, Menu } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, LogOut, X, Menu, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { href: '/vendedor', label: 'Resumen', icon: LayoutDashboard },
   { href: '/vendedor/reuniones', label: 'Mis Reuniones', icon: Calendar },
   { href: '/vendedor/formulario', label: 'Formulario', icon: FileText },
+  { href: '/change-password', label: 'Cambiar contraseña', icon: Lock },
 ];
 
 const EDGE_TRIGGER_WIDTH = 40;
@@ -156,7 +158,7 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
               const active = pathname === href;
               return (
-                <a
+                <Link
                   key={href}
                   href={href}
                   onClick={handleClose}
@@ -169,7 +171,7 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
                 >
                   <Icon className="h-4 w-4" />
                   {label}
-                </a>
+                </Link>
               );
             })}
           </nav>
