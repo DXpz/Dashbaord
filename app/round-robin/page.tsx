@@ -5,7 +5,8 @@ import { Shell } from '@/components/layout/Shell';
 import { API } from '@/services/api';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFilters, useConnectionStatus, useAuth } from '@/hooks';
+import { useFilters, useConnectionStatus } from '@/hooks';
+import { useAuth } from '@/lib/auth-context';
 
 interface Advisor {
   id: number;
