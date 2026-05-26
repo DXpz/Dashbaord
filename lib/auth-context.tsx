@@ -49,7 +49,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, [checkAuth]);
 
-  const login = async (username: string, password: string): Promise<{ ok: boolean; error?: string }> => {
+  const login = async (username: string, password: string): Promise<{ ok: boolean; error?: string; mustChangePassword?: boolean }> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -58,8 +58,13 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       });
       const data = await res.json();
       if (!res.ok) return { ok: false, error: data.detail || data.error || 'Error al iniciar sesión' };
-      setUser(data.user || data.data || data);
-      router.push((data.user || data.data || data).role === 'advisor' ? '/vendedor' : '/');
+      const userData = data.user || data.data || data;
+      if (userData.must_change_password) {
+        setUser(userData);
+        return { ok: true, mustChangePassword: true };
+      }
+      setUser(userData);
+      router.push(userData.role === 'advisor' ? '/vendedor' : '/');
       return { ok: true };
     } catch (e) {
       return { ok: false, error: 'No se pudo conectar al servidor' };

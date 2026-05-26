@@ -16,6 +16,7 @@ import {
   BarChart3,
   CircleDot,
   LogOut,
+  Lock,
 } from 'lucide-react';
 
 const navItems = [
@@ -157,6 +158,19 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 </Link>
               );
             })}
+            <Link
+              href="/change-password"
+              onClick={handleClose}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                pathname === '/change-password'
+                  ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+                  : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+              )}
+            >
+              <Lock className="w-4 h-4" />
+              <span>Cambiar contraseña</span>
+            </Link>
           </nav>
 
           <div className="mt-4 px-2">

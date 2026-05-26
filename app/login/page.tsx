@@ -19,7 +19,11 @@ export default function LoginPage() {
     setError('');
     const result = await login(email, password);
     if (result.ok) {
-      router.push('/');
+      if (result.mustChangePassword) {
+        router.push('/change-password');
+      } else {
+        router.push('/');
+      }
     } else {
       setError(result.error || 'Error al iniciar sesión');
       setLoading(false);
@@ -76,7 +80,7 @@ export default function LoginPage() {
                   <input type="checkbox" className="w-3.5 h-3.5 rounded border-[#EEEEEC] accent-[#1F1D3D]" />
                   <span className="text-[#35325B]">Recordarme</span>
                 </label>
-                <a href="#" className="text-[#1F1D3D] hover:text-[#35325B] transition-colors">
+                <a href="/forgot-password" className="text-[#1F1D3D] hover:text-[#35325B] transition-colors">
                   ¿Olvidaste tu contraseña?
                 </a>
               </div>
