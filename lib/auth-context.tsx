@@ -16,7 +16,7 @@ interface AuthContextType {
   user: ApiUser | null;
   loading: boolean;
   checked: boolean;
-  login: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  login: (username: string, password: string) => Promise<{ ok: boolean; error?: string; mustChangePassword?: boolean }>;
   logout: () => Promise<void>;
 }
 
