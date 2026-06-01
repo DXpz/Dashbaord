@@ -14,7 +14,7 @@ const MONTHS = [
 function getDefaultDates() {
   const currentYear = new Date().getFullYear();
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-  const lastDay = new Date(currentYear, parseInt(currentMonth) - 1, 0).getDate();
+  const lastDay = new Date(currentYear, parseInt(currentMonth), 0).getDate();
   return {
     desde: `${currentYear}-${currentMonth}-01`,
     hasta: `${currentYear}-${currentMonth}-${String(lastDay).padStart(2, '0')}`,
