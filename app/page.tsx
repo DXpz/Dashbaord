@@ -25,17 +25,17 @@ export default function HomePage() {
   const { user } = useAuth();
   const [showCerradas, setShowCerradas] = useState(true);
   const [showPerdidas, setShowPerdidas] = useState(true);
-  const [asesorFilter, setAsesorFilter] = useState('');
+  const [asesorFilter, setAsesorFilter] = useState('__all__');
   const [paisFilter, setPaisFilter] = useState('');
   const asesoresList = useAsesores(filters);
-  const { equipos } = useEquiposCount({ ...filters, asesor: asesorFilter, pais: paisFilter });
-  const AsesoresOptions = useMemo(() => [{ value: '', label: 'Todos' }, ...asesoresList.map((a) => ({ value: a, label: a }))], [asesoresList]);
+  const { equipos } = useEquiposCount({ ...filters, asesor: asesorFilter === '__all__' ? '' : asesorFilter, pais: paisFilter });
+  const AsesoresOptions = useMemo(() => [{ value: '__all__', label: 'Todos' }, ...asesoresList.map((a) => ({ value: a, label: a }))], [asesoresList]);
 
   const showPaisFilter = user?.country_code === 'SV';
 
   const handleAsesorChange = (value: string) => {
     setAsesorFilter(value);
-    handleFilterChange('asesor', value);
+    handleFilterChange('asesor', value === '__all__' ? '' : value);
   };
 
   const handlePaisChange = (value: string) => {
