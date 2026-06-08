@@ -238,6 +238,7 @@ interface FormularioProps {
   clientId: string;
   initialStage?: FormStage;
   onClose?: () => void;
+  readOnly?: boolean;
 }
 
 interface LoadedData {
@@ -251,7 +252,7 @@ interface LoadedData {
   history: any[];
 }
 
-export function Formulario({ clientId, initialStage = 'REUNION', onClose }: FormularioProps) {
+export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOnly = false }: FormularioProps) {
   const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [requiresDemo, setRequiresDemo] = useState(false);
@@ -430,6 +431,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   };
 
   const handleChange = (fieldId: string, value: string) => {
+    if (readOnly) return;
     setValidationError(null);
     const stageNum = stages[currentStageIndex]?.stageNumber;
     setStageData(prev => ({
@@ -447,6 +449,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   };
 
   const handleSave = async () => {
+    if (readOnly) return;
     const validation = validateStage(currentStageIndex);
     if (!validation.valid) {
       setValidationError('Completa todos los campos obligatorios antes de guardar.');
@@ -562,6 +565,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   };
 
   const handleCloseAsLost = async () => {
+    if (readOnly) return;
     if (!lostReason.trim() || !lostDescription.trim()) {
       showError('Selecciona un motivo y escribe una descripción');
       return;
@@ -629,6 +633,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   };
 
   const handleCloseAsWon = async () => {
+    if (readOnly) return;
     setClosing(true);
     try {
       const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
@@ -747,12 +752,13 @@ const url = isHttps
                     {field.label}
                     {field.required && <span className="text-[#c8151b] ml-0.5">*</span>}
                   </label>
-                  <FieldInput
-                    field={field}
-                    value={String(currentData[field.id] || '')}
-                    onChange={handleChange}
-                  />
-                  {field.id === 'industria_sector' && currentData['industria_sector'] === 'otro' && (
+                    <FieldInput
+                      field={field}
+                      value={String(currentData[field.id] || '')}
+                      onChange={handleChange}
+                      readOnly={readOnly}
+                    />
+                  {field.id === 'industria_sector' && currentData['industria_sector'] === 'otro' && !readOnly && (
                     <div className="space-y-1.5">
                       <label htmlFor="field-industria_otro" className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
                         Especificar Industria
@@ -791,7 +797,7 @@ const url = isHttps
           </span>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {!isClosed && (
+            {!readOnly && !isClosed && (
               <>
                 <div className="relative">
                   <Button
@@ -833,6 +839,7 @@ const url = isHttps
         </div>
       </div>
 
+      {!readOnly && (
       <Dialog open={showLostDialog} onOpenChange={(open) => {
           if (!open) {
             setShowLostDialog(false);
@@ -894,6 +901,7 @@ const url = isHttps
         </div>
         </DialogContent>
       </Dialog>
+      )}
     </div>
   );
 }
