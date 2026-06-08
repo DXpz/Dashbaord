@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API } from '@/services/api';
-import { FilterState } from './useFilters';
+import { FiltersState } from './useFilters';
 
-export function useEquiposCount(filters: FilterState) {
+export function useEquiposCount(filters: FiltersState) {
   const { user } = useAuth();
   const [equipos, setEquipos] = useState(0);
   const [loading, setLoading] = useState(false);
