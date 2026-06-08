@@ -144,8 +144,8 @@ export function useAdminDashboard(filters: FilterState | null) {
             atendidos_por_lider: 0,
             atendidos_por_gerente: 0,
           },
-          stages: [],
-          leads_por_stage: [],
+          stages: asesorData.stages || [],
+          leads_por_stage: asesorData.leads_por_stage || [],
         };
       } else {
         result = await API.dashboard(
