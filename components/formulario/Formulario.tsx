@@ -64,7 +64,7 @@ const REUNION_FIELDS: StageField[] = [
     { value: 'no', label: 'No' },
   ]},
   { id: 'fecha_reunion', label: 'Fecha de Reunión', type: 'date', required: true },
-  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios de la reunión' },
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: true, placeholder: 'Observaciones y comentarios de la reunión' },
   { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
@@ -95,7 +95,7 @@ const DEMO_FIELDS: StageField[] = [
     { value: 'si', label: 'Sí' },
     { value: 'no', label: 'No' },
   ]},
-  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios de la demo' },
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: true, placeholder: 'Observaciones y comentarios de la demo' },
   { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
@@ -138,7 +138,7 @@ const PROPUESTA_FIELDS: StageField[] = [
     { value: 'whatsapp', label: 'WhatsApp' },
     { value: 'otro', label: 'Otro' },
   ]},
-  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios de la propuesta' },
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: true, placeholder: 'Observaciones y comentarios de la propuesta' },
   { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
@@ -166,7 +166,7 @@ const SEGUIMIENTO_FIELDS: StageField[] = [
     { value: 'en_riesgo', label: 'En riesgo' },
   ]},
   { id: 'proximo_paso', label: 'Próximo Paso', type: 'textarea', required: true, placeholder: 'Describe el siguiente paso' },
-  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: false, placeholder: 'Observaciones y comentarios del seguimiento' },
+  { id: 'retroalimentacion', label: 'Retroalimentación', type: 'textarea', required: true, placeholder: 'Observaciones y comentarios del seguimiento' },
   { id: 'notes', label: 'Notas', type: 'textarea', required: false, placeholder: 'Notas adicionales' },
 ];
 
@@ -178,7 +178,7 @@ const CIERRE_FIELDS: StageField[] = [
     { value: 'en_pausa', label: 'En pausa' },
   ]},
   { id: 'fecha_cierre_real', label: 'Fecha de Cierre', type: 'date', required: true },
-  { id: 'retroalimentacion', label: 'Retroalimentación / Razón', type: 'textarea', required: false, placeholder: 'Razón del cierre o comentarios finales' },
+  { id: 'retroalimentacion', label: 'Retroalimentación / Razón', type: 'textarea', required: true, placeholder: 'Razón del cierre o comentarios finales' },
 ];
 
 function buildStages(requiresDemo: boolean): StageConfig[] {
@@ -411,14 +411,14 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
     if (nextIndex > currentStageIndex) {
       const currentValidation = validateStage(currentStageIndex);
       if (!currentValidation.valid) {
-        setValidationError(`Completa "${currentValidation.firstMissing}" antes de continuar.`);
+        setValidationError('Completa todos los campos obligatorios antes de continuar.');
         return;
       }
 
       for (let i = 0; i < nextIndex; i += 1) {
         const stepValidation = validateStage(i);
         if (!stepValidation.valid) {
-          setValidationError(`Completa "${stepValidation.firstMissing}" antes de avanzar.`);
+          setValidationError('Completa todos los campos obligatorios antes de continuar.');
           setCurrentStageIndex(i);
           return;
         }
@@ -449,7 +449,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   const handleSave = async () => {
     const validation = validateStage(currentStageIndex);
     if (!validation.valid) {
-      setValidationError(`Completa "${validation.firstMissing}" antes de guardar.`);
+      setValidationError('Completa todos los campos obligatorios antes de guardar.');
       return;
     }
 
