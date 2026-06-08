@@ -111,11 +111,50 @@ export function useAdminDashboard(filters: FilterState | null) {
     setError(null);
     try {
       console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor });
-      const result = await API.dashboard(
-        filters.desde,
-        filters.hasta,
-        { pais, nombre: filters.asesor || undefined }
-      );
+      let result: any;
+
+      if (filters.asesor) {
+        const asesorData = await API.asesor(filters.asesor, filters.desde, filters.hasta, pais);
+        const m = asesorData.metricas || {};
+        result = {
+          metricas: {
+            total_auditorias: m.total_leads_general || 0,
+            leads_aceptados: m.leads_aceptados || 0,
+            leads_rechazados: m.leads_rechazados || 0,
+            leads_pendientes_decision: m.leads_pendientes || 0,
+            reuniones_con_retro: m.reuniones_con_retro || 0,
+            reuniones_sin_retro: m.reuniones_sin_retro || 0,
+            propuestas_registradas: m.propuestas_registradas || 0,
+            total_propuestas: m.total_propuestas || 0,
+            seguimientos_registrados: m.seguimientos_registrados || 0,
+            ventas_cerradas: m.cerrados_ganados || 0,
+            ventas_perdidas: m.cerrados_perdidos || 0,
+            leads_no_agendados: 0,
+            atendidos_por_asesor: m.leads_aceptados || 0,
+            atendidos_por_lider: 0,
+            atendidos_por_gerente: 0,
+          },
+          resumen: {
+            lead_no_calificado: 0,
+            lead_calificado: m.leads_aceptados || 0,
+            total_comercial: m.leads_aceptados || 0,
+            total_lider: 0,
+            total_gerencial: 0,
+            atendidos_por_asesor: m.leads_aceptados || 0,
+            atendidos_por_lider: 0,
+            atendidos_por_gerente: 0,
+          },
+          stages: [],
+          leads_por_stage: [],
+        };
+      } else {
+        result = await API.dashboard(
+          filters.desde,
+          filters.hasta,
+          { pais }
+        );
+      }
+
       console.log('[useAdminDashboard] result keys:', Object.keys(result || {}));
       setData(result as DashboardData);
     } catch (err: any) {
