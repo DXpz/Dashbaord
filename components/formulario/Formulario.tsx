@@ -266,6 +266,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   const [lostReason, setLostReason] = useState('');
   const [lostDescription, setLostDescription] = useState('');
   const [isClosed, setIsClosed] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -379,7 +380,57 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
 
   const [stageData, setStageData] = useState<Record<number, Record<string, string | boolean>>>({});
 
+  const isFieldEmpty = (field: StageField, value: string) => {
+    if (field.type === 'select' || field.type === 'date' || field.type === 'number') return !String(value || '').trim();
+    return !String(value || '').trim();
+  };
+
+  const validateStage = (stageIndex: number) => {
+    const stage = stages[stageIndex];
+    if (!stage) return { valid: true, firstMissing: '' };
+
+    const data = stageData[stage.stageNumber] || {};
+
+    const missing = stage.fields.find((field) => {
+      if (!field.required) return false;
+      return isFieldEmpty(field, String(data[field.id] || ''));
+    });
+
+    if (missing) return { valid: false, firstMissing: missing.label };
+
+    if (stage.id === 'REUNION' && String(data.industria_sector || '') === 'otro' && !String(data.industria_otro || '').trim()) {
+      return { valid: false, firstMissing: 'Especificar Industria' };
+    }
+
+    return { valid: true, firstMissing: '' };
+  };
+
+  const handleStageChange = (nextIndex: number) => {
+    if (nextIndex === currentStageIndex) return;
+
+    if (nextIndex > currentStageIndex) {
+      const currentValidation = validateStage(currentStageIndex);
+      if (!currentValidation.valid) {
+        setValidationError(`Completa "${currentValidation.firstMissing}" antes de continuar.`);
+        return;
+      }
+
+      for (let i = 0; i < nextIndex; i += 1) {
+        const stepValidation = validateStage(i);
+        if (!stepValidation.valid) {
+          setValidationError(`Completa "${stepValidation.firstMissing}" antes de avanzar.`);
+          setCurrentStageIndex(i);
+          return;
+        }
+      }
+    }
+
+    setValidationError(null);
+    setCurrentStageIndex(nextIndex);
+  };
+
   const handleChange = (fieldId: string, value: string) => {
+    setValidationError(null);
     const stageNum = stages[currentStageIndex]?.stageNumber;
     setStageData(prev => ({
       ...prev,
@@ -396,6 +447,12 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose }: Form
   };
 
   const handleSave = async () => {
+    const validation = validateStage(currentStageIndex);
+    if (!validation.valid) {
+      setValidationError(`Completa "${validation.firstMissing}" antes de guardar.`);
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
@@ -646,13 +703,13 @@ const url = isHttps
         </div>
 
         {!loading && (
-          <div className="flex border-b border-[#EEEEEC] overflow-x-auto min-h-[44px]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-nowrap border-b border-[#EEEEEC] min-h-[44px]">
             {stages.map((stage, idx) => (
               <button
                 key={stage.id}
-                onClick={() => setCurrentStageIndex(idx)}
+                onClick={() => handleStageChange(idx)}
                 className={cn(
-                  'py-3 px-4 text-xs font-medium transition-colors border-b-2 whitespace-nowrap shrink-0',
+                  'py-3 px-3 text-xs font-medium transition-colors border-b-2 whitespace-nowrap min-w-0 text-center lg:flex-1',
                   idx === currentStageIndex
                     ? 'text-[#1F1D3D]'
                     : 'border-transparent text-[#B5B5AE] hover:text-[#35325B]',
@@ -666,6 +723,11 @@ const url = isHttps
         )}
 
         <div className="flex-1 overflow-y-auto px-4 py-4">
+          {validationError && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              {validationError}
+            </div>
+          )}
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-[#B5B5AE]" />
@@ -675,9 +737,9 @@ const url = isHttps
               <p className="text-red-600 text-sm font-medium">{error}</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {currentStage?.fields.map((field) => (
-                <div key={field.id} className="space-y-1.5">
+                <div key={field.id} className={cn('space-y-1.5', field.type === 'textarea' ? 'md:col-span-2' : '')}>
                   <label htmlFor={`field-${field.id}`} className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
                     {field.label}
                     {field.required && <span className="text-[#c8151b] ml-0.5">*</span>}
@@ -713,7 +775,7 @@ const url = isHttps
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setCurrentStageIndex(prev => Math.max(0, prev - 1))}
+            onClick={() => handleStageChange(Math.max(0, currentStageIndex - 1))}
             disabled={currentStageIndex === 0 || loading}
             className="gap-1.5 text-[#35325B]"
           >
@@ -757,7 +819,7 @@ const url = isHttps
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setCurrentStageIndex(prev => Math.min(stages.length - 1, prev + 1))}
+              onClick={() => handleStageChange(Math.min(stages.length - 1, currentStageIndex + 1))}
               disabled={currentStageIndex === stages.length - 1 || loading}
               className="gap-1.5 text-[#35325B]"
             >
