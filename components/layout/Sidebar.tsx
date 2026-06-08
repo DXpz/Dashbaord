@@ -17,6 +17,7 @@ import {
   CircleDot,
   LogOut,
   Lock,
+  Info,
 } from 'lucide-react';
 
 const navItems = [
@@ -28,6 +29,7 @@ const navItems = [
   { href: '/origen-leads', label: 'Origen Leads', icon: Globe },
   { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
   { href: '/formulario', label: 'Formulario', icon: FileText },
+  { href: '/versiones', label: 'Versiones', icon: Info },
 ];
 
 const EDGE_TRIGGER_WIDTH = 40;
