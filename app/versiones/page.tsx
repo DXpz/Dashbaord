@@ -5,6 +5,18 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.1.1',
+    fecha: '2026-06-08',
+    cambios: [
+      'Formulario de actualización de lead más responsivo en móvil y escritorio',
+      'Validación por etapa: no permite avanzar sin completar campos obligatorios',
+      'Retroalimentación obligatoria y notas opcionales en todas las etapas',
+      'Encabezado del lead muestra también el nombre del asesor',
+      'Vista Reuniones recupera la columna de contacto con el teléfono del cliente',
+      'Filtro de asesor actualiza toda la vista del resumen con datos del asesor seleccionado',
+    ],
+  },
+  {
     version: '2.0.1',
     fecha: '2026-06-08',
     cambios: [
