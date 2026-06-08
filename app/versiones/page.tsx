@@ -11,14 +11,14 @@ const VERSIONES = [
       'Filtro de país por código de usuario (GT/SV) en todos los hooks',
       'Vista Round Robin con country_code dinámico',
       'Menú "Cambiar contraseña" en sidebar admin y vendedor',
-      'Fix: wait for user before fetching data (country code filter)',
+      'Fix: esperar user antes de hacer fetch para respetar country_code',
     ],
   },
   {
     version: '1.9.0',
     fecha: '2026-05-26',
     cambios: [
-      'CIERRE stacked bar chart con toggle Ganadas/Perdidas',
+      'Gráfico CIERRE stacked bar con toggle Ganadas/Perdidas',
       'Sidebar hamburger para mobile',
       'Filtro FilterBar simplificado (solo Mes/Año)',
       'Vista reuniones sin columna Etapa',
@@ -58,7 +58,7 @@ const VERSIONES = [
     version: '1.5.0',
     fecha: '2026-05-05',
     cambios: [
-      'Round Robin view con chart circular',
+      'Vista Round Robin con gráfico circular',
       'Inactivos round-robin',
       'Asignación manual por administrador',
     ],
@@ -85,7 +85,7 @@ const VERSIONES = [
     version: '1.2.0',
     fecha: '2026-04-15',
     cambios: [
-      'Vista Asesores con ranking y chart',
+      'Vista Asesores con ranking y gráfico',
       'Tabla detalle con tasas de aceptación/cierre',
       'Top 3 asesores',
     ],
