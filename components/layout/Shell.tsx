@@ -16,6 +16,7 @@ export function Shell({
   onLimpiar,
   asesores,
   connectionStatus,
+  showPaisFilter,
 }: {
   children: React.ReactNode;
   pageTitle: string;
@@ -30,6 +31,7 @@ export function Shell({
   onLimpiar: () => void;
   asesores: Array<{ value: string; label: string }>;
   connectionStatus: 'connected' | 'connecting' | 'error';
+  showPaisFilter?: boolean;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -58,6 +60,7 @@ export function Shell({
               onLimpiar={onLimpiar}
               asesores={asesores}
               connectionStatus={connectionStatus}
+              showPaisFilter={showPaisFilter}
             />
           </header>
           <div className="p-6">

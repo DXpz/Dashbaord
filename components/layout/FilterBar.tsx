@@ -15,6 +15,7 @@ interface FilterBarProps {
   onLimpiar: () => void;
   asesores: Array<{ value: string; label: string }>;
   connectionStatus: 'connected' | 'connecting' | 'error';
+  showPaisFilter?: boolean;
 }
 
 const MONTHS = [
@@ -49,10 +50,10 @@ function setMonth(month: string, year: string): { desde: string; hasta: string }
 export function FilterBar({
   filters,
   onFilterChange,
-  onFiltrar,
   onLimpiar,
   asesores,
   connectionStatus,
+  showPaisFilter = false,
 }: FilterBarProps) {
   const storageKey = 'dashboard_filters';
   const { month, year } = getMonthFromDate(filters.desde);
@@ -91,7 +92,7 @@ export function FilterBar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-4 py-4 px-6 border-b border-[#EEEEEC]">
+<div className="flex flex-wrap items-center gap-4 py-4 px-6 border-b border-[#EEEEEC]">
       <div className="flex items-center gap-2">
         <select
           value={month}
@@ -114,6 +115,29 @@ export function FilterBar({
           ))}
         </select>
       </div>
+
+      {showPaisFilter && (
+        <select
+          value={filters.pais || ''}
+          onChange={(e) => persistFilters('pais', e.target.value)}
+          className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+        >
+          <option value="">País</option>
+          <option value="SV">SV</option>
+          <option value="GT">GT</option>
+        </select>
+      )}
+
+      <select
+        value={filters.asesor || ''}
+        onChange={(e) => persistFilters('asesor', e.target.value)}
+        className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+      >
+        <option value="">Ejecutivo</option>
+        {asesores.map((a) => (
+          <option key={a.value} value={a.value}>{a.label}</option>
+        ))}
+      </select>
 
       <div className="flex items-center gap-2 ml-auto">
         <button

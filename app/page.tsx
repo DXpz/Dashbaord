@@ -7,7 +7,6 @@ import { useAuth } from '@/lib/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { ChartCard } from '@/components/charts/ChartCard';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const STAGE_COLORS = [
   '#1F1D3D',
@@ -25,23 +24,11 @@ export default function HomePage() {
   const { user } = useAuth();
   const [showCerradas, setShowCerradas] = useState(true);
   const [showPerdidas, setShowPerdidas] = useState(true);
-  const [asesorFilter, setAsesorFilter] = useState('__all__');
-  const [paisFilter, setPaisFilter] = useState('');
   const asesoresList = useAsesores(filters);
-  const { equipos } = useEquiposCount({ ...filters, asesor: asesorFilter === '__all__' ? '' : asesorFilter, pais: paisFilter });
-  const AsesoresOptions = useMemo(() => [{ value: '__all__', label: 'Todos' }, ...asesoresList.map((a) => ({ value: a, label: a }))], [asesoresList]);
+  const { equipos } = useEquiposCount(filters);
+  const AsesoresOptions = useMemo(() => (asesoresList || []).map((a: string) => ({ value: a, label: a })), [asesoresList]);
 
   const showPaisFilter = user?.country_code === 'SV';
-
-  const handleAsesorChange = (value: string) => {
-    setAsesorFilter(value);
-    handleFilterChange('asesor', value === '__all__' ? '' : value);
-  };
-
-  const handlePaisChange = (value: string) => {
-    setPaisFilter(value);
-    handleFilterChange('pais', value);
-  };
 
   const metricas = data?.metricas || {};
   const resumen = data?.resumen || {};
@@ -254,6 +241,7 @@ export default function HomePage() {
         onLimpiar={handleLimpiar}
         asesores={AsesoresOptions}
         connectionStatus={connectionStatus}
+        showPaisFilter={showPaisFilter}
       >
         <div className="space-y-6">
           <div className="flex flex-col lg:flex-row gap-4">
@@ -280,6 +268,7 @@ export default function HomePage() {
         onLimpiar={handleLimpiar}
         asesores={AsesoresOptions}
         connectionStatus={connectionStatus}
+        showPaisFilter={showPaisFilter}
       >
         <div className="flex items-center justify-center h-64">
           <p className="text-sm text-[#B5B5AE]">{error}</p>
@@ -297,6 +286,7 @@ export default function HomePage() {
       onLimpiar={handleLimpiar}
       asesores={AsesoresOptions}
       connectionStatus={connectionStatus}
+      showPaisFilter={showPaisFilter}
     >
       <div className="space-y-6">
         <div className="flex flex-col lg:flex-row gap-4">
@@ -351,27 +341,6 @@ export default function HomePage() {
               <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
             </div>
             <div className="flex items-center gap-4 flex-wrap">
-              {showPaisFilter && (
-                <Select value={paisFilter} onValueChange={handlePaisChange}>
-                  <SelectTrigger className="w-24 h-8 text-xs">
-                    <SelectValue placeholder="País" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SV">SV</SelectItem>
-                    <SelectItem value="GT">GT</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-              <Select value={asesorFilter} onValueChange={handleAsesorChange}>
-                <SelectTrigger className="w-36 h-8 text-xs">
-                  <SelectValue placeholder="Ejecutivo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AsesoresOptions.map((a) => (
-                    <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               {chartData.showToggle ? (
                 <div className="flex items-center gap-3">
                   <button
@@ -460,7 +429,7 @@ export default function HomePage() {
             options={{
               plugins: {
                 legend: { display: false },
- },
+              },
               scales: {
                 y: {
                   grid: { color: 'rgba(0,0,0,0.04)' },
