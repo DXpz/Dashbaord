@@ -5,6 +5,16 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.1.2',
+    fecha: '2026-06-08',
+    cambios: [
+      'Agregar columna Tipo Lead en vista Reuniones',
+      'Permitir cambiar el tipo de lead desde la tabla de Reuniones',
+      'Agregar filtro global por Calificado, No calificado y Pendiente',
+      'Propagar el filtro de tipo de lead a los reportes y métricas relacionadas',
+    ],
+  },
+  {
     version: '2.1.1',
     fecha: '2026-06-08',
     cambios: [
