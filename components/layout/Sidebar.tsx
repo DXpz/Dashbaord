@@ -32,8 +32,8 @@ const navItems = [
   { href: '/versiones', label: 'Versiones', icon: Info },
 ];
 
-const EDGE_TRIGGER_WIDTH = 40;
-const LEAVE_DELAY_MS = 1500;
+const EDGE_TRIGGER_WIDTH = 60;
+const LEAVE_DELAY_MS = 2000;
 
 interface SidebarProps {
   isOpen?: boolean;
