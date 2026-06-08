@@ -1,5 +1,7 @@
 'use client';
 
+import { Shell } from '@/components/layout/Shell';
+import { useFilters, useConnectionStatus } from '@/hooks';
 import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
@@ -111,64 +113,69 @@ const VERSIONES = [
 ];
 
 export default function VersionesPage() {
+  const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
+  const connectionStatus = useConnectionStatus();
+
   return (
-    <div className="min-h-screen bg-[#EEEEEC]">
-      <header className="bg-[#F5F5ED] border-b border-[#EEEEEC] px-6 py-4">
-        <h1 className="text-base font-semibold text-[#1F1D3D]">Versiones</h1>
-      </header>
+    <Shell
+      pageTitle="Versiones"
+      filters={filters}
+      onFilterChange={handleFilterChange}
+      onFiltrar={handleFiltrar}
+      onLimpiar={handleLimpiar}
+      asesores={[]}
+      connectionStatus={connectionStatus}
+    >
+      <div className="space-y-6 max-w-3xl">
+        <div className="bg-white border border-[#EEEEEC] p-6">
+          <h2 className="text-lg font-semibold text-[#1F1D3D] mb-1">Dashboard V5</h2>
+          <p className="text-sm text-[#B5B5AE]">Control de versiones y cambios realizados</p>
+        </div>
 
-      <main className="p-6">
-        <div className="space-y-6 max-w-3xl">
-          <div className="bg-white border border-[#EEEEEC] p-6">
-            <h2 className="text-lg font-semibold text-[#1F1D3D] mb-1">Dashboard V5</h2>
-            <p className="text-sm text-[#B5B5AE]">Control de versiones y cambios realizados</p>
-          </div>
+        <div className="space-y-4">
+          {VERSIONES.map((v) => (
+            <div key={v.version} className="bg-white border border-[#EEEEEC]">
+              <div className="px-4 py-3 border-b border-[#EEEEEC] flex items-center gap-2">
+                <span className="text-sm font-semibold text-[#1F1D3D]">v{v.version}</span>
+                <span className="text-xs text-[#B5B5AE]">•</span>
+                <span className="text-xs text-[#B5B5AE]">{v.fecha}</span>
+              </div>
+              <div className="p-4">
+                <ul className="space-y-2">
+                  {v.cambios.map((c, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-[#35325B]">
+                      <span className="text-[#B5B5AE] mt-1">•</span>
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
 
-          <div className="space-y-4">
-            {VERSIONES.map((v) => (
-              <div key={v.version} className="bg-white border border-[#EEEEEC]">
-                <div className="px-4 py-3 border-b border-[#EEEEEC] flex items-center gap-2">
-                  <span className="text-sm font-semibold text-[#1F1D3D]">v{v.version}</span>
-                  <span className="text-xs text-[#B5B5AE]">•</span>
-                  <span className="text-xs text-[#B5B5AE]">{v.fecha}</span>
-                </div>
-                <div className="p-4">
-                  <ul className="space-y-2">
-                    {v.cambios.map((c, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-[#35325B]">
-                        <span className="text-[#B5B5AE] mt-1">•</span>
-                        <span>{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-white border border-[#EEEEEC] p-6">
-            <h3 className="text-sm font-semibold text-[#1F1D3D] mb-3">Stack Tecnológico</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2 text-sm text-[#35325B]">
-                <Code className="w-4 h-4 text-[#B5B5AE]" />
-                <span>Next.js 14 + TypeScript</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[#35325B]">
-                <FileText className="w-4 h-4 text-[#B5B5AE]" />
-                <span>Tailwind + Shadcn/ui</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[#35325B]">
-                <Database className="w-4 h-4 text-[#B5B5AE]" />
-                <span>API: 200.35.189.139:3001</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[#35325B]">
-                <Users className="w-4 h-4 text-[#B5B5AE]" />
-                <span>Chart.js + lucide-react</span>
-              </div>
+        <div className="bg-white border border-[#EEEEEC] p-6">
+          <h3 className="text-sm font-semibold text-[#1F1D3D] mb-3">Stack Tecnológico</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2 text-sm text-[#35325B]">
+              <Code className="w-4 h-4 text-[#B5B5AE]" />
+              <span>Next.js 14 + TypeScript</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-[#35325B]">
+<FileText className="w-4 h-4 text-[#B5B5AE]" />
+              <span>Tailwind + Shadcn/ui</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-[#35325B]">
+              <Database className="w-4 h-4 text-[#B5B5AE]" />
+              <span>API: 200.35.189.139:3001</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-[#35325B]">
+              <Users className="w-4 h-4 text-[#B5B5AE]" />
+              <span>Chart.js + lucide-react</span>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </Shell>
   );
 }
