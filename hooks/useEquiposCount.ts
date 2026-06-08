@@ -17,7 +17,7 @@ export function useEquiposCount(filters: FiltersState) {
         const desde = `${filters.desde}T00:00:00`;
         const hasta = `${filters.hasta}T23:59:59.999`;
         const pais = filters.pais || user?.country_code;
-        const result = await API.reuniones(desde, hasta, 500, 0, { pais, nombre: filters.asesor || undefined });
+        const result = await API.reuniones(desde, hasta, 500, 0, { pais, nombre: filters.asesor || undefined, tipoLead: filters.tipoLead || undefined });
         const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
         let total = 0;
         for (const item of list) {
@@ -41,7 +41,7 @@ export function useEquiposCount(filters: FiltersState) {
       }
     };
     fetchEquipos();
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, user?.country_code]);
 
   return { equipos, loading };
 }

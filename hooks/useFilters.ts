@@ -15,13 +15,14 @@ export interface FiltersState {
   hasta: string;
   pais: string;
   asesor: string;
+  tipoLead: string;
 }
 
 export function useFilters() {
   const [filters, setFilters] = useState<FiltersState>(() => {
-    if (typeof window === 'undefined') return { desde: '', hasta: '', pais: '', asesor: '' };
+    if (typeof window === 'undefined') return { desde: '', hasta: '', pais: '', asesor: '', tipoLead: '' };
     const defaults = getDefaultDates();
-    return { ...defaults, pais: '', asesor: '' };
+    return { ...defaults, pais: '', asesor: '', tipoLead: '' };
   });
 
   const handleFilterChange = useCallback((key: string, value: string) => {
@@ -34,7 +35,7 @@ export function useFilters() {
 
   const handleLimpiar = useCallback(() => {
     const defaults = getDefaultDates();
-    setFilters({ ...defaults, pais: '', asesor: '' });
+    setFilters({ ...defaults, pais: '', asesor: '', tipoLead: '' });
     window.location.reload();
   }, []);
 
@@ -49,9 +50,9 @@ export function useFiltersInit() {
   }, []);
 
   const getInitialFilters = useCallback((): FiltersState => {
-    if (!mounted) return { desde: '', hasta: '', pais: '', asesor: '' };
+    if (!mounted) return { desde: '', hasta: '', pais: '', asesor: '', tipoLead: '' };
     const defaults = getDefaultDates();
-    return { ...defaults, pais: '', asesor: '' };
+    return { ...defaults, pais: '', asesor: '', tipoLead: '' };
   }, [mounted]);
 
   return { mounted, getInitialFilters };

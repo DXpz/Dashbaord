@@ -65,6 +65,13 @@ function getInitialStageFromStageNumber(stageNum?: number): 'REUNION' | 'DEMO' |
   return 'REUNION';
 }
 
+function getLeadTypeLabel(tipoLead?: string) {
+  if (tipoLead === 'calificado') return 'Calificado';
+  if (tipoLead === 'no_calificado') return 'No calificado';
+  if (tipoLead === 'pendiente') return 'Pendiente';
+  return '—';
+}
+
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
   const segRaw = reunion.seguimiento_json;
   let seg: any = {};
@@ -341,6 +348,7 @@ export default function ReunionesPage() {
         if (changes.advisor_id !== undefined) body.advisor_id = changes.advisor_id;
         if (changes.country !== undefined) body.country = changes.country;
         if (changes.status !== undefined) body.status = changes.status;
+        if (changes.tipo_lead !== undefined) body.tipo_lead = changes.tipo_lead;
         await API.auditPatch(clientId, body);
       }
       setEditedRows({});
@@ -446,6 +454,7 @@ export default function ReunionesPage() {
                   <TableHead className="whitespace-nowrap">Lead #</TableHead>
                   <TableHead className="whitespace-nowrap">Cliente</TableHead>
                   <TableHead className="whitespace-nowrap">Contacto</TableHead>
+                  <TableHead className="whitespace-nowrap">Tipo Lead</TableHead>
                   <TableHead className="whitespace-nowrap">Fecha</TableHead>
                   <TableHead className="whitespace-nowrap">Tipo</TableHead>
                   <TableHead className="whitespace-nowrap">Demo</TableHead>
@@ -479,6 +488,21 @@ export default function ReunionesPage() {
                         </TableCell>
                         <TableCell className="text-xs text-[#35325B] whitespace-nowrap">
                           {reunion.client_phone || '—'}
+                        </TableCell>
+                        <TableCell>
+                          {editMode ? (
+                            <select
+                              value={getEditedValue(reunion.client_id, 'tipo_lead', reunion.tipo_lead || 'calificado')}
+                              onChange={(e) => handleFieldChange(reunion.client_id, 'tipo_lead', e.target.value)}
+                              className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none"
+                            >
+                              <option value="calificado">Calificado</option>
+                              <option value="no_calificado">No calificado</option>
+                              <option value="pendiente">Pendiente</option>
+                            </select>
+                          ) : (
+                            <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{getLeadTypeLabel(reunion.tipo_lead || 'calificado')}</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-[#B5B5AE] text-xs whitespace-nowrap">
                           {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
@@ -563,7 +587,7 @@ export default function ReunionesPage() {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center py-12 text-[#B5B5AE]">
+                    <TableCell colSpan={14} className="text-center py-12 text-[#B5B5AE]">
                       Sin reuniones
                     </TableCell>
                   </TableRow>

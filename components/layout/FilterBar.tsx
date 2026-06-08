@@ -9,6 +9,7 @@ interface FilterBarProps {
     hasta: string;
     pais: string;
     asesor: string;
+    tipoLead: string;
   };
   onFilterChange: (key: string, value: string) => void;
   onFiltrar: () => void;
@@ -65,8 +66,9 @@ export function FilterBar({
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.desde) onFilterChange('desde', parsed.desde);
-        if (parsed.hasta) onFilterChange('hasta', parsed.hasta);
+        ['desde', 'hasta', 'pais', 'asesor', 'tipoLead'].forEach((key) => {
+          if (parsed[key] !== undefined) onFilterChange(key, parsed[key]);
+        });
       } catch {}
     }
   }, []);
@@ -127,6 +129,17 @@ export function FilterBar({
           <option value="GT">GT</option>
         </select>
       )}
+
+      <select
+        value={filters.tipoLead || ''}
+        onChange={(e) => persistFilters('tipoLead', e.target.value)}
+        className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+      >
+        <option value="">Tipo Lead</option>
+        <option value="calificado">Calificado</option>
+        <option value="no_calificado">No calificado</option>
+        <option value="pendiente">Pendiente</option>
+      </select>
 
       <select
         value={filters.asesor || ''}

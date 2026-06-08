@@ -50,6 +50,11 @@ function paisParam(p: string | undefined) {
   return code ? { pais: code } : {};
 }
 
+function tipoLeadParam(tipoLead: string | undefined) {
+  if (!tipoLead || tipoLead === 'all') return {};
+  return { tipo_lead: tipoLead };
+}
+
 function nombreParam(nombre: string | undefined) {
   if (!nombre || !String(nombre).trim()) return {};
   return { nombre: String(nombre).trim() };
@@ -142,12 +147,13 @@ export const API = {
     opts: Record<string, any> = {}
   ) {
     const paisCode = normPaisQuery(opts.pais);
-    const key = `dashboard|${desde}|${hasta}|${opts.asesor || opts.nombre || ''}|${paisCode}`;
+    const key = `dashboard|${desde}|${hasta}|${opts.asesor || opts.nombre || ''}|${paisCode}|${opts.tipoLead || ''}`;
     if (_cache && _cacheKey === key) return _cache;
     const params = {
       desde, hasta,
       ...(opts.asesor ? asesorParam(opts.asesor) : nombreParam(opts.nombre)),
-      ...paisParam(paisCode)
+      ...paisParam(paisCode),
+      ...tipoLeadParam(opts.tipoLead)
     };
     const data = await get('/metrics/admin/dashboard', params);
     _cache = data;
@@ -155,59 +161,64 @@ export const API = {
     return data;
   },
 
-  resumen(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/metrics/resumen', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+  resumen(desde: string, hasta: string, nombre?: string, pais?: string, tipoLead?: string) {
+    return get('/metrics/resumen', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais), ...tipoLeadParam(tipoLead) });
   },
 
-  asesores(desde: string, hasta: string, group_by = 'asesor', nombre?: string, pais?: string) {
-    return get('/metrics/asesores', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
+  asesores(desde: string, hasta: string, group_by = 'asesor', nombre?: string, pais?: string, tipoLead?: string) {
+    return get('/metrics/asesores', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais), ...tipoLeadParam(tipoLead) });
   },
 
-  asesor(asesor: string, desde: string, hasta: string, pais?: string) {
-    return get('/metrics/asesor', { asesor, desde, hasta, ...paisParam(pais) });
+  asesor(asesor: string, desde: string, hasta: string, pais?: string, tipoLead?: string) {
+    return get('/metrics/asesor', { asesor, desde, hasta, ...paisParam(pais), ...tipoLeadParam(tipoLead) });
   },
 
-  propuestasPorRubro(desde: string, hasta: string, group_by = 'rubro', nombre?: string, pais?: string) {
-    return get('/metrics/propuestas-por-rubro', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais) });
+  propuestasPorRubro(desde: string, hasta: string, group_by = 'rubro', nombre?: string, pais?: string, tipoLead?: string) {
+    return get('/metrics/propuestas-por-rubro', { desde, hasta, group_by, ...nombreParam(nombre), ...paisParam(pais), ...tipoLeadParam(tipoLead) });
   },
 
-  negociacion(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/metrics/negociacion', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+  negociacion(desde: string, hasta: string, nombre?: string, pais?: string, tipoLead?: string) {
+    return get('/metrics/negociacion', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais), ...tipoLeadParam(tipoLead) });
   },
 
-  motivosPerdida(desde: string, hasta: string, limite = 50, nombre?: string, pais?: string) {
-    return get('/metrics/motivos-perdida', { desde, hasta, limite, ...nombreParam(nombre), ...paisParam(pais) });
+  motivosPerdida(desde: string, hasta: string, limite = 50, nombre?: string, pais?: string, tipoLead?: string) {
+    return get('/metrics/motivos-perdida', { desde, hasta, limite, ...nombreParam(nombre), ...paisParam(pais), ...tipoLeadParam(tipoLead) });
   },
 
-  motivosPerdidaAgrupados(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/metrics/motivos-perdida/agrupados', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+  motivosPerdidaAgrupados(desde: string, hasta: string, nombre?: string, pais?: string, tipoLead?: string) {
+    return get('/metrics/motivos-perdida/agrupados', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais), ...tipoLeadParam(tipoLead) });
   },
 
   reuniones(desde: string, hasta: string, limite = 200, offset = 0, extra: Record<string, any> = {}) {
     const params: Record<string, any> = { desde, hasta, limite, offset };
     if (extra.nombre) params.asesor = extra.nombre;
     if (extra.pais) params.pais = extra.pais;
+    if (extra.tipoLead) params.tipo_lead = extra.tipoLead;
     return get('/metrics/reuniones', params);
   },
 
-  listaAsesores(desde: string, hasta: string, nombre?: string, pais?: string) {
-    return get('/metrics/lista-asesores', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais) });
+  listaAsesores(desde: string, hasta: string, nombre?: string, pais?: string, tipoLead?: string) {
+    return get('/metrics/lista-asesores', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais), ...tipoLeadParam(tipoLead) });
   },
 
   fuentes(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/metrics/fuentes', { desde, hasta, ...extra });
+    const { tipoLead, ...rest } = extra;
+    return get('/metrics/fuentes', { desde, hasta, ...rest, ...tipoLeadParam(tipoLead) });
   },
 
   tiempoRespuesta(desde: string, hasta: string, groupBy = 'asesor', extra: Record<string, any> = {}) {
-    return get('/metrics/tiempo-respuesta', { desde, hasta, group_by: groupBy, ...extra });
+    const { tipoLead, ...rest } = extra;
+    return get('/metrics/tiempo-respuesta', { desde, hasta, group_by: groupBy, ...rest, ...tipoLeadParam(tipoLead) });
   },
 
   nivelesEscalacion(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/metrics/niveles-escalacion', { desde, hasta, ...extra });
+    const { tipoLead, ...rest } = extra;
+    return get('/metrics/niveles-escalacion', { desde, hasta, ...rest, ...tipoLeadParam(tipoLead) });
   },
 
   decisiones(desde: string, hasta: string, extra: Record<string, any> = {}) {
-    return get('/metrics/decisiones', { desde, hasta, ...extra });
+    const { tipoLead, ...rest } = extra;
+    return get('/metrics/decisiones', { desde, hasta, ...rest, ...tipoLeadParam(tipoLead) });
   },
 
   roundRobin(pais?: string, incluirInactivos = false) {

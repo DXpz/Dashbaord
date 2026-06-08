@@ -25,6 +25,7 @@ export function Shell({
     hasta: string;
     pais: string;
     asesor: string;
+    tipoLead: string;
   };
   onFilterChange: (key: string, value: string) => void;
   onFiltrar: () => void;
