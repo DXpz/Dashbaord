@@ -695,7 +695,10 @@ const url = isHttps
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEEEEC] shrink-0">
           <div>
             <h3 className="text-sm font-semibold text-[#1F1D3D]">Actualizar Lead</h3>
-            <p className="text-xs text-[#B5B5AE]">Lead: {clientId}</p>
+            <p className="text-xs text-[#B5B5AE]">
+              Lead: {clientId}
+              {loadedData?.sellerName ? ` · Asesor: ${loadedData.sellerName}` : ''}
+            </p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded transition-colors">
             <X className="h-4 w-4" />
