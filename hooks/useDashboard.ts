@@ -98,10 +98,11 @@ export function useAdminDashboard(filters: FilterState | null) {
     }
 
     const pais = filters.pais || user?.country_code || '';
-    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais };
+    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor || '' };
     if (lastFetchRef.current?.desde === filterKey.desde &&
         lastFetchRef.current?.hasta === filterKey.hasta &&
-        lastFetchRef.current?.pais === filterKey.pais) {
+        lastFetchRef.current?.pais === filterKey.pais &&
+        lastFetchRef.current?.asesor === filterKey.asesor) {
       return;
     }
     lastFetchRef.current = filterKey;
@@ -109,11 +110,11 @@ export function useAdminDashboard(filters: FilterState | null) {
     setLoading(true);
     setError(null);
     try {
-      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais });
+      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor });
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
-        { pais }
+        { pais, nombre: filters.asesor || undefined }
       );
       console.log('[useAdminDashboard] result keys:', Object.keys(result || {}));
       setData(result as DashboardData);
@@ -124,7 +125,7 @@ export function useAdminDashboard(filters: FilterState | null) {
     } finally {
       setLoading(false);
     }
-  }, [filters?.desde, filters?.hasta, filters?.pais, user?.country_code]);
+  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, user?.country_code]);
 
   useEffect(() => {
     fetchData();
