@@ -167,9 +167,8 @@ export function useAsesores(filters: FilterState) {
       try {
         const pais = filters.pais || user?.country_code || undefined;
         const result = await API.listaAsesores(filters.desde, filters.hasta, filters.asesor || undefined, pais);
-        if (Array.isArray(result)) {
-          setAsesores(result.map((a: any) => typeof a === 'string' ? a : a.nombre || a.nombre_vendedor || '').filter(Boolean));
-        }
+        const arr = Array.isArray(result) ? result : (result?.items || []);
+        setAsesores(arr.map((a: any) => typeof a === 'string' ? a : a.asesor || a.nombre || a.nombre_vendedor || '').filter(Boolean));
       } catch (err) {
         console.error('Error fetching asesores:', err);
       }
