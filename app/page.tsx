@@ -2,9 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
+import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters, useEquiposCount } from '@/hooks';
+import { useAuth } from '@/lib/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
+import { ChartCard } from '@/components/charts/ChartCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const STAGE_COLORS = [
   '#1F1D3D',
@@ -16,13 +19,29 @@ const STAGE_COLORS = [
 ];
 
 export default function HomePage() {
-const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
+  const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
   const { data, loading, error } = useAdminDashboard(filters);
   const connectionStatus = useConnectionStatus();
+  const { user } = useAuth();
   const [showCerradas, setShowCerradas] = useState(true);
   const [showPerdidas, setShowPerdidas] = useState(true);
+  const [asesorFilter, setAsesorFilter] = useState('');
+  const [paisFilter, setPaisFilter] = useState('');
   const asesoresList = useAsesores(filters);
-  const AsesoresOptions = useMemo(() => asesoresList.map((a) => ({ value: a, label: a })), [asesoresList]);
+  const { equipos } = useEquiposCount({ ...filters, asesor: asesorFilter, pais: paisFilter });
+  const AsesoresOptions = useMemo(() => [{ value: '', label: 'Todos' }, ...asesoresList.map((a) => ({ value: a, label: a }))], [asesoresList]);
+
+  const showPaisFilter = user?.country_code === 'SV';
+
+  const handleAsesorChange = (value: string) => {
+    setAsesorFilter(value);
+    handleFilterChange('asesor', value);
+  };
+
+  const handlePaisChange = (value: string) => {
+    setPaisFilter(value);
+    handleFilterChange('pais', value);
+  };
 
   const metricas = data?.metricas || {};
   const resumen = data?.resumen || {};
@@ -74,7 +93,7 @@ const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters
     });
   }, [stagesFromApi, leadsPorStage, leadsAceptados]);
 
-const flatData = useMemo(() => {
+  const flatData = useMemo(() => {
     const seen = new Set<string>();
     return stageData.flatMap((s: any) => {
       if (s.subs) {
@@ -215,6 +234,16 @@ const flatData = useMemo(() => {
     };
   }, [flatData, metricas, showCerradas, showPerdidas]);
 
+  const cierreChartData = useMemo(() => ({
+    labels: ['Leads Creados', 'Cierre Exitoso', 'Cant. Equipos'],
+    datasets: [{
+      data: [totalLeads, ventasCerradas, equipos],
+      backgroundColor: ['#1F1D3D', '#22c55e', '#3f3c6d'],
+      borderRadius: 4,
+      borderSkipped: false,
+    }],
+  }), [totalLeads, ventasCerradas, equipos]);
+
   if (loading) {
     return (
       <Shell
@@ -316,12 +345,33 @@ const flatData = useMemo(() => {
         </div>
 
         <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 lg:p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div>
               <h2 className="text-sm lg:text-base font-semibold text-[#1F1D3D]">Pipeline de Ventas</h2>
               <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">Distribución por etapa</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              {showPaisFilter && (
+                <Select value={paisFilter} onValueChange={handlePaisChange}>
+                  <SelectTrigger className="w-24 h-8 text-xs">
+                    <SelectValue placeholder="País" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SV">SV</SelectItem>
+                    <SelectItem value="GT">GT</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              <Select value={asesorFilter} onValueChange={handleAsesorChange}>
+                <SelectTrigger className="w-36 h-8 text-xs">
+                  <SelectValue placeholder="Ejecutivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AsesoresOptions.map((a) => (
+                    <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {chartData.showToggle ? (
                 <div className="flex items-center gap-3">
                   <button
@@ -401,6 +451,35 @@ const flatData = useMemo(() => {
             />
           )}
         </div>
+
+        <ChartCard title="Leads vs Cierre vs Equipos" subtitle="Comparación general">
+          <ChartWrapper
+            type="bar"
+            data={cierreChartData}
+            height="200px"
+            options={{
+              plugins: {
+                legend: { display: false },
+ },
+              scales: {
+                y: {
+                  grid: { color: 'rgba(0,0,0,0.04)' },
+                  ticks: {
+                    font: { size: 11, family: 'Inter' },
+                    color: '#B5B5AE',
+                  },
+                },
+                x: {
+                  grid: { display: false },
+                  ticks: {
+                    font: { size: 12, family: 'Inter', weight: '500' },
+                    color: '#35325B',
+                  },
+                },
+              },
+            }}
+          />
+        </ChartCard>
       </div>
     </Shell>
   );
