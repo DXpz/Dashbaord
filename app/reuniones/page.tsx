@@ -13,6 +13,24 @@ import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
 
+function getStageFields(reunion: any) {
+  const raw = reunion.stage_feedback_json || '';
+  let sf: any = {};
+  if (typeof raw === 'string' && raw.trim()) {
+    try { sf = JSON.parse(raw); } catch { sf = {}; }
+  } else if (typeof raw === 'object') { sf = raw; }
+  const s2 = sf['2'] || {};
+  const s4 = sf['4'] || {};
+  const s6 = sf['6'] || {};
+  return {
+    tipo: s2.tipo_reunion || '',
+    demo: s2.requiere_demo || '',
+    fecha: s2.fecha_reunion || '',
+    cantProp: s4.cantidad_equipos || '',
+    cantCierre: s6.cantidad_equipos || '',
+  };
+}
+
 function StatusBadge({ reunion }: { reunion: any }) {
   const status = reunion.status || reunion.reunion_status || '';
   const resultado = reunion.resultado_venta || '';
@@ -143,7 +161,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
     );
   };
 
-return (
+  return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEEEEC] shrink-0">
@@ -356,7 +374,7 @@ export default function ReunionesPage() {
             <FeedbackModal reunion={feedbackReunion} onClose={() => setFeedbackReunion(null)} />
           )}
           <div className="bg-white border border-[#EEEEEC] overflow-x-auto">
-            <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EEEEEC] min-w-[800px]">
+            <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EEEEEC] min-w-[900px]">
               <div>
                 <h3 className="text-sm font-medium text-[#1F1D3D]">Listado</h3>
                 <p className="text-xs text-[#B5B5AE] mt-0.5">{filteredReuniones.length} reuniones</p>
@@ -394,7 +412,7 @@ export default function ReunionesPage() {
                     Cancelar
                   </Button>
                 )}
-                
+
                 <div className="flex items-center gap-1 bg-[#F5F5ED] p-1 rounded ml-auto">
                   <Button variant="ghost" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 px-2">
                     <ChevronLeft className="h-4 w-4" />
@@ -413,10 +431,13 @@ export default function ReunionesPage() {
                 <TableRow>
                   <TableHead className="whitespace-nowrap">Lead #</TableHead>
                   <TableHead className="whitespace-nowrap">Cliente</TableHead>
-                  <TableHead className="hidden sm:table-cell whitespace-nowrap">Fecha</TableHead>
-                  <TableHead className="hidden md:table-cell whitespace-nowrap">Teléfono</TableHead>
-                  <TableHead className="hidden lg:table-cell whitespace-nowrap">Asesor</TableHead>
-                  <TableHead className="hidden lg:table-cell whitespace-nowrap">País</TableHead>
+                  <TableHead className="whitespace-nowrap">Fecha</TableHead>
+                  <TableHead className="whitespace-nowrap">Tipo</TableHead>
+                  <TableHead className="whitespace-nowrap">Demo</TableHead>
+                  <TableHead className="whitespace-nowrap">Fecha Reunión</TableHead>
+                  <TableHead className="whitespace-nowrap">Cant. Eq.</TableHead>
+                  <TableHead className="whitespace-nowrap">Asesor</TableHead>
+                  <TableHead className="whitespace-nowrap">País</TableHead>
                   <TableHead className="whitespace-nowrap">Estado</TableHead>
                   <TableHead className="whitespace-nowrap">Prop</TableHead>
                   <TableHead className="whitespace-nowrap"></TableHead>
@@ -424,84 +445,107 @@ export default function ReunionesPage() {
               </TableHeader>
               <TableBody>
                 {paginatedReuniones.length > 0 ? (
-                  paginatedReuniones.map((reunion: any, i: number) => (
-                    <TableRow
-                      key={reunion.id || reunion.opportunityNumber || i}
-                      className={`animate-slide-up delay-${Math.min(i + 1, 8)}`}
-                    >
-                      <TableCell>
-                        <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
-                      </TableCell>
-                      <TableCell>
-                        {editMode ? (
-                          <input type="text" value={getEditedValue(reunion.client_id, 'client_name', reunion.client_name || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_name', e.target.value)} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
-                        ) : (
-                          <span className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-[#B5B5AE] text-xs">
-                        {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
-                      </TableCell>
-                      <TableCell>
-                        {editMode ? (
-                          <input type="text" value={getEditedValue(reunion.client_id, 'client_phone', reunion.client_phone || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_phone', e.target.value)} className="w-full text-sm text-[#B5B5AE] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
-                        ) : (
-                          <span>{reunion.client_phone || reunion.telefono || '—'}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editMode ? (
-                          <select value={getEditedValue(reunion.client_id, 'advisor_name', reunion.advisor_name || '')} onChange={(e) => {
-                            const selected = AsesoresOptions.find(a => a.value === e.target.value);
-                            handleFieldChange(reunion.client_id, 'advisor_name', e.target.value);
-                            if (selected?.id) handleFieldChange(reunion.client_id, 'advisor_id', selected.id);
-                          }} className="w-full text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
-                            <option value="">—</option>
-                            {AsesoresOptions.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
-                          </select>
-                        ) : (
-                          <span className="text-[#35325B]">{reunion.advisor_name || reunion.asesor || '—'}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editMode ? (
-                          <select value={getEditedValue(reunion.client_id, 'country', reunion.country || reunion.pais || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'country', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
-                            <option value="SV">SV</option>
-                            <option value="GT">GT</option>
-                          </select>
-                        ) : (
-                          <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editMode ? (
-                          <select value={getEditedValue(reunion.client_id, 'status', reunion.status || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'status', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
-                            <option value="pending">Pendiente</option>
-                            <option value="en_proceso">En Proceso</option>
-                            <option value="cerrado">Cerrado</option>
-                            <option value="alerted">Alertado</option>
-                          </select>
-                        ) : (
-                          <StatusBadge reunion={reunion} />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {reunion.propuesta || reunion.has_propuesta ? (
-                          <span className="text-green-600 font-medium text-sm">Sí</span>
-                        ) : (
-                          <span className="text-[#B5B5AE] text-sm">No</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => setFeedbackReunion(reunion)} className="text-[#35325B] hover:bg-[#F5F5ED] p-1">
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  paginatedReuniones.map((reunion: any, i: number) => {
+                    const sf = getStageFields(reunion);
+                    return (
+                      <TableRow
+                        key={reunion.id || reunion.opportunityNumber || i}
+                        className={`animate-slide-up delay-${Math.min(i + 1, 8)}`}
+                      >
+                        <TableCell>
+                          <span className="font-medium text-[#1F1D3D]">{reunion.client_id || '—'}</span>
+                        </TableCell>
+                        <TableCell>
+                          {editMode ? (
+                            <input type="text" value={getEditedValue(reunion.client_id, 'client_name', reunion.client_name || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'client_name', e.target.value)} className="w-full text-sm font-medium text-[#1F1D3D] bg-[#F5F5ED] rounded px-2 py-1 border border-[#EEEEEC] outline-none" />
+                          ) : (
+                            <span className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-[#B5B5AE] text-xs whitespace-nowrap">
+                          {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                        </TableCell>
+                        <TableCell className="text-xs text-[#35325B]">
+                          {sf.tipo ? sf.tipo.charAt(0).toUpperCase() + sf.tipo.slice(1) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          {sf.demo ? (
+                            <span className={`text-xs px-2 py-1 rounded font-medium ${sf.demo.toLowerCase() === 'si' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {sf.demo.toLowerCase() === 'si' ? 'Sí' : 'No'}
+                            </span>
+                          ) : '—'}
+                        </TableCell>
+                        <TableCell className="text-xs text-[#35325B] whitespace-nowrap">
+                          {sf.fecha ? (() => {
+                            const d = new Date(sf.fecha);
+                            if (!isNaN(d.getTime())) {
+                              return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            }
+                            return sf.fecha;
+                          })() : '—'}
+                        </TableCell>
+                        <TableCell className="text-xs text-[#35325B]">
+                          {sf.cantProp || sf.cantCierre ? (
+                            <span className="flex flex-col gap-0.5">
+                              {sf.cantProp ? <span>Prop: {sf.cantProp}</span> : null}
+                              {sf.cantCierre ? <span>Cierre: {sf.cantCierre}</span> : null}
+                            </span>
+                          ) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          {editMode ? (
+                            <select value={getEditedValue(reunion.client_id, 'advisor_name', reunion.advisor_name || '')} onChange={(e) => {
+                              const selected = AsesoresOptions.find(a => a.value === e.target.value);
+                              handleFieldChange(reunion.client_id, 'advisor_name', e.target.value);
+                              if (selected?.id) handleFieldChange(reunion.client_id, 'advisor_id', selected.id);
+                            }} className="w-full text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                              <option value="">—</option>
+                              {AsesoresOptions.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+                            </select>
+                          ) : (
+                            <span className="text-[#35325B] text-xs">{reunion.advisor_name || reunion.asesor || '—'}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {editMode ? (
+                            <select value={getEditedValue(reunion.client_id, 'country', reunion.country || reunion.pais || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'country', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                              <option value="SV">SV</option>
+                              <option value="GT">GT</option>
+                            </select>
+                          ) : (
+                            <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {editMode ? (
+                            <select value={getEditedValue(reunion.client_id, 'status', reunion.status || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'status', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                              <option value="pending">Pendiente</option>
+                              <option value="en_proceso">En Proceso</option>
+                              <option value="cerrado">Cerrado</option>
+                              <option value="alerted">Alertado</option>
+                            </select>
+                          ) : (
+                            <StatusBadge reunion={reunion} />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {reunion.propuesta || reunion.has_propuesta ? (
+                            <span className="text-green-600 font-medium text-sm">Sí</span>
+                          ) : (
+                            <span className="text-[#B5B5AE] text-sm">No</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => setFeedbackReunion(reunion)} className="text-[#35325B] hover:bg-[#F5F5ED] p-1">
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-12 text-[#B5B5AE]">
+                    <TableCell colSpan={12} className="text-center py-12 text-[#B5B5AE]">
                       Sin reuniones
                     </TableCell>
                   </TableRow>
