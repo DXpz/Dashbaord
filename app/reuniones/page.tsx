@@ -431,6 +431,7 @@ export default function ReunionesPage() {
                 <TableRow>
                   <TableHead className="whitespace-nowrap">Lead #</TableHead>
                   <TableHead className="whitespace-nowrap">Cliente</TableHead>
+                  <TableHead className="whitespace-nowrap">Contacto</TableHead>
                   <TableHead className="whitespace-nowrap">Fecha</TableHead>
                   <TableHead className="whitespace-nowrap">Tipo</TableHead>
                   <TableHead className="whitespace-nowrap">Demo</TableHead>
@@ -461,6 +462,9 @@ export default function ReunionesPage() {
                           ) : (
                             <span className="font-medium text-[#1F1D3D]">{reunion.client_name || reunion.cliente || '—'}</span>
                           )}
+                        </TableCell>
+                        <TableCell className="text-xs text-[#35325B] whitespace-nowrap">
+                          {reunion.client_phone || '—'}
                         </TableCell>
                         <TableCell className="text-[#B5B5AE] text-xs whitespace-nowrap">
                           {reunion.created_at ? new Date(reunion.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
