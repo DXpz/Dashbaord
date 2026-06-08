@@ -5,6 +5,17 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.0.1',
+    fecha: '2026-06-08',
+    cambios: [
+      'Agregar Tipo de Reunión en vista Reuniones',
+      'Agregar Requiere Demo en vista Reuniones',
+      'Agregar Fecha de reunión en vista Reuniones',
+      'Agregar Cantidad de equipos en etapa Propuesta',
+      'Agregar Cantidad de equipos en etapa Cierre',
+    ],
+  },
+  {
     version: '2.0.0',
     fecha: '2026-06-08',
     cambios: [
