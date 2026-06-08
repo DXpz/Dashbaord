@@ -1,7 +1,6 @@
 'use client';
 
-import { Shell } from '@/components/layout/Shell';
-import { useFilters, useConnectionStatus } from '@/hooks';
+import { VersionsShell } from '@/components/layout/VersionsShell';
 import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
@@ -113,20 +112,9 @@ const VERSIONES = [
 ];
 
 export default function VersionesPage() {
-  const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const connectionStatus = useConnectionStatus();
-
   return (
-    <Shell
-      pageTitle="Versiones"
-      filters={filters}
-      onFilterChange={handleFilterChange}
-      onFiltrar={handleFiltrar}
-      onLimpiar={handleLimpiar}
-      asesores={[]}
-      connectionStatus={connectionStatus}
-    >
-      <div className="space-y-6 max-w-3xl">
+    <VersionsShell>
+      <div className="space-y-6 max-w-3xl mx-auto">
         <div className="bg-white border border-[#EEEEEC] p-6">
           <h2 className="text-lg font-semibold text-[#1F1D3D] mb-1">Dashboard V5</h2>
           <p className="text-sm text-[#B5B5AE]">Control de versiones y cambios realizados</p>
@@ -162,7 +150,7 @@ export default function VersionesPage() {
               <span>Next.js 14 + TypeScript</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-[#35325B]">
-<FileText className="w-4 h-4 text-[#B5B5AE]" />
+              <FileText className="w-4 h-4 text-[#B5B5AE]" />
               <span>Tailwind + Shadcn/ui</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-[#35325B]">
@@ -176,6 +164,6 @@ export default function VersionesPage() {
           </div>
         </div>
       </div>
-    </Shell>
+    </VersionsShell>
   );
 }
