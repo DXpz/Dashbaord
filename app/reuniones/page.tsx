@@ -464,7 +464,6 @@ export default function ReunionesPage() {
                   <TableHead className="whitespace-nowrap">Asesor</TableHead>
                   <TableHead className="whitespace-nowrap">País</TableHead>
                   <TableHead className="whitespace-nowrap">Estado</TableHead>
-                  <TableHead className="whitespace-nowrap">Prop</TableHead>
                   <TableHead className="whitespace-nowrap"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -572,13 +571,6 @@ export default function ReunionesPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {reunion.propuesta || reunion.has_propuesta ? (
-                            <span className="text-green-600 font-medium text-sm">Sí</span>
-                          ) : (
-                            <span className="text-[#B5B5AE] text-sm">No</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
                           <Button variant="ghost" size="sm" onClick={() => setViewLead({ clientId: reunion.client_id || reunion.opportunity_number || '', initialStage: getInitialStageFromStageNumber(reunion.opportunity_stage) })} className="text-[#35325B] hover:bg-[#F5F5ED] p-1">
                             <FileText className="h-4 w-4" />
                           </Button>
@@ -588,7 +580,7 @@ export default function ReunionesPage() {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={14} className="text-center py-12 text-[#B5B5AE]">
+                    <TableCell colSpan={13} className="text-center py-12 text-[#B5B5AE]">
                       Sin reuniones
                     </TableCell>
                   </TableRow>
