@@ -406,7 +406,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
     return { valid: true, firstMissing: '' };
   };
 
-  const handleStageChange = (nextIndex: number) => {
+  const handleStageChange = async (nextIndex: number) => {
     if (nextIndex === currentStageIndex) return;
 
     if (nextIndex > currentStageIndex) {
@@ -424,6 +424,9 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
           return;
         }
       }
+
+      const saved = await handleSave(false);
+      if (!saved) return;
     }
 
     setValidationError(null);
@@ -448,12 +451,12 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (showToast = true) => {
     if (readOnly) return;
     const validation = validateStage(currentStageIndex);
     if (!validation.valid) {
       setValidationError('Completa todos los campos obligatorios antes de guardar.');
-      return;
+      return false;
     }
 
     setSaving(true);
@@ -551,14 +554,17 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       });
 
       if (res.ok) {
-        showSuccess('Feedback guardado correctamente');
+        if (showToast) showSuccess('Feedback guardado correctamente');
+        return true;
       } else {
         const errorData = await res.json().catch(() => ({}));
         showError(errorData?.detail || 'Error al guardar');
+        return false;
       }
     } catch (err) {
       console.error('Error saving:', err);
       showError('Error al guardar. Intenta de nuevo.');
+      return false;
     } finally {
       setSaving(false);
     }
@@ -815,7 +821,7 @@ const url = isHttps
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleSave}
+                  onClick={() => handleSave()}
                   disabled={saving || loading}
                   className="gap-1.5 bg-[#1F1D3D] text-white border-[#1F1D3D] hover:bg-[#35325B]"
                 >
