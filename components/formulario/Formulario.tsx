@@ -381,6 +381,8 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
 
   const [stageData, setStageData] = useState<Record<number, Record<string, string | boolean>>>({});
 
+  const getFieldValue = (fieldId: string) => String(currentData[fieldId] || '');
+
   const isFieldEmpty = (field: StageField, value: string) => {
     if (field.type === 'select' || field.type === 'date' || field.type === 'number') return !String(value || '').trim();
     return !String(value || '').trim();
@@ -760,7 +762,7 @@ const url = isHttps
                   </label>
                     <FieldInput
                       field={field}
-                      value={String(currentData[field.id] || '')}
+                      value={getFieldValue(field.id)}
                       onChange={handleChange}
                       readOnly={readOnly}
                     />

@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useVendedorFilters } from '@/lib/vendedor-filters';
 import { API } from '@/services/api';
+import { Formulario } from '@/components/formulario/Formulario';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,6 +35,14 @@ function StageBadge({ stageLabel, stageNum }: { stageLabel?: string; stageNum?: 
   if (stageLabel) return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{stageLabel}</span>;
   if (stageNum == null) return <span className="text-gray-400">—</span>;
   return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Etapa {stageNum}</span>;
+}
+
+function getInitialStageFromStageNumber(stageNum?: number): 'REUNION' | 'DEMO' | 'PROPUESTA' | 'SEGUIMIENTO' | 'CIERRE' {
+  if (stageNum === 3) return 'DEMO';
+  if (stageNum === 4) return 'PROPUESTA';
+  if (stageNum === 5) return 'SEGUIMIENTO';
+  if (stageNum === 6) return 'CIERRE';
+  return 'REUNION';
 }
 
 function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void }) {
@@ -253,7 +262,7 @@ export default function VendedorReunionesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [feedbackReunion, setFeedbackReunion] = useState<any>(null);
+  const [viewLead, setViewLead] = useState<{ clientId: string; initialStage: 'REUNION' | 'DEMO' | 'PROPUESTA' | 'SEGUIMIENTO' | 'CIERRE' } | null>(null);
   const [sortAsc, setSortAsc] = useState(false);
 
   const fetchReuniones = useCallback(async () => {
@@ -302,8 +311,13 @@ export default function VendedorReunionesPage() {
 
   return (
     <div className="space-y-4">
-      {feedbackReunion && (
-        <FeedbackModal reunion={feedbackReunion} onClose={() => setFeedbackReunion(null)} />
+      {viewLead && (
+        <Formulario
+          clientId={viewLead.clientId}
+          initialStage={viewLead.initialStage}
+          readOnly
+          onClose={() => setViewLead(null)}
+        />
       )}
       <div className="bg-white border border-[#EEEEEC] overflow-x-auto">
         <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EEEEEC]">
@@ -385,7 +399,15 @@ export default function VendedorReunionesPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => setFeedbackReunion(reunion)} className="text-[#35325B] hover:bg-[#F5F5ED] p-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setViewLead({
+                            clientId: reunion.client_id || reunion.opportunity_number || '',
+                            initialStage: getInitialStageFromStageNumber(reunion.opportunity_stage),
+                          })}
+                          className="text-[#35325B] hover:bg-[#F5F5ED] p-1"
+                        >
                           <FileText className="h-4 w-4" />
                         </Button>
                       </TableCell>
