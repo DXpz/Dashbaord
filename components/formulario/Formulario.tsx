@@ -413,7 +413,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
   const handleStageChange = async (nextIndex: number) => {
     if (nextIndex === currentStageIndex) return;
 
-    if (nextIndex > currentStageIndex) {
+    if (enforceStageValidation && nextIndex > currentStageIndex) {
       const currentValidation = validateStage(currentStageIndex);
       if (!currentValidation.valid) {
         setValidationError('Completa todos los campos obligatorios antes de continuar.');
