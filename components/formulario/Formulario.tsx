@@ -268,6 +268,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
   const [lostReason, setLostReason] = useState('');
   const [lostDescription, setLostDescription] = useState('');
   const [isClosed, setIsClosed] = useState(false);
+  const [leadStatus, setLeadStatus] = useState<'ganado' | 'perdido' | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -316,6 +317,13 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         const propuestaJson = auditData?.propuesta_json || {};
         const seguimientoJson = auditData?.seguimiento_json || {};
         const cierreJson = auditData?.cierre_json || {};
+
+        const stage6Data = stageFeedback['6'] || stageFeedback[6] || cierreJson || {};
+        const cierreResultado = String(stage6Data?.resultado_cierre || '').toLowerCase();
+        const leadStatus: 'ganado' | 'perdido' | null =
+          cierreResultado === 'ganado' ? 'ganado' :
+          cierreResultado === 'perdido' || cierreResultado === 'perdida' ? 'perdido' :
+          null;
 
         console.log('[Formulario] stageFeedback keys:', Object.keys(stageFeedback));
         console.log('[Formulario] seguimiento_json:', JSON.stringify(seguimientoJson));
@@ -370,6 +378,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
           history: [],
         });
         setIsClosed(isLeadClosed);
+        setLeadStatus(leadStatus);
       } catch (err) {
         console.error('Error loading lead data:', err);
         setError('No se pudo cargar los datos del lead');
@@ -708,8 +717,20 @@ const url = isHttps
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEEEEC] shrink-0">
-          <div>
-            <h3 className="text-sm font-semibold text-[#1F1D3D]">Actualizar Lead</h3>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-semibold text-[#1F1D3D]">Actualizar Lead</h3>
+              {leadStatus === 'perdido' && (
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                  Lead perdido
+                </span>
+              )}
+              {leadStatus === 'ganado' && (
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
+                  Venta concretada
+                </span>
+              )}
+            </div>
             <p className="text-xs text-[#B5B5AE]">
               Lead: {clientId}
               {loadedData?.sellerName ? ` · Asesor: ${loadedData.sellerName}` : ''}
