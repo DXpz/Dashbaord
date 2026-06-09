@@ -255,6 +255,7 @@ interface LoadedData {
 export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOnly = false }: FormularioProps) {
   const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
+  const enforceStageValidation = user?.role === 'advisor';
   const [requiresDemo, setRequiresDemo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -389,6 +390,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
   };
 
   const validateStage = (stageIndex: number) => {
+    if (!enforceStageValidation) return { valid: true, firstMissing: '' };
     const stage = stages[stageIndex];
     if (!stage) return { valid: true, firstMissing: '' };
 
