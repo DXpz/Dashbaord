@@ -180,6 +180,7 @@ export default function VendedorFormularioPage() {
         <Formulario
           clientId={selectedLead.client_id}
           initialStage="REUNION"
+          readOnly={false}
           onClose={() => setShowForm(false)}
         />
       )}
