@@ -316,6 +316,7 @@ export default function VendedorReunionesPage() {
           clientId={viewLead.clientId}
           initialStage={viewLead.initialStage}
           readOnly={user?.country_code === 'GT'}
+          vendorReadOnlyBanner={user?.country_code === 'GT'}
           onClose={() => setViewLead(null)}
         />
       )}

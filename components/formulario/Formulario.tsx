@@ -239,6 +239,7 @@ interface FormularioProps {
   initialStage?: FormStage;
   onClose?: () => void;
   readOnly?: boolean;
+  vendorReadOnlyBanner?: boolean;
 }
 
 interface LoadedData {
@@ -252,7 +253,7 @@ interface LoadedData {
   history: any[];
 }
 
-export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOnly = false }: FormularioProps) {
+export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOnly = false, vendorReadOnlyBanner = false }: FormularioProps) {
   const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const enforceStageValidation = user?.role === 'advisor';
@@ -740,6 +741,12 @@ const url = isHttps
             <X className="h-4 w-4" />
           </button>
         </div>
+
+        {vendorReadOnlyBanner && (
+          <div className="bg-red-50 border-b border-red-200 px-4 py-2 text-[11px] font-medium text-red-700">
+            Modo lectura — los asesores de Guatemala solo pueden visualizar el detalle del lead.
+          </div>
+        )}
 
         {!loading && (
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-nowrap border-b border-[#EEEEEC] min-h-[44px]">
