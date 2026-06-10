@@ -315,7 +315,7 @@ export default function VendedorReunionesPage() {
         <Formulario
           clientId={viewLead.clientId}
           initialStage={viewLead.initialStage}
-          readOnly
+          readOnly={user?.country_code === 'GT'}
           onClose={() => setViewLead(null)}
         />
       )}
