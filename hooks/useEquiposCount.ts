@@ -21,17 +21,18 @@ export function useEquiposCount(filters: FiltersState) {
         const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
         let total = 0;
         for (const item of list) {
-          const resultado = item.resultado_venta || '';
-          const isGanado = resultado === 'cerrada' || resultado === 'ganado';
-          if (!isGanado) continue;
+          const stage = item.opportunity_stage;
           const sfRaw = item.stage_feedback_json || '';
           let sf: any = {};
           if (typeof sfRaw === 'string' && sfRaw.trim()) {
             try { sf = JSON.parse(sfRaw); } catch { sf = {}; }
           } else if (typeof sfRaw === 'object') { sf = sfRaw; }
-          const eq6 = sf['6']?.cantidad_equipos || sf[6]?.cantidad_equipos || '';
-          if (eq6) {
-            const num = parseInt(String(eq6), 10);
+          const isCierre = stage === 6;
+          const isGanado = sf['6']?.resultado_cierre === 'ganado' || sf[6]?.resultado_cierre === 'ganado';
+          if (!isCierre || !isGanado) continue;
+          const eq4 = sf['4']?.cantidad_equipos || sf[4]?.cantidad_equipos || '';
+          if (eq4) {
+            const num = parseInt(String(eq4), 10);
             if (!isNaN(num)) total += num;
           }
         }
