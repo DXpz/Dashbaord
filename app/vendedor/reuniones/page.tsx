@@ -363,7 +363,6 @@ export default function VendedorReunionesPage() {
                   <TableHead className="hidden lg:table-cell">País</TableHead>
                   <TableHead>Etapa</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead className="w-10">Prop</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -391,13 +390,6 @@ export default function VendedorReunionesPage() {
                       </TableCell>
                       <TableCell>
                         <StatusBadge reunion={reunion} />
-                      </TableCell>
-                      <TableCell>
-                        {reunion.propuesta || reunion.has_propuesta ? (
-                          <span className="text-green-600 font-medium text-sm">Sí</span>
-                        ) : (
-                          <span className="text-[#B5B5AE] text-sm">No</span>
-                        )}
                       </TableCell>
                       <TableCell>
                         <Button
