@@ -5,6 +5,16 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.1.3',
+    fecha: '2026-06-10',
+    cambios: [
+      'Corrección: los asesores de Guatemala no podían escribir en el formulario de cada lead',
+      'Página vendedor/formulario ahora siempre se abre editable',
+      'Modo lectura con banner rojo solo se aplica a vendedor/reuniones para GT',
+      'Se agrega canal de origen PostIAlo Mailing en Crear Lead',
+    ],
+  },
+  {
     version: '2.1.2',
     fecha: '2026-06-08',
     cambios: [
