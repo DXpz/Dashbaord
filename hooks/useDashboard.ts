@@ -10,6 +10,7 @@ export interface FilterState {
   pais: string;
   asesor: string;
   tipoLead: string;
+  origen: string;
 }
 
 export interface DashboardData {
@@ -63,7 +64,7 @@ export function useDashboard(filters: FilterState | null) {
       const result = await API.dashboard(
         filters.desde,
         filters.hasta,
-        { pais: filters.pais, nombre: filters.asesor, asesor: filters.asesor, tipoLead: filters.tipoLead }
+        { pais: filters.pais, nombre: filters.asesor, asesor: filters.asesor, tipoLead: filters.tipoLead, origen: filters.origen }
       );
       setData(result as DashboardData);
     } catch (err: any) {
@@ -74,7 +75,7 @@ export function useDashboard(filters: FilterState | null) {
     } finally {
       setLoading(false);
     }
-  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead]);
+  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead, filters?.origen]);
 
   useEffect(() => {
     fetchData();
@@ -88,7 +89,7 @@ export function useAdminDashboard(filters: FilterState | null) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const lastFetchRef = useRef<{ desde: string; hasta: string; pais: string; asesor: string; tipoLead: string } | null>(null);
+  const lastFetchRef = useRef<{ desde: string; hasta: string; pais: string; asesor: string; tipoLead: string; origen: string } | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -99,12 +100,13 @@ export function useAdminDashboard(filters: FilterState | null) {
     }
 
     const pais = filters.pais || user?.country_code || '';
-    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor || '', tipoLead: filters.tipoLead || '' };
+    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor || '', tipoLead: filters.tipoLead || '', origen: filters.origen || '' };
     if (lastFetchRef.current?.desde === filterKey.desde &&
         lastFetchRef.current?.hasta === filterKey.hasta &&
         lastFetchRef.current?.pais === filterKey.pais &&
         lastFetchRef.current?.asesor === filterKey.asesor &&
-        lastFetchRef.current?.tipoLead === filterKey.tipoLead) {
+        lastFetchRef.current?.tipoLead === filterKey.tipoLead &&
+        lastFetchRef.current?.origen === filterKey.origen) {
       return;
     }
     lastFetchRef.current = filterKey;
@@ -112,11 +114,11 @@ export function useAdminDashboard(filters: FilterState | null) {
     setLoading(true);
     setError(null);
     try {
-      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor, tipoLead: filters.tipoLead });
+      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor, tipoLead: filters.tipoLead, origen: filters.origen });
       let result: any;
 
       if (filters.asesor) {
-        const asesorData = await API.asesor(filters.asesor, filters.desde, filters.hasta, pais, filters.tipoLead);
+        const asesorData = await API.asesor(filters.asesor, filters.desde, filters.hasta, pais, filters.tipoLead, filters.origen);
         const m = asesorData.metricas || {};
         result = {
           metricas: {
@@ -153,7 +155,7 @@ export function useAdminDashboard(filters: FilterState | null) {
         result = await API.dashboard(
           filters.desde,
           filters.hasta,
-          { pais, tipoLead: filters.tipoLead }
+          { pais, tipoLead: filters.tipoLead, origen: filters.origen }
         );
       }
 
@@ -166,7 +168,7 @@ export function useAdminDashboard(filters: FilterState | null) {
     } finally {
       setLoading(false);
     }
-  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead, user?.country_code]);
+  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead, filters?.origen, user?.country_code]);
 
   useEffect(() => {
     fetchData();
@@ -207,7 +209,7 @@ export function useAsesores(filters: FilterState) {
     const fetchAsesores = async () => {
       try {
         const pais = filters.pais || user?.country_code || undefined;
-        const result = await API.listaAsesores(filters.desde, filters.hasta, filters.asesor || undefined, pais, filters.tipoLead || undefined);
+        const result = await API.listaAsesores(filters.desde, filters.hasta, filters.asesor || undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         const arr = Array.isArray(result) ? result : (result?.items || []);
         setAsesores(arr.map((a: any) => typeof a === 'string' ? a : a.asesor || a.nombre || a.nombre_vendedor || '').filter(Boolean));
       } catch (err) {
@@ -215,7 +217,7 @@ export function useAsesores(filters: FilterState) {
       }
     };
     fetchAsesores();
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user?.country_code]);
 
   return asesores;
 }
@@ -232,7 +234,7 @@ export function useListaAsesores(filters: FilterState) {
       try {
         const pais = filters.pais || user?.country_code || undefined;
         console.log('[useListaAsesores] fetching with pais:', pais);
-        const result = await API.listaAsesores(filters.desde, filters.hasta, undefined, pais, filters.tipoLead || undefined);
+        const result = await API.listaAsesores(filters.desde, filters.hasta, undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         const arr = Array.isArray(result) ? result : (result?.asesores || result?.items || []);
         setData(arr);
       } catch (err) {
@@ -243,7 +245,7 @@ export function useListaAsesores(filters: FilterState) {
       }
     };
     fetch();
-  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user?.country_code]);
 
   return { data, loading };
 }
@@ -314,9 +316,9 @@ export function useReuniones(filters: FilterState) {
     try {
       const desde = `${filters.desde}T00:00:00`;
       const hasta = `${filters.hasta}T23:59:59.999`;
-       const pais = filters.pais || user?.country_code;
-       console.log('[useReuniones] fetching:', { desde, hasta, pais, tipoLead: filters.tipoLead });
-       const result = await API.reuniones(desde, hasta, 200, 0, { pais, tipoLead: filters.tipoLead || undefined });
+        const pais = filters.pais || user?.country_code;
+        console.log('[useReuniones] fetching:', { desde, hasta, pais, tipoLead: filters.tipoLead, origen: filters.origen });
+        const result = await API.reuniones(desde, hasta, 200, 0, { pais, tipoLead: filters.tipoLead || undefined, origen: filters.origen || undefined });
       console.log('[useReuniones] raw result:', result);
       const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
       console.log('[useReuniones] setReuniones:', list.length, 'items');
@@ -327,7 +329,7 @@ export function useReuniones(filters: FilterState) {
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user?.country_code]);
 
   useEffect(() => {
     fetchReuniones();
@@ -351,7 +353,7 @@ export function useAllLeads(filters: FilterState) {
         const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
         const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
          const pais = filters.pais || user?.country_code;
-         const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, { pais, tipoLead: filters.tipoLead || undefined });
+         const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, { pais, tipoLead: filters.tipoLead || undefined, origen: filters.origen || undefined });
         const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
         setLeads(Array.isArray(list) ? list : []);
       } catch (err: any) {
@@ -361,7 +363,7 @@ export function useAllLeads(filters: FilterState) {
       }
     };
     fetchLeads();
-  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user?.country_code]);
 
   return { leads, loading, error };
 }
@@ -379,7 +381,7 @@ export function useFuentes(filters: FilterState) {
         const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
         const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
         const pais = filters.pais || user?.country_code;
-        const result = await API.fuentes(desde ?? '', hasta ?? '', { pais, tipoLead: filters.tipoLead });
+        const result = await API.fuentes(desde ?? '', hasta ?? '', { pais, tipoLead: filters.tipoLead, origen: filters.origen });
         const list = result?.fuentes || result?.items || result || [];
         setFuentes(Array.isArray(list) ? list : []);
       } catch (err) {
@@ -390,7 +392,7 @@ export function useFuentes(filters: FilterState) {
       }
     };
     fetchFuentes();
-  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user?.country_code]);
 
   return { fuentes, loading };
 }
@@ -408,7 +410,7 @@ export function useMotivosPerdida(filters: FilterState) {
       setLoading(true);
       try {
         const pais = filters.pais || user?.country_code || undefined;
-        const json = await API.motivosPerdida(filters.desde, filters.hasta, 50, filters.asesor || undefined, pais, filters.tipoLead || undefined);
+        const json = await API.motivosPerdida(filters.desde, filters.hasta, 50, filters.asesor || undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         if (cancelled) return;
         const motivos = Array.isArray(json.motivos) ? json.motivos : [];
         const categorias = Array.isArray(json.categorias) ? json.categorias : [];
@@ -422,7 +424,7 @@ export function useMotivosPerdida(filters: FilterState) {
     };
     fetchMotivos();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user?.country_code]);
 
   return { motivos: data.motivos, categorias: data.categorias, categorias_globales: data.categorias_globales, loading };
 }
@@ -439,7 +441,7 @@ export function useNegociacion(filters: FilterState) {
       setLoading(true);
       try {
         const pais = filters.pais || user?.country_code || undefined;
-        const json = await API.negociacion(filters.desde, filters.hasta, filters.asesor || undefined, pais, filters.tipoLead || undefined);
+        const json = await API.negociacion(filters.desde, filters.hasta, filters.asesor || undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         if (cancelled) return;
         setData(json);
       } catch (err) {
@@ -450,7 +452,7 @@ export function useNegociacion(filters: FilterState) {
     };
     fetchNegociacion();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user?.country_code]);
 
   return { data, loading };
 }
@@ -467,19 +469,20 @@ export function usePropuestasPorRubro(filters: FilterState) {
       setLoading(true);
       try {
         const pais = filters.pais || user?.country_code || undefined;
-        const json = await API.propuestasPorRubro(filters.desde, filters.hasta, 'rubro', filters.asesor || undefined, pais, filters.tipoLead || undefined);
+        const json = await API.propuestasPorRubro(filters.desde, filters.hasta, 'rubro', filters.asesor || undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         if (cancelled) return;
         const arr = json.propuestas_por_rubro || json.items || json || [];
         setData(Array.isArray(arr) ? arr : []);
       } catch (err) {
         console.error('Error fetching propuestas por rubro:', err);
+        setData([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
     fetchPropuestas();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user?.country_code]);
 
   return { data, loading };
 }
