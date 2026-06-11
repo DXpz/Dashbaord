@@ -350,6 +350,7 @@ export default function ReunionesPage() {
         if (changes.country !== undefined) body.country = changes.country;
         if (changes.status !== undefined) body.status = changes.status;
         if (changes.tipo_lead !== undefined) body.tipo_lead = changes.tipo_lead;
+        if (changes.validator_source !== undefined) body.validator_source = changes.validator_source;
         await API.auditPatch(clientId, body);
       }
       setEditedRows({});
@@ -560,7 +561,19 @@ export default function ReunionesPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <span className="text-xs text-[#35325B]">{reunion.validator_source || reunion.origen || '—'}</span>
+                          {editMode ? (
+                            <select value={getEditedValue(reunion.client_id, 'validator_source', reunion.validator_source || '')} onChange={(e) => handleFieldChange(reunion.client_id, 'validator_source', e.target.value)} className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded border border-[#EEEEEC] outline-none">
+                              <option value="">—</option>
+                              <option value="Lead Manual">Lead Manual</option>
+                              <option value="Página Web">Página Web</option>
+                              <option value="PostIAlo Redes Sociales">PostIAlo Redes Sociales</option>
+                              <option value="PostIAlo Mailing">PostIAlo Mailing</option>
+                              <option value="PBX SV">PBX SV</option>
+                              <option value="PBX GT">PBX GT</option>
+                            </select>
+                          ) : (
+                            <span className="text-xs text-[#35325B]">{reunion.validator_source || reunion.origen || '—'}</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           {editMode ? (
