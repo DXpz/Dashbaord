@@ -404,7 +404,7 @@ const url = isHttps
                   >
                     <option value="">Seleccionar…</option>
                     <option value="Página Web">Página Web</option>
-                    <option value="PostIAlo">PostIAlo Redes Sociales</option>
+                    <option value="PostIAlo Redes Sociales">PostIAlo Redes Sociales</option>
                     <option value="PostIAlo Mailing">PostIAlo Mailing</option>
                     <option value="PBX SV">PBX SV</option>
                     <option value="PBX GT">PBX GT</option>
