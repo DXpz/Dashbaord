@@ -39,25 +39,9 @@ function StatusBadge({ reunion }: { reunion: any }) {
   const s = status.toLowerCase();
 
   if (resultado === 'cerrada') return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Venta concretada</span>;
-  if (resultado === 'perdida') {
-    const motivo = reunion.motivo_perdida || reunion.categoria_cierre || '';
-    const showMotivo = motivo && !motivo.includes('sin_contacto') && motivo.toLowerCase() !== 'sin categoria';
-    return (
-      <div className="flex items-center gap-1 flex-wrap">
-        <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Lead perdido</span>
-        {showMotivo && <span className="text-xs text-red-500">{motivo}</span>}
-      </div>
-    );
-  }
+  if (resultado === 'perdida') return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Lead perdido</span>;
   if (resultado === 'en_seguimiento') return <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">En Seguimiento</span>;
-  if (categoriaCierre && categoriaCierre.includes('sin_contacto')) {
-    return (
-      <div className="flex items-center gap-1 flex-wrap">
-        <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Lead perdido</span>
-        <span className="text-xs text-red-500">Sin contacto</span>
-      </div>
-    );
-  }
+  if (categoriaCierre && categoriaCierre.includes('sin_contacto')) return <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">Lead perdido</span>;
   if (s === 'pending') return <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">Pendiente</span>;
   if (s === 'en_proceso') return <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">En Proceso</span>;
   if (s === 'cerrado') return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">Cerrado</span>;

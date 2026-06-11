@@ -722,9 +722,14 @@ const url = isHttps
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-semibold text-[#1F1D3D]">Actualizar Lead</h3>
               {leadStatus === 'perdido' && (
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
-                  Lead perdido
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                    Lead perdido
+                  </span>
+                  {stageData[6]?.motivo_perdida && (
+                    <span className="text-[10px] text-red-600">{stageData[6].motivo_perdida}</span>
+                  )}
+                </div>
               )}
               {leadStatus === 'ganado' && (
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
