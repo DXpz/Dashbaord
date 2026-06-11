@@ -6,7 +6,7 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 const VERSIONES = [
   {
     version: '2.1.3',
-    fecha: '2026-06-10',
+    fecha: '2026-06-11',
     cambios: [
       'Corrección: los asesores de Guatemala no podían escribir en el formulario de cada lead',
       'Página vendedor/formulario ahora siempre se abre editable',
