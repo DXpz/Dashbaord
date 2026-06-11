@@ -37,7 +37,7 @@ export default function FormularioPage() {
   const [deleteReason, setDeleteReason] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: user?.country_code || 'SV' });
+  const [newLead, setNewLead] = useState({ nombre: '', correo: '', telefono: '', pais: user?.country_code || 'SV', validator_source: '' });
   const [showReopenDialog, setShowReopenDialog] = useState(false);
 
   const { showSuccess, showError } = useNotification();
@@ -165,9 +165,10 @@ export default function FormularioPage() {
 
       const payload: Record<string, string> = {
         nombre: newLead.nombre.trim(),
-        correo: newLead.correo.trim(),
         telefono: newLead.telefono.trim(),
+        correo: newLead.correo.trim(),
         pais: newLead.pais || 'SV',
+        validator_source: newLead.validator_source || '',
         asunto: 'Lead nuevo desde dashboard',
         ubicacion: '',
         descripcion: 'Creado por admin',
@@ -198,7 +199,7 @@ const url = isHttps
       if (res.ok && data.ok) {
         showSuccess(`Lead ${data.client_id} creado - Asesor: ${data.advisor_name || 'Asignado'}`);
         setShowCreateModal(false);
-        setNewLead({ nombre: '', correo: '', telefono: '', pais: user?.country_code || 'SV' });
+        setNewLead({ nombre: '', correo: '', telefono: '', pais: user?.country_code || 'SV', validator_source: '' });
       } else if (data.already_existed) {
         showSuccess(`Lead ${data.client_id} ya existía`);
         setShowCreateModal(false);
@@ -391,6 +392,23 @@ const url = isHttps
                     onChange={(e) => setNewLead({ ...newLead, pais: e.target.value })}
                     placeholder="SV"
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-[#35325B] uppercase tracking-wide">
+                    Canal de origen
+                  </label>
+                  <select
+                    value={newLead.validator_source}
+                    onChange={(e) => setNewLead({ ...newLead, validator_source: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] focus:outline-none focus:border-[#35325B]"
+                  >
+                    <option value="">Seleccionar…</option>
+                    <option value="Página Web">Página Web</option>
+                    <option value="PostIAlo">PostIAlo Redes Sociales</option>
+                    <option value="Redes Sociales">Redes Sociales</option>
+                    <option value="PBX SV">PBX SV</option>
+                    <option value="PBX GT">PBX GT</option>
+                  </select>
                 </div>
               </div>
               <DialogFooter>
