@@ -151,7 +151,6 @@ export function FilterBar({
         <option value="Página Web">Página Web</option>
         <option value="PostIAlo">PostIAlo Redes Sociales</option>
         <option value="PostIAlo Mailing">PostIAlo Mailing</option>
-        <option value="Redes Sociales">Redes Sociales</option>
         <option value="PBX SV">PBX SV</option>
         <option value="PBX GT">PBX GT</option>
       </select>

@@ -463,6 +463,7 @@ export default function ReunionesPage() {
                   <TableHead className="whitespace-nowrap">Cant. Eq.</TableHead>
                   <TableHead className="whitespace-nowrap">Asesor</TableHead>
                   <TableHead className="whitespace-nowrap">País</TableHead>
+                  <TableHead className="whitespace-nowrap">Canal</TableHead>
                   <TableHead className="whitespace-nowrap">Estado</TableHead>
                   <TableHead className="whitespace-nowrap"></TableHead>
                 </TableRow>
@@ -557,6 +558,9 @@ export default function ReunionesPage() {
                           ) : (
                             <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{reunion.country || reunion.pais || '—'}</span>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs text-[#35325B]">{reunion.validator_source || reunion.origen || '—'}</span>
                         </TableCell>
                         <TableCell>
                           {editMode ? (
