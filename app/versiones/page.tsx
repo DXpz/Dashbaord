@@ -12,6 +12,10 @@ const VERSIONES = [
       'Página vendedor/formulario ahora siempre se abre editable',
       'Modo lectura con banner rojo solo se aplica a vendedor/reuniones para GT',
       'Se agrega canal de origen PostIAlo Mailing en Crear Lead',
+      'Eliminado opción duplicada "Redes Sociales" (ya existe "PostIAlo Redes Sociales")',
+      'Valor de PostIAlo corregido a "PostIAlo Redes Sociales" exacto en filtros y formulario',
+      'Agregada columna "Canal" en vista Reuniones mostrando fuente del lead',
+      'Columna "Canal" editable en modo edición de Reuniones',
     ],
   },
   {
