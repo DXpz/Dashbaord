@@ -28,7 +28,7 @@ export function useEquiposCount(filters: FiltersState) {
             try { sf = JSON.parse(sfRaw); } catch { sf = {}; }
           } else if (typeof sfRaw === 'object') { sf = sfRaw; }
           const isCierre = stage === 6;
-          const isGanado = sf['6']?.resultado_cierre === 'ganado' || sf[6]?.resultado_cierre === 'ganado';
+          const isGanado = item.status === 'cerrado' && (sf['6']?.resultado_propuesta === 'ganada' || sf[6]?.resultado_propuesta === 'ganada');
           if (!isCierre || !isGanado) continue;
           const eq4 = sf['4']?.cantidad_equipos || sf[4]?.cantidad_equipos || '';
           if (eq4) {
