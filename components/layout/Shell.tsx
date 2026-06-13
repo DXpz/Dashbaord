@@ -17,6 +17,7 @@ export function Shell({
   asesores,
   connectionStatus,
   showPaisFilter,
+  showFilterBar = true,
 }: {
   children: React.ReactNode;
   pageTitle: string;
@@ -34,6 +35,7 @@ export function Shell({
   asesores: Array<{ value: string; label: string }>;
   connectionStatus: 'connected' | 'connecting' | 'error';
   showPaisFilter?: boolean;
+  showFilterBar?: boolean;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -55,15 +57,17 @@ export function Shell({
               </button>
               <h1 className="text-base font-semibold text-[#1F1D3D]">{pageTitle}</h1>
             </div>
-            <FilterBar
-              filters={filters}
-              onFilterChange={onFilterChange}
-              onFiltrar={onFiltrar}
-              onLimpiar={onLimpiar}
-              asesores={asesores}
-              connectionStatus={connectionStatus}
-              showPaisFilter={showPaisFilter}
-            />
+            {showFilterBar && (
+              <FilterBar
+                filters={filters}
+                onFilterChange={onFilterChange}
+                onFiltrar={onFiltrar}
+                onLimpiar={onLimpiar}
+                asesores={asesores}
+                connectionStatus={connectionStatus}
+                showPaisFilter={showPaisFilter}
+              />
+            )}
           </header>
           <div className="p-6">
             {children}
