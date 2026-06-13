@@ -299,12 +299,12 @@ export const API = {
     catch { return false; }
   },
 
-  advisorOverdueList() {
-    return get('/metrics/advisor-overdue', {});
+  advisorOverdueList(params: { asesor?: string; desde?: string; hasta?: string } = {}) {
+    return get('/metrics/advisor-overdue', params);
   },
 
-  advisorOverdueDetail(advisorId: string) {
-    return get(`/metrics/advisor-overdue/${encodeURIComponent(advisorId)}`, {});
+  advisorOverdueDetail(advisorId: string, params: { desde?: string; hasta?: string } = {}) {
+    return get(`/metrics/advisor-overdue/${encodeURIComponent(advisorId)}`, params);
   },
 
   advisorOverdueAcknowledge(eventId: number) {

@@ -38,7 +38,13 @@ export interface AdvisorOverdueDetail {
   events: OverdueEvent[];
 }
 
-export function useAdvisorOverdue() {
+export interface OverdueFilters {
+  asesor?: string;
+  desde?: string;
+  hasta?: string;
+}
+
+export function useAdvisorOverdue(filters?: OverdueFilters) {
   const { user } = useAuth();
   const [advisors, setAdvisors] = useState<AdvisorOverdueSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,7 +56,11 @@ export function useAdvisorOverdue() {
     setLoading(true);
     setError(null);
     try {
-      const json = await API.advisorOverdueList();
+      const json = await API.advisorOverdueList({
+        asesor: filters?.asesor || undefined,
+        desde: filters?.desde || undefined,
+        hasta: filters?.hasta || undefined,
+      });
       setAdvisors(json.advisors || []);
       setTotalEvents(json.total_events || 0);
     } catch (err: any) {
@@ -58,7 +68,7 @@ export function useAdvisorOverdue() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, filters?.asesor, filters?.desde, filters?.hasta]);
 
   useEffect(() => {
     fetchList();
@@ -67,7 +77,7 @@ export function useAdvisorOverdue() {
   return { advisors, loading, error, totalEvents, refetch: fetchList };
 }
 
-export function useAdvisorOverdueDetail(advisorId: string | null) {
+export function useAdvisorOverdueDetail(advisorId: string | null, filters?: OverdueFilters) {
   const { user } = useAuth();
   const [detail, setDetail] = useState<AdvisorOverdueDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -78,14 +88,17 @@ export function useAdvisorOverdueDetail(advisorId: string | null) {
     setLoading(true);
     setError(null);
     try {
-      const json = await API.advisorOverdueDetail(advisorId);
+      const json = await API.advisorOverdueDetail(advisorId, {
+        desde: filters?.desde || undefined,
+        hasta: filters?.hasta || undefined,
+      });
       setDetail(json);
     } catch (err: any) {
       setError(err.message || 'Error al cargar detalle del asesor');
     } finally {
       setLoading(false);
     }
-  }, [user, advisorId]);
+  }, [user, advisorId, filters?.desde, filters?.hasta]);
 
   useEffect(() => {
     fetchDetail();

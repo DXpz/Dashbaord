@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { useAdvisorOverdue, useAdvisorOverdueDetail, useAcknowledgeEvent } from '@/hooks';
+import { useAdvisorOverdue, useAdvisorOverdueDetail, useAcknowledgeEvent, OverdueFilters } from '@/hooks';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, CheckCircle, Clock, ChevronRight, X } from 'lucide-react';
@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import { useAsesores } from '@/hooks';
 
 const STAGE_LABELS: Record<number, string> = {
   2: 'Reunión',
@@ -18,11 +19,6 @@ const STAGE_LABELS: Record<number, string> = {
   5: 'Seguimiento',
 };
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
 function formatDateTime(iso: string) {
   const d = new Date(iso);
   return d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -30,11 +26,30 @@ function formatDateTime(iso: string) {
 
 export default function MetricasEtapasPage() {
   const { user } = useAuth();
-  const { advisors, loading, error, totalEvents, refetch } = useAdvisorOverdue();
+  const [asesorFilter, setAsesorFilter] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
   const [selectedAdvisor, setSelectedAdvisor] = useState<string | null>(null);
-  const { detail, loading: detailLoading } = useAdvisorOverdueDetail(selectedAdvisor);
+
+  const filters: OverdueFilters = {
+    asesor: asesorFilter || undefined,
+    desde: month && year ? `${year}-${month}-01` : undefined,
+    hasta: month && year ? `${year}-${month}-31` : undefined,
+  };
+
+  const { advisors, loading, error, totalEvents, refetch } = useAdvisorOverdue(filters);
+  const { detail, loading: detailLoading } = useAdvisorOverdueDetail(selectedAdvisor, filters);
   const { acknowledge, loading: ackLoading } = useAcknowledgeEvent();
   const [acknowledgingId, setAcknowledgingId] = useState<number | null>(null);
+
+  const { AsesoresList } = useAsesores({} as any);
+  const allAsesores = Array.isArray(AsesoresList) ? AsesoresList : [];
+
+  useEffect(() => {
+    const now = new Date();
+    if (!month) setMonth(String(now.getMonth() + 1).padStart(2, '0'));
+    if (!year) setYear(String(now.getFullYear()));
+  }, []);
 
   const handleAcknowledge = async (eventId: number) => {
     setAcknowledgingId(eventId);
@@ -55,14 +70,54 @@ export default function MetricasEtapasPage() {
       connectionStatus={{ isConnected: true } as any}
       asesores={[]}
     >
-      <div className="space-y-6">
-        <div className="bg-white border border-[#EEEEEC] p-4 flex items-center gap-3">
+      <div className="space-y-4">
+        <div className="bg-white border border-[#EEEEEC] p-4 flex flex-wrap items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600" />
           <div>
             <p className="text-sm font-semibold text-[#1F1D3D]">Eventos vencidos en total</p>
             <p className="text-xs text-[#B5B5AE]">Leads que superaron el deadline sin retroalimentación</p>
           </div>
           <div className="ml-auto text-2xl font-bold text-[#1F1D3D]">{totalEvents}</div>
+        </div>
+
+        <div className="bg-white border border-[#EEEEEC] p-4 flex flex-wrap items-center gap-3">
+          <select
+            value={asesorFilter}
+            onChange={e => setAsesorFilter(e.target.value)}
+            className="text-sm px-3 py-2 border border-[#EEEEEC] rounded text-[#35325B] bg-[#F5F5ED] outline-none"
+          >
+            <option value="">Todos los asesores</option>
+            {allAsesores.map((a: any) => (
+              <option key={a.value} value={a.value}>{a.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={month}
+            onChange={e => setMonth(e.target.value)}
+            className="text-sm px-3 py-2 border border-[#EEEEEC] rounded text-[#35325B] bg-[#F5F5ED] outline-none"
+          >
+            <option value="">Mes</option>
+            {[
+              { v: '01', l: 'Enero' }, { v: '02', l: 'Febrero' }, { v: '03', l: 'Marzo' },
+              { v: '04', l: 'Abril' }, { v: '05', l: 'Mayo' }, { v: '06', l: 'Junio' },
+              { v: '07', l: 'Julio' }, { v: '08', l: 'Agosto' }, { v: '09', l: 'Septiembre' },
+              { v: '10', l: 'Octubre' }, { v: '11', l: 'Noviembre' }, { v: '12', l: 'Diciembre' },
+            ].map(m => (
+              <option key={m.v} value={m.v}>{m.l}</option>
+            ))}
+          </select>
+
+          <select
+            value={year}
+            onChange={e => setYear(e.target.value)}
+            className="text-sm px-3 py-2 border border-[#EEEEEC] rounded text-[#35325B] bg-[#F5F5ED] outline-none"
+          >
+            <option value="">Año</option>
+            {[2025, 2026, 2027].map(y => (
+              <option key={y} value={String(y)}>{y}</option>
+            ))}
+          </select>
         </div>
 
         {loading ? (
