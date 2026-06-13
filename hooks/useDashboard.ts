@@ -314,8 +314,8 @@ export function useReuniones(filters: FilterState) {
     setLoading(true);
     setError(null);
     try {
-      const desde = `${filters.desde}T00:00:00`;
-      const hasta = `${filters.hasta}T23:59:59.999`;
+const desde = filters.desde;
+        const hasta = filters.hasta;
         const pais = filters.pais || user?.country_code;
         console.log('[useReuniones] fetching:', { desde, hasta, pais, tipoLead: filters.tipoLead, origen: filters.origen });
         const result = await API.reuniones(desde, hasta, 200, 0, { pais, tipoLead: filters.tipoLead || undefined, origen: filters.origen || undefined });
@@ -350,8 +350,8 @@ export function useAllLeads(filters: FilterState) {
       setLoading(true);
       setError(null);
       try {
-        const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
-        const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
+        const desde = filters.desde ? `filters.desde` : undefined;
+        const hasta = filters.hasta ? `filters.hasta` : undefined;
          const pais = filters.pais || user?.country_code;
          const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, { pais, tipoLead: filters.tipoLead || undefined, origen: filters.origen || undefined });
         const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
@@ -378,8 +378,8 @@ export function useFuentes(filters: FilterState) {
     const fetchFuentes = async () => {
       setLoading(true);
       try {
-        const desde = filters.desde ? `${filters.desde}T00:00:00` : undefined;
-        const hasta = filters.hasta ? `${filters.hasta}T23:59:59.999` : undefined;
+        const desde = filters.desde ? `filters.desde` : undefined;
+        const hasta = filters.hasta ? `filters.hasta` : undefined;
         const pais = filters.pais || user?.country_code;
         const result = await API.fuentes(desde ?? '', hasta ?? '', { pais, tipoLead: filters.tipoLead, origen: filters.origen });
         const list = result?.fuentes || result?.items || result || [];

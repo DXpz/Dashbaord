@@ -19,6 +19,11 @@ const STAGE_LABELS: Record<number, string> = {
   5: 'Seguimiento',
 };
 
+function getLastDayOfMonth(year: number, month: string) {
+  const d = new Date(Number(year), Number(month), 0);
+  return `${year}-${month}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function formatDateTime(iso: string) {
   const d = new Date(iso);
   return d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -34,7 +39,7 @@ export default function MetricasEtapasPage() {
   const filters: OverdueFilters = {
     asesor: asesorFilter || undefined,
     desde: month && year ? `${year}-${month}-01` : undefined,
-    hasta: month && year ? `${year}-${month}-31` : undefined,
+    hasta: month && year ? getLastDayOfMonth(Number(year), month) : undefined,
   };
 
   const { advisors, loading, error, totalEvents, refetch } = useAdvisorOverdue(filters);

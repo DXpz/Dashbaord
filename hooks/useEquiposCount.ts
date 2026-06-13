@@ -14,8 +14,8 @@ export function useEquiposCount(filters: FiltersState) {
     const fetchEquipos = async () => {
       setLoading(true);
       try {
-        const desde = `${filters.desde}T00:00:00`;
-        const hasta = `${filters.hasta}T23:59:59.999`;
+        const desde = filters.desde;
+        const hasta = filters.hasta;
         const pais = filters.pais || user?.country_code;
         const result = await API.reuniones(desde, hasta, 500, 0, { pais, nombre: filters.asesor || undefined, tipoLead: filters.tipoLead || undefined });
         const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
