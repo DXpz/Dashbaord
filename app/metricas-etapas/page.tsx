@@ -42,8 +42,8 @@ export default function MetricasEtapasPage() {
   const { acknowledge, loading: ackLoading } = useAcknowledgeEvent();
   const [acknowledgingId, setAcknowledgingId] = useState<number | null>(null);
 
-  const { AsesoresList } = useAsesores({} as any);
-  const allAsesores = Array.isArray(AsesoresList) ? AsesoresList : [];
+  const allAsesoresRaw = useAsesores({} as any);
+  const allAsesores = (Array.isArray(allAsesoresRaw) ? allAsesoresRaw : []).map((a: string) => ({ value: a, label: a }));
 
   useEffect(() => {
     const now = new Date();
