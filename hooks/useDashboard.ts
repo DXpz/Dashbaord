@@ -371,6 +371,7 @@ export function useAllLeads(filters: FilterState) {
 export function useFuentes(filters: FilterState) {
   const { user } = useAuth();
   const [fuentes, setFuentes] = useState<any[]>([]);
+  const [tiposLlamada, setTiposLlamada] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -384,9 +385,11 @@ export function useFuentes(filters: FilterState) {
         const result = await API.fuentes(desde ?? '', hasta ?? '', { pais, tipoLead: filters.tipoLead, origen: filters.origen });
         const list = result?.fuentes || result?.items || result || [];
         setFuentes(Array.isArray(list) ? list : []);
+        setTiposLlamada(result?.tipos_llamada || []);
       } catch (err) {
         console.error('Error fetching fuentes:', err);
         setFuentes([]);
+        setTiposLlamada([]);
       } finally {
         setLoading(false);
       }
@@ -394,7 +397,7 @@ export function useFuentes(filters: FilterState) {
     fetchFuentes();
   }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user?.country_code]);
 
-  return { fuentes, loading };
+  return { fuentes, tiposLlamada, loading };
 }
 
 export function useMotivosPerdida(filters: FilterState) {

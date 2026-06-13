@@ -17,10 +17,11 @@ const COLORS = {
 };
 
 const CANAL_COLORS = [COLORS.dark, COLORS.medium, COLORS.light, COLORS.dark, COLORS.medium, COLORS.dark];
+const LLAMADA_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export default function OrigenLeadsPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const { fuentes, loading } = useFuentes(filters);
+  const { fuentes, tiposLlamada, loading } = useFuentes(filters);
   const connectionStatus = useConnectionStatus();
   const AsesoresOptions = useAsesores(filters).map((a) => ({ value: a, label: a }));
 
@@ -42,6 +43,14 @@ export default function OrigenLeadsPage() {
       values: sorted.map((f: any) => f.auditorias || 0),
     };
   }, [fuentes]);
+
+  const llamadaChartData = useMemo(() => {
+    if (!tiposLlamada.length) return null;
+    return {
+      labels: tiposLlamada.map((t: any) => t.tipo_llamada || '—'),
+      values: tiposLlamada.map((t: any) => t.total || 0),
+    };
+  }, [tiposLlamada]);
 
   return (
     <Shell
@@ -82,6 +91,23 @@ export default function OrigenLeadsPage() {
           ) : (
             <ChartCard title="Distribución por Canal">
               <div className="h-48 lg:h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos de fuentes</div>
+            </ChartCard>
+          )}
+
+          {llamadaChartData ? (
+            <ChartCard title="Tipo de Llamada" subtitle={`${tiposLlamada.length} tipos`}>
+              <ChartWrapper type="doughnut" data={{
+                labels: llamadaChartData.labels,
+                datasets: [{
+                  data: llamadaChartData.values,
+                  backgroundColor: LLAMADA_COLORS,
+                  borderWidth: 0,
+                }],
+              }} height="240px" />
+            </ChartCard>
+          ) : (
+            <ChartCard title="Tipo de Llamada">
+              <div className="h-48 lg:h-64 flex items-center justify-center text-[#B5B5AE] text-sm">Sin datos de llamadas</div>
             </ChartCard>
           )}
 
