@@ -53,6 +53,7 @@ export default function MetricasEtapasPage() {
       onFiltrar={() => {}}
       onLimpiar={() => {}}
       connectionStatus={{ isConnected: true } as any}
+      asesores={[]}
     >
       <div className="space-y-6">
         <div className="bg-white border border-[#EEEEEC] p-4 flex items-center gap-3">
