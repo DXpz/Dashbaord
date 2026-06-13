@@ -38,7 +38,7 @@ export default function OrigenLeadsPage() {
   const topTipoLlamada = useMemo(() => {
     if (!tiposLlamada.length) return '—';
     const sorted = [...tiposLlamada].sort((a, b) => (b.total || 0) - (a.total || 0));
-    return sorted[0]?.tipo_llamada || '—';
+    return sorted[0]?.tipo_reunion || '—';
   }, [tiposLlamada]);
 
   const distChartData = useMemo(() => {
@@ -53,7 +53,7 @@ export default function OrigenLeadsPage() {
   const llamadaChartData = useMemo(() => {
     if (!tiposLlamada.length) return null;
     return {
-      labels: tiposLlamada.map((t: any) => t.tipo_llamada || '—'),
+      labels: tiposLlamada.map((t: any) => t.tipo_reunion || '—'),
       values: tiposLlamada.map((t: any) => t.total || 0),
     };
   }, [tiposLlamada]);
