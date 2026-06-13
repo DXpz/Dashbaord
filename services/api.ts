@@ -297,5 +297,17 @@ export const API = {
   async ping() {
     try { await get('/health', {}); return true; }
     catch { return false; }
-  }
+  },
+
+  advisorOverdueList() {
+    return get('/metrics/advisor-overdue', {});
+  },
+
+  advisorOverdueDetail(advisorId: string) {
+    return get(`/metrics/advisor-overdue/${encodeURIComponent(advisorId)}`, {});
+  },
+
+  advisorOverdueAcknowledge(eventId: number) {
+    return patch(`/metrics/advisor-overdue/${encodeURIComponent(String(eventId))}/acknowledge`, {});
+  },
 };

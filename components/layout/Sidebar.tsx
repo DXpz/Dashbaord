@@ -18,6 +18,7 @@ import {
   LogOut,
   Lock,
   Info,
+  AlertTriangle,
 } from 'lucide-react';
 
 const navItems = [
@@ -25,6 +26,7 @@ const navItems = [
   { href: '/asesores', label: 'Asesores', icon: Users },
   { href: '/propuestas', label: 'Propuestas', icon: FileText },
   { href: '/reuniones', label: 'Reuniones', icon: Calendar },
+  { href: '/metricas-etapas', label: 'Métricas Etapas', icon: AlertTriangle, adminOnly: true },
   { href: '/round-robin', label: 'Round Robin', icon: CircleDot },
   { href: '/origen-leads', label: 'Origen Leads', icon: Globe },
   { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
@@ -42,7 +44,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [isOpenDesktop, setIsOpenDesktop] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -142,6 +144,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
           <nav className="flex-1 space-y-0.5">
             {navItems.map((item) => {
+              if (item.adminOnly && user?.role !== 'admin') return null;
               const isActive = pathname === item.href;
               return (
                 <Link
