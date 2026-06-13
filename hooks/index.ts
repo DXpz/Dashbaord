@@ -3,3 +3,4 @@ export { useFilters } from './useFilters';
 export type { FiltersState } from './useFilters';
 export { useEquiposCount } from './useEquiposCount';
 export { useAdvisorOverdue, useAdvisorOverdueDetail, useAcknowledgeEvent } from './useAdvisorOverdue';
+export type { OverdueFilters } from './useAdvisorOverdue';
