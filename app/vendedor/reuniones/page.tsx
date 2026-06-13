@@ -129,7 +129,7 @@ function FeedbackModal({ reunion, onClose }: { reunion: any; onClose: () => void
       }
     }
     if (key === 'industria_sector') return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    if (key === 'tipo_reunion') return value.charAt(0).toUpperCase() + value.slice(1);
+    if (key === 'tipo_reunion') return value;
     return value;
   };
 
