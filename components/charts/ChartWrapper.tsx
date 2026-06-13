@@ -61,17 +61,21 @@ function DoughnutCenterLabel({ chart }: { chart: Chart }) {
     const pct = total > 0 ? Math.round(((val as number) / total) * 100) : 0;
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span className="text-2xl font-bold text-[#1F1D3D]">{val}</span>
-        <span className="text-xs font-medium text-[#35325B]">{label}</span>
-        <span className="text-xs text-[#B5B5AE]">{pct}%</span>
+        <div className="bg-white/90 rounded-xl px-4 py-2 shadow-sm">
+          <span className="text-2xl font-bold text-[#1F1D3D]">{val}</span>
+          <span className="text-xs font-medium text-[#35325B] ml-1">{label}</span>
+          <span className="text-xs text-[#B5B5AE] ml-1">({pct}%)</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-      <span className="text-2xl font-bold text-[#1F1D3D]">{total}</span>
-      <span className="text-xs text-[#B5B5AE]">Total</span>
+      <div className="bg-white/90 rounded-xl px-4 py-2 shadow-sm">
+        <span className="text-2xl font-bold text-[#1F1D3D]">{total}</span>
+        <span className="text-xs text-[#B5B5AE] ml-1">Total</span>
+      </div>
     </div>
   );
 }

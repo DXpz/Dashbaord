@@ -17,7 +17,7 @@ const COLORS = {
 };
 
 const CANAL_COLORS = [COLORS.dark, COLORS.medium, COLORS.light, COLORS.dark, COLORS.medium, COLORS.dark];
-const LLAMADA_COLORS = [COLORS.medium, COLORS.dark, COLORS.light, COLORS.medium, COLORS.dark, COLORS.light];
+const LLAMADA_COLORS = [COLORS.medium, COLORS.dark, COLORS.light, COLORS.dark, COLORS.light, COLORS.medium];
 
 export default function OrigenLeadsPage() {
   const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
