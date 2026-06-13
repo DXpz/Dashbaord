@@ -109,7 +109,7 @@ function buildDefaultOptions(type: string, showCenter = false) {
   };
 
   if (isPieDoughnut) {
-    base.cutout = '65%';
+    base.cutout = '70%';
   }
 
   if (isBar) {
