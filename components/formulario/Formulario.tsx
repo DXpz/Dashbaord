@@ -47,9 +47,9 @@ const REUNION_FIELDS: StageField[] = [
   ]},
   { id: 'tipo_reunion', label: 'Tipo de Reunión', type: 'select', required: true, options: [
     { value: '', label: 'Seleccionar…' },
-    { value: 'Llamada Telefónica', label: 'Llamada Telefónica' },
     { value: 'Llamada Virtual', label: 'Llamada Virtual' },
-    { value: 'Reunión Presencial', label: 'Reunión Presencial' },
+    { value: 'Reunion Presencial', label: 'Reunión Presencial' },
+    { value: 'Llamada Telefonica', label: 'Llamada Telefónica' },
   ]},
   { id: 'interes_producto', label: 'Interés en el producto', type: 'select', required: true, options: [
     { value: '', label: 'Seleccionar…' },
