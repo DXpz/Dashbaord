@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shell } from '@/components/layout/Shell';
 import { useAdvisorOverdue, useAdvisorOverdueDetail, useAcknowledgeEvent, OverdueFilters } from '@/hooks';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, CheckCircle, Clock, ChevronRight, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, ChevronRight, X, LayoutDashboard } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -61,16 +60,18 @@ export default function MetricasEtapasPage() {
   };
 
   return (
-    <Shell
-      pageTitle="Métricas por Etapas"
-      filters={{} as any}
-      onFilterChange={() => {}}
-      onFiltrar={() => {}}
-      onLimpiar={() => {}}
-      connectionStatus={{ isConnected: true } as any}
-      asesores={[]}
-    >
-      <div className="space-y-4">
+    <div className="min-h-screen bg-[#F5F5ED]">
+      <div className="bg-white border-b border-[#EEEEEC] px-6 py-4 flex items-center gap-3">
+        <div className="w-8 h-8 bg-[#1F1D3D] rounded-lg flex items-center justify-center">
+          <LayoutDashboard className="w-4 h-4 text-[#B5B5AE]" strokeWidth={1.5} />
+        </div>
+        <div>
+          <h1 className="text-sm font-semibold text-[#1F1D3D]">Métricas por Etapas</h1>
+          <p className="text-xs text-[#B5B5AE]">Eventos vencidos por asesor y etapa</p>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-4">
         <div className="bg-white border border-[#EEEEEC] p-4 flex flex-wrap items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600" />
           <div>
@@ -253,6 +254,6 @@ export default function MetricasEtapasPage() {
           </div>
         </div>
       )}
-    </Shell>
+    </div>
   );
 }
