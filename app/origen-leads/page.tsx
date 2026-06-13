@@ -7,7 +7,7 @@ import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { useFuentes, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Globe, Target, TrendingUp } from 'lucide-react';
+import { Globe, Target, TrendingUp, Phone } from 'lucide-react';
 
 const COLORS = {
   dark: '#1F1D3D',
@@ -34,6 +34,12 @@ export default function OrigenLeadsPage() {
     const sorted = [...fuentes].sort((a, b) => (b.auditorias || 0) - (a.auditorias || 0));
     return sorted[0]?.fuente || '—';
   }, [fuentes]);
+
+  const topTipoLlamada = useMemo(() => {
+    if (!tiposLlamada.length) return '—';
+    const sorted = [...tiposLlamada].sort((a, b) => (b.total || 0) - (a.total || 0));
+    return sorted[0]?.tipo_llamada || '—';
+  }, [tiposLlamada]);
 
   const distChartData = useMemo(() => {
     if (!fuentes.length) return null;
@@ -71,10 +77,11 @@ export default function OrigenLeadsPage() {
         </div>
       ) : (
         <div className="space-y-4 lg:space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <KPICard label="Leads Totales" value={totalLeads} icon={Target} className="delay-1" />
             <KPICard label="Canal Principal" value={topFuente} icon={TrendingUp} className="delay-2" />
             <KPICard label="Canales Activos" value={fuentes.length} icon={Globe} className="delay-3" />
+            <KPICard label="Llamada Principal" value={topTipoLlamada} icon={Phone} className="delay-4" />
           </div>
 
           {distChartData ? (
