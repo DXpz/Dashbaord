@@ -5,6 +5,24 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.1.4',
+    fecha: '2026-06-15',
+    cambios: [
+      'Vista de Versiones ahora visible para todos los vendedores (GT y SV)',
+      'Resumen de vendedor: calendario con eventos de leads, reuniones, propuestas y seguimientos',
+      'Resumen de vendedor: simplificar vista (solo KPIs + calendario, sin charts)',
+      'Resumen de vendedor: calendario usa start_time del endpoint /metrics/reuniones',
+      'Resumen: cantidad de equipos se filtra por asesor, país, fechas y canal de origen',
+      'Resumen: métrica total_equipos ahora viene del backend en /metrics/admin/dashboard',
+      'Resumen: incluye total_equipos en filtro por asesor usando /metrics/asesor',
+      'Filtros: cache con TTL de 30s para evitar datos desactualizados',
+      'Métricas Etapas: dropdown de asesores carga correctamente con filtros del mes/año',
+      'Formulario: motivo_perdida sin prefijo "SIN CONTACTO - " (formato: razon: descripcion)',
+      'Formulario: navegación entre etapas no guarda si no hay cambios (dirty state)',
+      'Vendedor: asesores de GT y SV ahora tienen acceso completo al formulario de leads',
+    ],
+  },
+  {
     version: '2.1.3',
     fecha: '2026-06-11',
     cambios: [
