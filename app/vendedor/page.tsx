@@ -5,8 +5,6 @@ import { useAuth } from '@/lib/auth-context';
 import { useVendedorFilters } from '@/lib/vendedor-filters';
 import { API } from '@/services/api';
 import { KPICard } from '@/components/kpi/KPICard';
-import { ChartCard } from '@/components/charts/ChartCard';
-import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VendedorCalendar, CalendarEvent } from '@/components/calendar/VendedorCalendar';
 import { Target, TrendingUp, Users, CheckCircle } from 'lucide-react';
@@ -96,34 +94,13 @@ export default function VendedorDashboard() {
     seguimientos: metricas.seguimientos_registrados ?? 0,
   }), [metricas]);
 
-  const reunionesChartData = useMemo(() => {
-    return {
-      labels: ['Con Retro', 'Sin Retro'],
-      values: [kpis.reunionesConRetro, kpis.reunionesSinRetro],
-    };
-  }, [kpis.reunionesConRetro, kpis.reunionesSinRetro]);
-
-  const cierreChartData = useMemo(() => {
-    return {
-      labels: ['Ganados', 'Perdidos'],
-      values: [kpis.cerradosGanados, kpis.cerradosPerdidos],
-    };
-  }, [kpis.cerradosGanados, kpis.cerradosPerdidos]);
-
-  const propuestaChartData = useMemo(() => {
-    return {
-      labels: ['Propuestas', 'Seguimientos'],
-      values: [kpis.propuestas, kpis.seguimientos],
-    };
-  }, [kpis.propuestas, kpis.seguimientos]);
-
   if (authLoading || loading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-24" />)}
         </div>
-        <Skeleton className="h-80" />
+        <Skeleton className="h-[500px]" />
       </div>
     );
   }
@@ -136,41 +113,6 @@ export default function VendedorDashboard() {
         <KPICard label="Cerrados Perdidos" value={kpis.cerradosPerdidos} icon={Target} className="delay-3" />
         <KPICard label="Tasa Aceptación %" value={kpis.tasaAceptacion} icon={TrendingUp} className="delay-4" />
         <KPICard label="Tasa Cierre %" value={kpis.tasaCierre} icon={Target} className="delay-5" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ChartCard title="Reuniones" subtitle="Con vs Sin retroalimentación">
-          <ChartWrapper type="doughnut" data={{
-            labels: reunionesChartData.labels,
-            datasets: [{
-              data: reunionesChartData.values,
-              backgroundColor: [COLORS.dark, COLORS.light],
-              borderWidth: 0,
-            }],
-          }} height="200px" />
-        </ChartCard>
-
-        <ChartCard title="Estado de Cierre" subtitle="Ganados vs Perdidos">
-          <ChartWrapper type="doughnut" data={{
-            labels: cierreChartData.labels,
-            datasets: [{
-              data: cierreChartData.values,
-              backgroundColor: [COLORS.dark, COLORS.medium],
-              borderWidth: 0,
-            }],
-          }} height="200px" />
-        </ChartCard>
-
-        <ChartCard title="Oportunidades" subtitle="Propuestas y Seguimientos">
-          <ChartWrapper type="doughnut" data={{
-            labels: propuestaChartData.labels,
-            datasets: [{
-              data: propuestaChartData.values,
-              backgroundColor: [COLORS.medium, COLORS.light],
-              borderWidth: 0,
-            }],
-          }} height="200px" />
-        </ChartCard>
       </div>
 
       <VendedorCalendar events={events} />
