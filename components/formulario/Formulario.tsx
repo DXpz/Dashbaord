@@ -604,7 +604,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         'X-API-KEY': key,
       };
 
-      const motivoCompleto = `SIN CONTACTO - ${lostReason}: ${lostDescription}`;
+      const motivoCompleto = `${lostReason}: ${lostDescription}`;
       const body = {
         resultado_venta: 'perdida',
         resultado_propuesta: 'perdida',
