@@ -391,6 +391,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
   }, [clientId, initialStage]);
 
   const [stageData, setStageData] = useState<Record<number, Record<string, string | boolean>>>({});
+  const [isDirty, setIsDirty] = useState(false);
 
   const getFieldValue = (fieldId: string) => String(currentData[fieldId] || '');
 
@@ -439,8 +440,10 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         }
       }
 
-      const saved = await handleSave(false);
-      if (!saved) return;
+      if (isDirty) {
+        const saved = await handleSave(false);
+        if (!saved) return;
+      }
     }
 
     setValidationError(null);
@@ -450,6 +453,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
   const handleChange = (fieldId: string, value: string) => {
     if (readOnly) return;
     setValidationError(null);
+    setIsDirty(true);
     const stageNum = stages[currentStageIndex]?.stageNumber;
     setStageData(prev => ({
       ...prev,
@@ -569,6 +573,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
 
       if (res.ok) {
         if (showToast) showSuccess('Feedback guardado correctamente');
+        setIsDirty(false);
         return true;
       } else {
         const errorData = await res.json().catch(() => ({}));
