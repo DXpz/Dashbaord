@@ -160,6 +160,8 @@ export function useAdminDashboard(filters: FilterState | null) {
       }
 
       console.log('[useAdminDashboard] result keys:', Object.keys(result || {}));
+      console.log('[useAdminDashboard] metricas:', JSON.stringify(result?.metricas || {}));
+      console.log('[useAdminDashboard] stages count:', (result?.stages || []).length, 'leads_por_stage count:', (result?.leads_por_stage || []).length);
       setData(result as DashboardData);
     } catch (err: any) {
       const message = err?.message || err?.cause?.message || 'Error al cargar datos';
