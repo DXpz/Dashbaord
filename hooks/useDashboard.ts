@@ -157,7 +157,7 @@ export function useAdminDashboard(filters: FilterState | null) {
         result = await API.dashboard(
           filters.desde,
           filters.hasta,
-          { pais, tipoLead: filters.tipoLead, origen: filters.origen }
+          { pais, tipoLead: filters.tipoLead, origen: filters.origen, tipoLlamada: filters.tipoLlamada }
         );
       }
 
@@ -170,7 +170,7 @@ export function useAdminDashboard(filters: FilterState | null) {
     } finally {
       setLoading(false);
     }
-  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead, filters?.origen, user?.country_code]);
+  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead, filters?.origen, filters?.tipoLlamada, user?.country_code]);
 
   useEffect(() => {
     fetchData();

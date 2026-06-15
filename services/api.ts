@@ -159,7 +159,7 @@ export const API = {
     opts: Record<string, any> = {}
   ) {
     const paisCode = normPaisQuery(opts.pais);
-    const key = `dashboard|${desde}|${hasta}|${opts.asesor || opts.nombre || ''}|${paisCode}|${opts.tipoLead || ''}|${opts.origen || ''}`;
+    const key = `dashboard|${desde}|${hasta}|${opts.asesor || opts.nombre || ''}|${paisCode}|${opts.tipoLead || ''}|${opts.origen || ''}|${opts.tipoLlamada || ''}`;
     const now = Date.now();
     if (_cache && _cacheKey === key && now < _cacheExpiry) return _cache;
     const params = {
@@ -167,7 +167,8 @@ export const API = {
       ...(opts.asesor ? asesorParam(opts.asesor) : nombreParam(opts.nombre)),
       ...paisParam(paisCode),
       ...tipoLeadParam(opts.tipoLead),
-      ...origenParam(opts.origen)
+      ...origenParam(opts.origen),
+      ...tipoLlamadaParam(opts.tipoLlamada)
     };
     const data = await get('/metrics/admin/dashboard', params);
     _cache = data;
