@@ -8,9 +8,11 @@ const DEFAULT_UPSTREAM = 'http://200.35.189.139';
 const API_KEY = process.env.API_KEY || '';
 
 const FETCH_TIMEOUT_MS = 25000;
+const DASHBOARD_CACHE_TTL_MS = 30000;
 
 let _cache: any = null;
 let _cacheKey = '';
+let _cacheExpiry = 0;
 
 function isProduction(): boolean {
   if (typeof window === 'undefined') return true;
@@ -144,7 +146,7 @@ async function del(path: string) {
 
 export const API = {
   getBase,
-  invalidateCache() { _cache = null; _cacheKey = ''; },
+  invalidateCache() { _cache = null; _cacheKey = ''; _cacheExpiry = 0; },
 
   async dashboard(
     desde: string,
@@ -153,7 +155,8 @@ export const API = {
   ) {
     const paisCode = normPaisQuery(opts.pais);
     const key = `dashboard|${desde}|${hasta}|${opts.asesor || opts.nombre || ''}|${paisCode}|${opts.tipoLead || ''}|${opts.origen || ''}`;
-    if (_cache && _cacheKey === key) return _cache;
+    const now = Date.now();
+    if (_cache && _cacheKey === key && now < _cacheExpiry) return _cache;
     const params = {
       desde, hasta,
       ...(opts.asesor ? asesorParam(opts.asesor) : nombreParam(opts.nombre)),
@@ -164,6 +167,7 @@ export const API = {
     const data = await get('/metrics/admin/dashboard', params);
     _cache = data;
     _cacheKey = key;
+    _cacheExpiry = now + DASHBOARD_CACHE_TTL_MS;
     return data;
   },
 
