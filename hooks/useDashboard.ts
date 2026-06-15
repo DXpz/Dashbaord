@@ -171,6 +171,7 @@ export function useAdminDashboard(filters: FilterState | null) {
   }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead, filters?.origen, user?.country_code]);
 
   useEffect(() => {
+    console.log('[useAdminDashboard] useEffect triggered, calling fetchData');
     fetchData();
   }, [fetchData]);
 
