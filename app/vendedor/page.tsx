@@ -8,6 +8,7 @@ import { KPICard } from '@/components/kpi/KPICard';
 import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VendedorCalendar, CalendarEvent } from '@/components/calendar/VendedorCalendar';
 import { Target, TrendingUp, Users, CheckCircle } from 'lucide-react';
 
 const COLORS = {
@@ -24,6 +25,7 @@ export default function VendedorDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
     if (!user?.full_name) return;
@@ -37,6 +39,40 @@ export default function VendedorDashboard() {
           user.country_code
         );
         setData(result);
+
+        const calendarStart = new Date();
+        calendarStart.setMonth(calendarStart.getMonth() - 1);
+        const calendarEnd = new Date();
+        calendarEnd.setMonth(calendarEnd.getMonth() + 3);
+        const fmt = (d: Date) => d.toISOString().split('T')[0];
+        const reunionesResult = await API.reuniones(
+          fmt(calendarStart), fmt(calendarEnd), 500, 0,
+          { pais: user.country_code, nombre: user.full_name }
+        );
+        const list = reunionesResult?.reuniones || reunionesResult?.items || (Array.isArray(reunionesResult) ? reunionesResult : []);
+        const evs: CalendarEvent[] = [];
+        for (const r of list) {
+          if (r.advisor_name !== user.full_name) continue;
+          const clientName = r.client_name || '';
+          if (r.created_at) {
+            evs.push({ date: r.created_at.split('T')[0], type: 'lead', label: 'Lead', clientName });
+          }
+          const sfRaw = r.stage_feedback_json;
+          let sf: any = {};
+          if (typeof sfRaw === 'string' && sfRaw.trim()) {
+            try { sf = JSON.parse(sfRaw); } catch { sf = {}; }
+          } else if (typeof sfRaw === 'object' && sfRaw) { sf = sfRaw; }
+          if (sf?.['2']?.fecha_reunion) {
+            evs.push({ date: sf['2'].fecha_reunion.split('T')[0], type: 'reunion', label: 'Reunión', clientName });
+          }
+          if (sf?.['4']?.fecha_propuesta) {
+            evs.push({ date: sf['4'].fecha_propuesta.split('T')[0], type: 'propuesta', label: 'Propuesta', clientName });
+          }
+          if (sf?.['5']?.fecha_seguimiento) {
+            evs.push({ date: sf['5'].fecha_seguimiento.split('T')[0], type: 'seguimiento', label: 'Seguimiento', clientName });
+          }
+        }
+        setEvents(evs);
       } catch (err) {
         console.error('Error:', err);
       } finally {
@@ -44,7 +80,7 @@ export default function VendedorDashboard() {
       }
     };
     fetchData();
-  }, [user?.full_name, authLoading, desde, hasta, refreshKey]);
+  }, [user?.full_name, user?.country_code, authLoading, desde, hasta, refreshKey]);
 
   const metricas = data?.metricas || {};
 
@@ -136,6 +172,8 @@ export default function VendedorDashboard() {
           }} height="200px" />
         </ChartCard>
       </div>
+
+      <VendedorCalendar events={events} />
     </div>
   );
 }
