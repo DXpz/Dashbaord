@@ -60,6 +60,10 @@ export default function VendedorDashboard() {
           if (typeof sfRaw === 'string' && sfRaw.trim()) {
             try { sf = JSON.parse(sfRaw); } catch { sf = {}; }
           } else if (typeof sfRaw === 'object' && sfRaw) { sf = sfRaw; }
+          if (r.start_time) {
+            const startDate = r.start_time.split('T')[0];
+            evs.push({ date: startDate, type: 'reunion', label: 'Reunión', clientName });
+          }
           if (sf?.['2']?.fecha_reunion) {
             evs.push({ date: sf['2'].fecha_reunion.split('T')[0], type: 'reunion', label: 'Reunión', clientName });
           }
