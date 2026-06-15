@@ -39,6 +39,7 @@ async function handleRequest(req: NextRequest) {
   }
 
   const base = (process.env.API_UPSTREAM ?? 'http://200.35.189.139:3001').trim().replace(/\/+$/, '');
+  console.log('[proxy] API_UPSTREAM env:', JSON.stringify(process.env.API_UPSTREAM), '→ using base:', base);
 
   const { searchParams } = req.nextUrl;
   const endpointParam = searchParams.get('endpoint');
