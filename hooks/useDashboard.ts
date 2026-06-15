@@ -152,7 +152,7 @@ export function useAdminDashboard(filters: FilterState | null) {
           leads_por_stage: asesorData.leads_por_stage || [],
         };
       } else {
-        result = await API.dashboard(
+        result = await API.dashboardMetrics(
           filters.desde,
           filters.hasta,
           { pais, tipoLead: filters.tipoLead, origen: filters.origen }

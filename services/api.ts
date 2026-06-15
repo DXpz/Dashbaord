@@ -171,6 +171,26 @@ export const API = {
     return data;
   },
 
+  async dashboardMetrics(
+    desde: string,
+    hasta: string,
+    opts: Record<string, any> = {}
+  ) {
+    const paisCode = normPaisQuery(opts.pais);
+    const key = `dm|${desde}|${hasta}|${paisCode}|${opts.tipoLead || ''}|${opts.origen || ''}`;
+    const now = Date.now();
+    if (_cache && _cacheKey === key && now < _cacheExpiry) return _cache;
+    const params: Record<string, any> = { desde, hasta };
+    if (paisCode) params.pais = paisCode;
+    if (opts.tipoLead) params.tipoLead = opts.tipoLead;
+    if (opts.origen) params.origen = opts.origen;
+    const data = await get('/metrics/dashboard', params);
+    _cache = data;
+    _cacheKey = key;
+    _cacheExpiry = now + DASHBOARD_CACHE_TTL_MS;
+    return data;
+  },
+
   resumen(desde: string, hasta: string, nombre?: string, pais?: string, tipoLead?: string, origen?: string) {
     return get('/metrics/resumen', { desde, hasta, ...nombreParam(nombre), ...paisParam(pais), ...tipoLeadParam(tipoLead), ...origenParam(origen) });
   },
