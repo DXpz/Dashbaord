@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
+import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters, useEquiposCount } from '@/hooks';
 import { useAuth } from '@/lib/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
@@ -24,7 +24,8 @@ export default function HomePage() {
   const { user } = useAuth();
   const [showCerradas, setShowCerradas] = useState(true);
   const [showPerdidas, setShowPerdidas] = useState(true);
-  const asesoresList = useAsesores(filters);
+  const   asesoresList = useAsesores(filters);
+  const { equipos: equiposCalc } = useEquiposCount(filters);
 
   const AsesoresOptions = useMemo(() => (asesoresList || []).map((a: string) => ({ value: a, label: a })), [asesoresList]);
 
@@ -44,7 +45,7 @@ export default function HomePage() {
   const seguimientos = metricas.seguimientos_registrados ?? 0;
   const ventasCerradas = metricas.ventas_cerradas ?? 0;
   const ventasPerdidas = metricas.ventas_perdidas ?? 0;
-  const totalEquipos = metricas.total_equipos ?? 0;
+  const totalEquipos = metricas.total_equipos ?? equiposCalc;
   const atendidosPorAsesor = metricas.atendidos_por_asesor ?? resumen.atendidos_por_asesor ?? 0;
   const atendidosPorLider = metricas.atendidos_por_lider ?? resumen.atendidos_por_lider ?? 0;
   const atendidosPorGerente = metricas.atendidos_por_gerente ?? resumen.atendidos_por_gerente ?? 0;
