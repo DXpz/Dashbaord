@@ -134,6 +134,7 @@ export function useAdminDashboard(filters: FilterState | null) {
             ventas_cerradas: m.cerrados_ganados || 0,
             ventas_perdidas: m.cerrados_perdidos || 0,
             leads_no_agendados: 0,
+            total_equipos: m.total_equipos || 0,
             atendidos_por_asesor: m.leads_aceptados || 0,
             atendidos_por_lider: 0,
             atendidos_por_gerente: 0,
