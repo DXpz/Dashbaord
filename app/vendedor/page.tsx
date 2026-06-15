@@ -136,16 +136,6 @@ export default function VendedorDashboard() {
           }} height="200px" />
         </ChartCard>
       </div>
-
-      <div className="bg-white border border-[#EEEEEC] p-5">
-        <h3 className="text-sm font-medium text-[#1F1D3D] mb-4">Resumen de Desempeño</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-          <div><span className="text-[#B5B5AE]">Reuniones con Retro</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesConRetro}</p></div>
-          <div><span className="text-[#B5B5AE]">Reuniones Sin Retro</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.reunionesSinRetro}</p></div>
-          <div><span className="text-[#B5B5AE]">Propuestas Registradas</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.propuestas}</p></div>
-          <div><span className="text-[#B5B5AE]">Seguimientos</span><p className="text-lg font-semibold text-[#1F1D3D]">{kpis.seguimientos}</p></div>
-        </div>
-      </div>
     </div>
   );
 }
