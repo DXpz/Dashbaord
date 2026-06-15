@@ -54,6 +54,7 @@ export default function MetricasEtapasPage() {
     asesor: '',
     tipoLead: '',
     origen: '',
+    tipoLlamada: '',
   });
   const allAsesores = (Array.isArray(allAsesoresRaw) ? allAsesoresRaw : []).map((a: string) => ({ value: a, label: a }));
 

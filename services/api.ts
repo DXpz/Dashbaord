@@ -62,6 +62,11 @@ function origenParam(origen: string | undefined) {
   return { origen };
 }
 
+function tipoLlamadaParam(tipoLlamada: string | undefined) {
+  if (!tipoLlamada) return {};
+  return { tipo_llamada: tipoLlamada };
+}
+
 function nombreParam(nombre: string | undefined) {
   if (!nombre || !String(nombre).trim()) return {};
   return { nombre: String(nombre).trim() };
@@ -225,6 +230,7 @@ export const API = {
     if (extra.pais) params.pais = extra.pais;
     if (extra.tipoLead) params.tipo_lead = extra.tipoLead;
     if (extra.origen) params.origen = extra.origen;
+    if (extra.tipoLlamada) params.tipo_llamada = extra.tipoLlamada;
     return get('/metrics/reuniones', params);
   },
 

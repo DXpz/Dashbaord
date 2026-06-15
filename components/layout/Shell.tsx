@@ -28,6 +28,7 @@ export function Shell({
     asesor: string;
     tipoLead: string;
     origen: string;
+    tipoLlamada: string;
   };
   onFilterChange: (key: string, value: string) => void;
   onFiltrar: () => void;

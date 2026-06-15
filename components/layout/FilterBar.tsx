@@ -11,6 +11,7 @@ interface FilterBarProps {
     asesor: string;
     tipoLead: string;
     origen: string;
+    tipoLlamada: string;
   };
   onFilterChange: (key: string, value: string) => void;
   onFiltrar: () => void;
@@ -67,7 +68,7 @@ export function FilterBar({
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        ['desde', 'hasta', 'pais', 'asesor', 'tipoLead', 'origen'].forEach((key) => {
+        ['desde', 'hasta', 'pais', 'asesor', 'tipoLead', 'origen', 'tipoLlamada'].forEach((key) => {
           if (parsed[key] !== undefined) onFilterChange(key, parsed[key]);
         });
       } catch {}
@@ -153,6 +154,17 @@ export function FilterBar({
         <option value="PostIAlo Mailing">PostIAlo Mailing</option>
         <option value="PBX SV">PBX SV</option>
         <option value="PBX GT">PBX GT</option>
+      </select>
+
+      <select
+        value={filters.tipoLlamada || ''}
+        onChange={(e) => persistFilters('tipoLlamada', e.target.value)}
+        className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+      >
+        <option value="">Tipo de llamada</option>
+        <option value="Llamada Virtual">Llamada Virtual</option>
+        <option value="Reunion Presencial">Reunión Presencial</option>
+        <option value="Llamada Telefonica">Llamada Telefónica</option>
       </select>
 
       <select
