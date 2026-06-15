@@ -47,7 +47,14 @@ export default function MetricasEtapasPage() {
   const { acknowledge, loading: ackLoading } = useAcknowledgeEvent();
   const [acknowledgingId, setAcknowledgingId] = useState<number | null>(null);
 
-  const allAsesoresRaw = useAsesores({} as any);
+  const allAsesoresRaw = useAsesores({
+    desde: month && year ? `${year}-${month}-01` : '',
+    hasta: month && year ? getLastDayOfMonth(Number(year), month) : '',
+    pais: user?.country_code || '',
+    asesor: '',
+    tipoLead: '',
+    origen: '',
+  });
   const allAsesores = (Array.isArray(allAsesoresRaw) ? allAsesoresRaw : []).map((a: string) => ({ value: a, label: a }));
 
   useEffect(() => {
