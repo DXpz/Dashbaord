@@ -22,17 +22,20 @@ export function useEquiposCount(filters: FiltersState) {
         let total = 0;
         for (const item of list) {
           const stage = item.opportunity_stage;
-          const sfRaw = item.stage_feedback_json || '';
-          let sf: any = {};
-          if (typeof sfRaw === 'string' && sfRaw.trim()) {
-            try { sf = JSON.parse(sfRaw); } catch { sf = {}; }
-          } else if (typeof sfRaw === 'object') { sf = sfRaw; }
+          const status = item.status;
+          const resultadoVenta = item.resultado_venta;
           const isCierre = stage === 6;
-          const isGanado = item.status === 'cerrado' && (sf['6']?.resultado_propuesta === 'ganada' || sf[6]?.resultado_propuesta === 'ganada');
+          const isGanado = status === 'cerrado' && resultadoVenta === 'cerrada';
           if (!isCierre || !isGanado) continue;
-          const eq4 = sf['4']?.cantidad_equipos || sf[4]?.cantidad_equipos || '';
-          if (eq4) {
-            const num = parseInt(String(eq4), 10);
+          let pj: any = item.propuesta_json;
+          if (typeof pj === 'string' && pj.trim()) {
+            try { pj = JSON.parse(pj); } catch { pj = {}; }
+          } else if (typeof pj !== 'object' || pj === null) {
+            pj = {};
+          }
+          const eq = pj.equipos;
+          if (eq) {
+            const num = parseInt(String(eq), 10);
             if (!isNaN(num)) total += num;
           }
         }
