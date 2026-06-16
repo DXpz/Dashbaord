@@ -90,7 +90,7 @@ export function useAdminDashboard(filters: FilterState | null) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const lastFetchRef = useRef<{ desde: string; hasta: string; pais: string; asesor: string; tipoLead: string; origen: string } | null>(null);
+  const lastFetchRef = useRef<{ desde: string; hasta: string; pais: string; asesor: string; tipoLead: string; origen: string; tipoLlamada: string } | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
