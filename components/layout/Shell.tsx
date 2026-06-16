@@ -18,6 +18,7 @@ export function Shell({
   connectionStatus,
   showPaisFilter,
   showFilterBar = true,
+  isSuperAdmin,
 }: {
   children: React.ReactNode;
   pageTitle: string;
@@ -37,6 +38,7 @@ export function Shell({
   connectionStatus: 'connected' | 'connecting' | 'error';
   showPaisFilter?: boolean;
   showFilterBar?: boolean;
+  isSuperAdmin?: boolean;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -67,6 +69,7 @@ export function Shell({
                 asesores={asesores}
                 connectionStatus={connectionStatus}
                 showPaisFilter={showPaisFilter}
+                isSuperAdmin={isSuperAdmin}
               />
             )}
           </header>

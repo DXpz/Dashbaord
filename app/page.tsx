@@ -28,7 +28,8 @@ export default function HomePage() {
 
   const AsesoresOptions = useMemo(() => (asesoresList || []).map((a: string) => ({ value: a, label: a })), [asesoresList]);
 
-  const showPaisFilter = user?.country_code === 'SV';
+  const isSuperAdmin = user?.is_super_admin === true || user?.email === 'ghenriquez@red.com.sv';
+  const showPaisFilter = isSuperAdmin || user?.country_code === 'SV';
 
   const metricas = data?.metricas || {};
   const resumen = data?.resumen || {};
@@ -270,6 +271,7 @@ export default function HomePage() {
         asesores={AsesoresOptions}
         connectionStatus={connectionStatus}
         showPaisFilter={showPaisFilter}
+        isSuperAdmin={isSuperAdmin}
       >
         <div className="flex items-center justify-center h-64">
           <p className="text-sm text-[#B5B5AE]">{error}</p>
@@ -288,6 +290,7 @@ export default function HomePage() {
       asesores={AsesoresOptions}
       connectionStatus={connectionStatus}
       showPaisFilter={showPaisFilter}
+      isSuperAdmin={isSuperAdmin}
     >
       <div className="space-y-6">
         <div className="flex flex-col lg:flex-row gap-4">

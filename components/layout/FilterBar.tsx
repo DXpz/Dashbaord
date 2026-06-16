@@ -19,6 +19,20 @@ interface FilterBarProps {
   asesores: Array<{ value: string; label: string }>;
   connectionStatus: 'connected' | 'connecting' | 'error';
   showPaisFilter?: boolean;
+  isSuperAdmin?: boolean;
+}
+
+function isUserSuperAdmin(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = localStorage.getItem('api_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u?.is_super_admin === true) return true;
+      if (u?.email === 'ghenriquez@red.com.sv') return true;
+    }
+  } catch {}
+  return false;
 }
 
 const MONTHS = [
@@ -57,11 +71,19 @@ export function FilterBar({
   asesores,
   connectionStatus,
   showPaisFilter = false,
+  isSuperAdmin = false,
 }: FilterBarProps) {
   const storageKey = 'dashboard_filters';
   const { month, year } = getMonthFromDate(filters.desde);
   const currentYear = new Date().getFullYear();
   const years = [currentYear - 1, currentYear, currentYear + 1];
+  const [isSuperAdminState, setIsSuperAdminState] = React.useState(isSuperAdmin);
+
+  React.useEffect(() => {
+    setIsSuperAdminState(isUserSuperAdmin() || isSuperAdmin);
+  }, [isSuperAdmin]);
+
+  const showPaisDropdown = isSuperAdminState || showPaisFilter;
 
   React.useEffect(() => {
     const saved = localStorage.getItem(storageKey);
@@ -120,13 +142,18 @@ export function FilterBar({
         </select>
       </div>
 
-      {showPaisFilter && (
+      {showPaisDropdown && (
         <select
           value={filters.pais || ''}
           onChange={(e) => persistFilters('pais', e.target.value)}
-          className="text-sm font-medium text-[#35325B] bg-transparent outline-none cursor-pointer"
+          className={cn(
+            "text-sm font-medium bg-transparent outline-none cursor-pointer",
+            isSuperAdminState ? "text-[#1F1D3D] font-semibold" : "text-[#35325B]"
+          )}
+          title={isSuperAdminState ? "Super admin: filtrar por país o ver todos" : "País"}
         >
-          <option value="">País</option>
+          {isSuperAdminState && <option value="">Todos los países</option>}
+          {!isSuperAdminState && <option value="">País</option>}
           <option value="SV">SV</option>
           <option value="GT">GT</option>
         </select>
