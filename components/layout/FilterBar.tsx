@@ -22,19 +22,6 @@ interface FilterBarProps {
   isSuperAdmin?: boolean;
 }
 
-function isUserSuperAdmin(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    const raw = localStorage.getItem('api_user');
-    if (raw) {
-      const u = JSON.parse(raw);
-      if (u?.is_super_admin === true) return true;
-      if (u?.email === 'ghenriquez@red.com.sv') return true;
-    }
-  } catch {}
-  return false;
-}
-
 const MONTHS = [
   { value: '01', label: 'Enero' },
   { value: '02', label: 'Febrero' },
@@ -77,13 +64,6 @@ export function FilterBar({
   const { month, year } = getMonthFromDate(filters.desde);
   const currentYear = new Date().getFullYear();
   const years = [currentYear - 1, currentYear, currentYear + 1];
-  const [isSuperAdminState, setIsSuperAdminState] = React.useState(isSuperAdmin);
-
-  React.useEffect(() => {
-    setIsSuperAdminState(isUserSuperAdmin() || isSuperAdmin);
-  }, [isSuperAdmin]);
-
-  const showPaisDropdown = isSuperAdminState || showPaisFilter;
 
   React.useEffect(() => {
     const saved = localStorage.getItem(storageKey);
@@ -141,23 +121,6 @@ export function FilterBar({
           ))}
         </select>
       </div>
-
-      {showPaisDropdown && (
-        <select
-          value={filters.pais || (isSuperAdminState ? 'ALL' : '')}
-          onChange={(e) => persistFilters('pais', e.target.value)}
-          className={cn(
-            "text-sm font-medium bg-transparent outline-none cursor-pointer",
-            isSuperAdminState ? "text-[#1F1D3D] font-semibold" : "text-[#35325B]"
-          )}
-          title={isSuperAdminState ? "Super admin: filtrar por país o ver todos" : "País"}
-        >
-          {isSuperAdminState && <option value="ALL">Todos los países</option>}
-          {!isSuperAdminState && <option value="">País</option>}
-          <option value="SV">SV</option>
-          <option value="GT">GT</option>
-        </select>
-      )}
 
       <select
         value={filters.tipoLead || ''}
