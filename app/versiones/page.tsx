@@ -5,6 +5,20 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.1.5',
+    fecha: '2026-06-16',
+    cambios: [
+      'Filtros: nuevo filtro "Tipo de llamada" (Llamada Virtual, Reunión Presencial, Llamada Telefónica)',
+      'Filtros: persisten entre vistas (Resumen, Reuniones, Propuestas) usando localStorage',
+      'Reuniones: API.reuniones ahora filtra correctamente por asesor (antes no se enviaba el param)',
+      'Reuniones: filtro tipoLlamada ahora se aplica correctamente',
+      'Backend: distinción entre filtros globales (total_leads) y filtros específicos (lead_calificado, atendidos_por_asesor)',
+      'Backend: atendidos_por_asesor cuenta solo leads realmente gestionados (con retroalimentación, en_proceso, cerrado, o stage > 1)',
+      'Backend: leads_no_agendados ahora filtra por origen y asesor',
+      'Backend: 89 leads backfilled con preferred_tipo_llamada desde stage_feedback_json[2].tipo_reunion',
+    ],
+  },
+  {
     version: '2.1.4',
     fecha: '2026-06-15',
     cambios: [
