@@ -24,7 +24,19 @@ export function useFilters() {
   const [filters, setFilters] = useState<FiltersState>(() => {
     if (typeof window === 'undefined') return { desde: '', hasta: '', pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '' };
     const defaults = getDefaultDates();
-    return { ...defaults, pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '' };
+    const initial = { ...defaults, pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '' };
+    try {
+      const saved = localStorage.getItem('dashboard_filters');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        Object.keys(parsed).forEach((key) => {
+          if (parsed[key] !== undefined && (parsed[key] !== '')) {
+            (initial as any)[key] = parsed[key];
+          }
+        });
+      }
+    } catch {}
+    return initial;
   });
 
   const handleFilterChange = useCallback((key: string, value: string) => {
