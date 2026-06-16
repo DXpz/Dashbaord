@@ -101,13 +101,14 @@ export function useAdminDashboard(filters: FilterState | null) {
     }
 
     const pais = filters.pais || user?.country_code || '';
-    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor || '', tipoLead: filters.tipoLead || '', origen: filters.origen || '' };
+    const filterKey = { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor || '', tipoLead: filters.tipoLead || '', origen: filters.origen || '', tipoLlamada: filters.tipoLlamada || '' };
     if (lastFetchRef.current?.desde === filterKey.desde &&
         lastFetchRef.current?.hasta === filterKey.hasta &&
         lastFetchRef.current?.pais === filterKey.pais &&
         lastFetchRef.current?.asesor === filterKey.asesor &&
         lastFetchRef.current?.tipoLead === filterKey.tipoLead &&
-        lastFetchRef.current?.origen === filterKey.origen) {
+        lastFetchRef.current?.origen === filterKey.origen &&
+        lastFetchRef.current?.tipoLlamada === filterKey.tipoLlamada) {
       return;
     }
     lastFetchRef.current = filterKey;
@@ -115,7 +116,7 @@ export function useAdminDashboard(filters: FilterState | null) {
     setLoading(true);
     setError(null);
     try {
-      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor, tipoLead: filters.tipoLead, origen: filters.origen });
+      console.log('[useAdminDashboard] fetching:', { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor, tipoLead: filters.tipoLead, origen: filters.origen, tipoLlamada: filters.tipoLlamada });
       let result: any;
 
       if (filters.asesor) {
