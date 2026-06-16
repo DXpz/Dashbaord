@@ -11,6 +11,7 @@ export interface ApiUser {
   role: string;
   country_code: string;
   is_active: boolean;
+  is_super_admin?: boolean;
 }
 
 function parseJwtPayload(token: string): any | null {
@@ -48,6 +49,7 @@ export async function getSessionFromCookie(): Promise<ApiUser | null> {
     role: payload.role,
     country_code: payload.country_code || '',
     is_active: true,
+    is_super_admin: payload.is_super_admin || false,
   };
 }
 

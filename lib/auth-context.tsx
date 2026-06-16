@@ -10,6 +10,7 @@ export interface ApiUser {
   role: string;
   country_code: string;
   is_active: boolean;
+  is_super_admin?: boolean;
 }
 
 interface AuthContextType {
@@ -33,9 +34,14 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/auth/me', { cache: 'no-store' });
       if (res.ok) {
         const userData = await res.json();
-        setUser(userData.user || userData.data || userData);
+        const u = userData.user || userData.data || userData;
+        setUser(u);
+        if (typeof window !== 'undefined' && u?.email) {
+          localStorage.setItem('api_user', JSON.stringify(u));
+        }
       } else {
         setUser(null);
+        if (typeof window !== 'undefined') localStorage.removeItem('api_user');
       }
     } catch {
       setUser(null);
@@ -61,9 +67,15 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       const userData = data.user || data.data || data;
       if (userData.must_change_password) {
         setUser(userData);
+        if (typeof window !== 'undefined' && userData?.email) {
+          localStorage.setItem('api_user', JSON.stringify(userData));
+        }
         return { ok: true, mustChangePassword: true };
       }
       setUser(userData);
+      if (typeof window !== 'undefined' && userData?.email) {
+        localStorage.setItem('api_user', JSON.stringify(userData));
+      }
       router.push(userData.role === 'advisor' ? '/vendedor' : '/');
       return { ok: true };
     } catch (e) {
@@ -74,6 +86,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setUser(null);
     setLoading(true);
+    if (typeof window !== 'undefined') localStorage.removeItem('api_user');
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {
