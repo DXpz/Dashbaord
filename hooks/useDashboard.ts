@@ -320,8 +320,8 @@ export function useReuniones(filters: FilterState) {
 const desde = filters.desde;
         const hasta = filters.hasta;
         const pais = filters.pais || user?.country_code;
-        console.log('[useReuniones] fetching:', { desde, hasta, pais, tipoLead: filters.tipoLead, origen: filters.origen, tipoLlamada: filters.tipoLlamada });
-        const result = await API.reuniones(desde, hasta, 200, 0, { pais, tipoLead: filters.tipoLead || undefined, origen: filters.origen || undefined, tipoLlamada: filters.tipoLlamada || undefined });
+        console.log('[useReuniones] fetching:', { desde, hasta, pais, asesor: filters.asesor, tipoLead: filters.tipoLead, origen: filters.origen, tipoLlamada: filters.tipoLlamada });
+        const result = await API.reuniones(desde, hasta, 200, 0, { pais, asesor: filters.asesor || undefined, tipoLead: filters.tipoLead || undefined, origen: filters.origen || undefined, tipoLlamada: filters.tipoLlamada || undefined });
       console.log('[useReuniones] raw result:', result);
       const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
       console.log('[useReuniones] setReuniones:', list.length, 'items');
@@ -332,7 +332,7 @@ const desde = filters.desde;
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, filters.tipoLlamada, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, filters.tipoLlamada, user?.country_code]);
 
   useEffect(() => {
     fetchReuniones();
