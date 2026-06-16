@@ -144,7 +144,7 @@ export function FilterBar({
 
       {showPaisDropdown && (
         <select
-          value={filters.pais || ''}
+          value={filters.pais || (isSuperAdminState ? 'ALL' : '')}
           onChange={(e) => persistFilters('pais', e.target.value)}
           className={cn(
             "text-sm font-medium bg-transparent outline-none cursor-pointer",
@@ -152,7 +152,7 @@ export function FilterBar({
           )}
           title={isSuperAdminState ? "Super admin: filtrar por país o ver todos" : "País"}
         >
-          {isSuperAdminState && <option value="">Todos los países</option>}
+          {isSuperAdminState && <option value="ALL">Todos los países</option>}
           {!isSuperAdminState && <option value="">País</option>}
           <option value="SV">SV</option>
           <option value="GT">GT</option>

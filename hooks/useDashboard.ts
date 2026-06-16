@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { API } from '@/services/api';
 import { useAuth } from '@/lib/auth-context';
+import { resolvePais } from '@/lib/pais';
 
 export interface FilterState {
   desde: string;
@@ -100,7 +101,7 @@ export function useAdminDashboard(filters: FilterState | null) {
       return;
     }
 
-    const pais = filters.pais || user?.country_code || '';
+    const pais = resolvePais(filters.pais, user);
     const filterKey = { desde: filters.desde, hasta: filters.hasta, pais, asesor: filters.asesor || '', tipoLead: filters.tipoLead || '', origen: filters.origen || '', tipoLlamada: filters.tipoLlamada || '' };
     if (lastFetchRef.current?.desde === filterKey.desde &&
         lastFetchRef.current?.hasta === filterKey.hasta &&
@@ -171,7 +172,7 @@ export function useAdminDashboard(filters: FilterState | null) {
     } finally {
       setLoading(false);
     }
-  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead, filters?.origen, filters?.tipoLlamada, user?.country_code]);
+  }, [filters?.desde, filters?.hasta, filters?.pais, filters?.asesor, filters?.tipoLead, filters?.origen, filters?.tipoLlamada, user]);
 
   useEffect(() => {
     fetchData();
@@ -211,7 +212,7 @@ export function useAsesores(filters: FilterState) {
     if (!filters.desde || !filters.hasta) return;
     const fetchAsesores = async () => {
       try {
-        const pais = filters.pais || user?.country_code || undefined;
+        const pais = resolvePais(filters.pais, user) || undefined;
         const result = await API.listaAsesores(filters.desde, filters.hasta, filters.asesor || undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         const arr = Array.isArray(result) ? result : (result?.items || []);
         setAsesores(arr.map((a: any) => typeof a === 'string' ? a : a.asesor || a.nombre || a.nombre_vendedor || '').filter(Boolean));
@@ -220,7 +221,7 @@ export function useAsesores(filters: FilterState) {
       }
     };
     fetchAsesores();
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user]);
 
   return asesores;
 }
@@ -235,7 +236,7 @@ export function useListaAsesores(filters: FilterState) {
     const fetch = async () => {
       setLoading(true);
       try {
-        const pais = filters.pais || user?.country_code || undefined;
+        const pais = resolvePais(filters.pais, user) || undefined;
         console.log('[useListaAsesores] fetching with pais:', pais);
         const result = await API.listaAsesores(filters.desde, filters.hasta, undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         const arr = Array.isArray(result) ? result : (result?.asesores || result?.items || []);
@@ -248,7 +249,7 @@ export function useListaAsesores(filters: FilterState) {
       }
     };
     fetch();
-  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user]);
 
   return { data, loading };
 }
@@ -317,9 +318,9 @@ export function useReuniones(filters: FilterState) {
     setLoading(true);
     setError(null);
     try {
-const desde = filters.desde;
+      const desde = filters.desde;
         const hasta = filters.hasta;
-        const pais = filters.pais || user?.country_code;
+        const pais = resolvePais(filters.pais, user);
         console.log('[useReuniones] fetching:', { desde, hasta, pais, asesor: filters.asesor, tipoLead: filters.tipoLead, origen: filters.origen, tipoLlamada: filters.tipoLlamada });
         const result = await API.reuniones(desde, hasta, 200, 0, { pais, asesor: filters.asesor || undefined, tipoLead: filters.tipoLead || undefined, origen: filters.origen || undefined, tipoLlamada: filters.tipoLlamada || undefined });
       console.log('[useReuniones] raw result:', result);
@@ -332,7 +333,7 @@ const desde = filters.desde;
     } finally {
       setLoading(false);
     }
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, filters.tipoLlamada, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, filters.tipoLlamada, user]);
 
   useEffect(() => {
     fetchReuniones();
@@ -355,7 +356,7 @@ export function useAllLeads(filters: FilterState) {
       try {
         const desde = filters.desde || undefined;
         const hasta = filters.hasta || undefined;
-         const pais = filters.pais || user?.country_code;
+         const pais = resolvePais(filters.pais, user);
          const result = await API.reuniones(desde ?? '', hasta ?? '', 200, 0, { pais, tipoLead: filters.tipoLead || undefined, origen: filters.origen || undefined });
         const list = result?.reuniones ?? result?.items ?? (Array.isArray(result) ? result : []);
         setLeads(Array.isArray(list) ? list : []);
@@ -366,7 +367,7 @@ export function useAllLeads(filters: FilterState) {
       }
     };
     fetchLeads();
-  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user]);
 
   return { leads, loading, error };
 }
@@ -384,7 +385,7 @@ export function useFuentes(filters: FilterState) {
       try {
         const desde = filters.desde || undefined;
         const hasta = filters.hasta || undefined;
-        const pais = filters.pais || user?.country_code;
+        const pais = resolvePais(filters.pais, user);
         const result = await API.fuentes(desde ?? '', hasta ?? '', { pais, tipoLead: filters.tipoLead, origen: filters.origen });
         const list = result?.fuentes || result?.items || result || [];
         setFuentes(Array.isArray(list) ? list : []);
@@ -398,7 +399,7 @@ export function useFuentes(filters: FilterState) {
       }
     };
     fetchFuentes();
-  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.tipoLead, filters.origen, user]);
 
   return { fuentes, tiposLlamada, loading };
 }
@@ -415,7 +416,7 @@ export function useMotivosPerdida(filters: FilterState) {
     const fetchMotivos = async () => {
       setLoading(true);
       try {
-        const pais = filters.pais || user?.country_code || undefined;
+        const pais = resolvePais(filters.pais, user) || undefined;
         const json = await API.motivosPerdida(filters.desde, filters.hasta, 50, filters.asesor || undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         if (cancelled) return;
         const motivos = Array.isArray(json.motivos) ? json.motivos : [];
@@ -430,7 +431,7 @@ export function useMotivosPerdida(filters: FilterState) {
     };
     fetchMotivos();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user]);
 
   return { motivos: data.motivos, categorias: data.categorias, categorias_globales: data.categorias_globales, loading };
 }
@@ -446,7 +447,7 @@ export function useNegociacion(filters: FilterState) {
     const fetchNegociacion = async () => {
       setLoading(true);
       try {
-        const pais = filters.pais || user?.country_code || undefined;
+        const pais = resolvePais(filters.pais, user) || undefined;
         const json = await API.negociacion(filters.desde, filters.hasta, filters.asesor || undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         if (cancelled) return;
         setData(json);
@@ -458,7 +459,7 @@ export function useNegociacion(filters: FilterState) {
     };
     fetchNegociacion();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user]);
 
   return { data, loading };
 }
@@ -474,7 +475,7 @@ export function usePropuestasPorRubro(filters: FilterState) {
     const fetchPropuestas = async () => {
       setLoading(true);
       try {
-        const pais = filters.pais || user?.country_code || undefined;
+        const pais = resolvePais(filters.pais, user) || undefined;
         const json = await API.propuestasPorRubro(filters.desde, filters.hasta, 'rubro', filters.asesor || undefined, pais, filters.tipoLead || undefined, filters.origen || undefined);
         if (cancelled) return;
         const arr = json.propuestas_por_rubro || json.items || json || [];
@@ -488,7 +489,7 @@ export function usePropuestasPorRubro(filters: FilterState) {
     };
     fetchPropuestas();
     return () => { cancelled = true; };
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, filters.origen, user]);
 
   return { data, loading };
 }

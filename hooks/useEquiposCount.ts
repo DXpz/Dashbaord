@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API } from '@/services/api';
 import { FiltersState } from './useFilters';
+import { resolvePais } from '@/lib/pais';
 
 export function useEquiposCount(filters: FiltersState) {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ export function useEquiposCount(filters: FiltersState) {
       try {
         const desde = filters.desde;
         const hasta = filters.hasta;
-        const pais = filters.pais || user?.country_code;
+        const pais = resolvePais(filters.pais, user);
         const result = await API.reuniones(desde, hasta, 500, 0, { pais, nombre: filters.asesor || undefined, tipoLead: filters.tipoLead || undefined });
         const list = result?.items || result?.reuniones || (Array.isArray(result) ? result : []);
         let total = 0;
@@ -48,7 +49,7 @@ export function useEquiposCount(filters: FiltersState) {
       }
     };
     fetchEquipos();
-  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, user?.country_code]);
+  }, [filters.desde, filters.hasta, filters.pais, filters.asesor, filters.tipoLead, user]);
 
   return { equipos, loading };
 }

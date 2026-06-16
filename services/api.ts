@@ -23,34 +23,6 @@ function getBase(): string {
   return DEFAULT_UPSTREAM;
 }
 
-function getCurrentUserEmail(): string | undefined {
-  if (typeof window === 'undefined') return undefined;
-  try {
-    const raw = localStorage.getItem('api_user');
-    if (raw) {
-      const u = JSON.parse(raw);
-      if (u?.email) return u.email;
-    }
-  } catch {}
-  try {
-    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('access_token='));
-    if (cookie) {
-      const token = cookie.split('=')[1];
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload?.email) return payload.email;
-    }
-  } catch {}
-  return undefined;
-}
-
-function injectUserEmail(params: Record<string, any>): Record<string, any> {
-  const email = getCurrentUserEmail();
-  if (email && !params.user_email) {
-    return { ...params, user_email: email };
-  }
-  return params;
-}
-
 function getProxyEndpoint(path: string, params: Record<string, any>): string {
   const qs = buildQuery(params);
   return `/api/proxy?endpoint=${encodeURIComponent(path)}${qs}`;
@@ -77,7 +49,8 @@ function normPaisQuery(p: string | null | undefined): string {
 function paisParam(p: string | undefined) {
   if (!p) return {};
   const code = normPaisQuery(p);
-  return code ? { pais: code } : {};
+  if (!code) return {};
+  return { pais: code };
 }
 
 function tipoLeadParam(tipoLead: string | undefined) {
@@ -135,8 +108,7 @@ function makeUrl(path: string, params: Record<string, any>): string {
 }
 
 async function get(path: string, params: Record<string, any>) {
-  const finalParams = injectUserEmail(params);
-  const url = makeUrl(path, finalParams);
+  const url = makeUrl(path, params);
   return fetchJson(url);
 }
 
