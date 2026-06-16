@@ -120,7 +120,7 @@ export function useAdminDashboard(filters: FilterState | null) {
       let result: any;
 
       if (filters.asesor) {
-        const asesorData = await API.asesor(filters.asesor, filters.desde, filters.hasta, pais, filters.tipoLead, filters.origen);
+        const asesorData = await API.asesor(filters.asesor, filters.desde, filters.hasta, pais, filters.tipoLead, filters.origen, filters.tipoLlamada);
         const m = asesorData.metricas || {};
         result = {
           metricas: {
