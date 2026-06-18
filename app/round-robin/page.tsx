@@ -64,31 +64,28 @@ function AdvisorRow({ advisor, showEmail = false }: { advisor: Advisor; showEmai
   );
 }
 
-export default function RoundRobinPage() {
-  const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
-  const connectionStatus = useConnectionStatus();
-  const { user } = useAuth();
+function CountryBlock({ pais, paisLabel }: { pais: string; paisLabel: string }) {
   const [data, setData] = useState<RoundRobinData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    if (!user) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await API.roundRobin(user.country_code, true);
-      setData(result as RoundRobinData);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar datos');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let cancelled = false;
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await API.roundRobin(pais, true);
+        if (!cancelled) setData(result as RoundRobinData);
+      } catch (err: any) {
+        if (!cancelled) setError(err.message || 'Error al cargar datos');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
     fetchData();
-  }, [user]);
+    return () => { cancelled = true; };
+  }, [pais]);
 
   const chartData = useMemo(() => {
     if (!data) return null;
@@ -107,6 +104,136 @@ export default function RoundRobinPage() {
     };
   }, [data]);
 
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-base lg:text-lg font-bold text-[#1F1D3D]">{paisLabel}</h2>
+          <span className="text-[10px] lg:text-xs text-[#B5B5AE] uppercase tracking-wider">Round Robin</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-48 rounded-xl hidden sm:block" />
+          <Skeleton className="h-48 rounded-xl hidden sm:block" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-base lg:text-lg font-bold text-[#1F1D3D]">{paisLabel}</h2>
+        <div className="flex items-center justify-center h-32 bg-white border border-[#EEEEEC] rounded-xl">
+          <p className="text-sm text-red-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <h2 className="text-base lg:text-lg font-bold text-[#1F1D3D]">{paisLabel}</h2>
+        <span className="text-[10px] lg:text-xs text-[#B5B5AE] uppercase tracking-wider">Round Robin</span>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
+          <SectionCard title="Siguiente">
+            <div className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                <span className="text-emerald-700 text-xs lg:text-sm font-bold uppercase">
+                  {data.siguiente.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm lg:text-base font-bold text-[#1F1D3D] truncate">{data.siguiente.nombre_vendedor}</p>
+                <p className="text-[10px] lg:text-xs text-[#B5B5AE] truncate">{data.siguiente.correo_vendedor}</p>
+                <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">#{data.siguiente.assignment_sequence} · {data.siguiente.pais}</p>
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Últimos Asignados">
+            {data.ultimos_asignados.length > 0 ? (
+              <div className="divide-y divide-[#EEEEEC]">
+                {data.ultimos_asignados.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-[#F5F5ED] flex items-center justify-center shrink-0">
+                        <span className="text-[#35325B] text-[8px] lg:text-[10px] font-bold uppercase">
+                          {a.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </span>
+                      </div>
+                      <span className="text-xs lg:text-sm text-[#35325B] truncate">{a.nombre_vendedor}</span>
+                    </div>
+                    <span className="text-[10px] lg:text-xs text-[#B5B5AE] shrink-0 ml-2">
+                      {new Date(a.ultima_asignacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 lg:p-6 text-center">
+                <p className="text-xs text-[#B5B5AE]">Sin asignaciones recientes</p>
+              </div>
+            )}
+          </SectionCard>
+        </div>
+
+        <SectionCard title="Distribución" badge={data.total_activos} badgeColor="emerald">
+          <div className="p-3 lg:p-4">
+            {chartData && (
+              <ChartWrapper
+                type="doughnut"
+                data={chartData}
+                height="240px"
+                options={{
+                  cutout: '60%',
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      labels: {
+                        font: { size: 10, family: 'Inter' },
+                        color: '#35325B',
+                        padding: 8,
+                      },
+                    },
+                  },
+                }}
+              />
+            )}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Inactivos" badge={data.total_inactivos} badgeColor="red">
+          {data.inactivos_round_robin.length > 0 ? (
+            <div className="divide-y divide-[#EEEEEC] max-h-64 overflow-y-auto">
+              {data.inactivos_round_robin.map((a) => (
+                <AdvisorRow key={a.id} advisor={a} showEmail />
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 lg:p-8 text-center">
+              <p className="text-xs text-[#B5B5AE]">Sin asesores inactivos</p>
+            </div>
+          )}
+        </SectionCard>
+      </div>
+    </div>
+  );
+}
+
+export default function RoundRobinPage() {
+  const { filters, handleFilterChange, handleFiltrar, handleLimpiar } = useFilters();
+  const connectionStatus = useConnectionStatus();
+  const { user } = useAuth();
+
+  const isSuperAdmin = user?.is_super_admin === true || user?.email === 'ghenriquez@red.com.sv';
+  const userCountry = user?.country_code;
+
   const AdvisorsOptions = [{ value: '', label: 'Todos' }];
 
   return (
@@ -119,99 +246,20 @@ export default function RoundRobinPage() {
       asesores={AdvisorsOptions}
       connectionStatus={connectionStatus}
     >
-      {loading ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Skeleton className="h-48 rounded-xl" />
-            <Skeleton className="h-48 rounded-xl hidden sm:block" />
-            <Skeleton className="h-48 rounded-xl hidden sm:block" />
+      <div className="space-y-6">
+        {isSuperAdmin ? (
+          <>
+            <CountryBlock pais="SV" paisLabel="El Salvador (SV)" />
+            <CountryBlock pais="GT" paisLabel="Guatemala (GT)" />
+          </>
+        ) : userCountry ? (
+          <CountryBlock pais={userCountry} paisLabel={userCountry === 'SV' ? 'El Salvador (SV)' : userCountry === 'GT' ? 'Guatemala (GT)' : userCountry} />
+        ) : (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-sm text-[#B5B5AE]">No se ha definido un país para el usuario</p>
           </div>
-        </div>
-      ) : error ? (
-        <div className="flex items-center justify-center h-64">
-          <p className="text-sm text-red-500">{error}</p>
-        </div>
-      ) : data ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="space-y-4">
-              <SectionCard title="Siguiente">
-                <div className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                    <span className="text-emerald-700 text-xs lg:text-sm font-bold uppercase">
-                      {data.siguiente.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm lg:text-base font-bold text-[#1F1D3D] truncate">{data.siguiente.nombre_vendedor}</p>
-                    <p className="text-[10px] lg:text-xs text-[#B5B5AE] truncate">{data.siguiente.correo_vendedor}</p>
-                    <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">#{data.siguiente.assignment_sequence} · {data.siguiente.pais}</p>
-                  </div>
-                </div>
-              </SectionCard>
-
-              <SectionCard title="Últimos Asignados">
-                <div className="divide-y divide-[#EEEEEC]">
-                  {data.ultimos_asignados.map((a) => (
-                    <div key={a.id} className="flex items-center justify-between px-3 py-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-[#F5F5ED] flex items-center justify-center shrink-0">
-                          <span className="text-[#35325B] text-[8px] lg:text-[10px] font-bold uppercase">
-                            {a.nombre_vendedor.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                          </span>
-                        </div>
-                        <span className="text-xs lg:text-sm text-[#35325B] truncate">{a.nombre_vendedor}</span>
-                      </div>
-                      <span className="text-[10px] lg:text-xs text-[#B5B5AE] shrink-0 ml-2">
-                        {new Date(a.ultima_asignacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </SectionCard>
-            </div>
-
-            <SectionCard title="Distribución" badge={data.total_activos} badgeColor="emerald">
-              <div className="p-3 lg:p-4">
-                {chartData && (
-                  <ChartWrapper
-                    type="doughnut"
-                    data={chartData}
-                    height="240px"
-                    options={{
-                      cutout: '60%',
-                      plugins: {
-                        legend: {
-                          position: 'bottom',
-                          labels: {
-                            font: { size: 10, family: 'Inter' },
-                            color: '#35325B',
-                            padding: 8,
-                          },
-                        },
-                      },
-                    }}
-                  />
-                )}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Inactivos" badge={data.total_inactivos} badgeColor="red">
-              {data.inactivos_round_robin.length > 0 ? (
-                <div className="divide-y divide-[#EEEEEC] max-h-64 overflow-y-auto">
-                  {data.inactivos_round_robin.map((a) => (
-                    <AdvisorRow key={a.id} advisor={a} showEmail />
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 lg:p-8 text-center">
-                  <p className="text-xs text-[#B5B5AE]">Sin asesores inactivos</p>
-                </div>
-              )}
-            </SectionCard>
-          </div>
-        </div>
-      ) : null}
+        )}
+      </div>
     </Shell>
   );
 }
