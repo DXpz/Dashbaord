@@ -518,12 +518,12 @@ export default function ReunionesPage() {
                           ) : '—'}
                         </TableCell>
                         <TableCell className="text-xs text-[#35325B] whitespace-nowrap">
-                          {sf.fecha ? (() => {
-                            const d = new Date(sf.fecha);
+                          {reunion.start_time ? (() => {
+                            const d = new Date(reunion.start_time);
                             if (!isNaN(d.getTime())) {
                               return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
                             }
-                            return sf.fecha;
+                            return '—';
                           })() : '—'}
                         </TableCell>
                         <TableCell className="text-xs text-[#35325B]">
