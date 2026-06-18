@@ -218,7 +218,7 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
     case 'textarea':
       if (field.id === 'retroalimentacion') {
         const charsSinEspacios = (value || '').replace(/\s+/g, '').length;
-        const cumpleMin = charsSinEspacios >= 30;
+        const cumpleMin = charsSinEspacios >= 50;
         return (
           <div className="space-y-1">
             <textarea
@@ -229,11 +229,11 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
               required={required}
               placeholder={field.placeholder}
               rows={3}
-              minLength={30}
+              minLength={50}
               className={cn(baseClass, 'resize-y min-h-[5rem]')}
             />
             <p className={cn('text-[10px] text-right', cumpleMin ? 'text-emerald-600' : 'text-[#c8151b]')}>
-              {charsSinEspacios} / 30 caracteres (sin espacios) {cumpleMin ? '✓' : '— mínimo 30'}
+              {charsSinEspacios} / 50 caracteres (sin espacios) {cumpleMin ? '✓' : '— mínimo 50'}
             </p>
           </div>
         );
@@ -440,16 +440,16 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       return { valid: false, firstMissing: 'Especificar Industria' };
     }
 
-    // La retroalimentacion debe tener al menos 30 caracteres sin contar espacios
+    // La retroalimentacion debe tener al menos 50 caracteres sin contar espacios
     // para evitar que los vendedores la salten con solo "-"
     const retroField = stage.fields.find((f) => f.id === 'retroalimentacion');
     if (retroField && retroField.required) {
       const texto = String(data.retroalimentacion || '').trim();
       const charsSinEspacios = texto.replace(/\s+/g, '').length;
-      if (charsSinEspacios < 30) {
+      if (charsSinEspacios < 50) {
         return {
           valid: false,
-          firstMissing: `La retroalimentación debe tener al menos 30 caracteres (actual: ${charsSinEspacios})`,
+          firstMissing: `La retroalimentación debe tener al menos 50 caracteres (actual: ${charsSinEspacios})`,
         };
       }
     }
