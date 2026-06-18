@@ -518,7 +518,10 @@ export default function ReunionesPage() {
                           {reunion.start_time ? (() => {
                             const d = new Date(reunion.start_time);
                             if (!isNaN(d.getTime())) {
-                              return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                              return d.toLocaleString('es-ES', {
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit', hour12: false,
+                              });
                             }
                             return '—';
                           })() : '—'}
