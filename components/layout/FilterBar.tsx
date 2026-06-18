@@ -115,6 +115,19 @@ export function FilterBar({
 
   return (
 <div className="flex flex-wrap items-center gap-4 py-4 px-6 border-b border-[#EEEEEC]">
+      {isSuperAdminState && (
+        <select
+          value={filters.pais || 'ALL'}
+          onChange={(e) => persistFilters('pais', e.target.value)}
+          className="text-sm font-medium text-[#1F1D3D] font-semibold bg-transparent outline-none cursor-pointer"
+          title="Super admin: filtrar por país o ver todos"
+        >
+          <option value="ALL">Todos los países</option>
+          <option value="SV">SV</option>
+          <option value="GT">GT</option>
+        </select>
+      )}
+
       <div className="flex items-center gap-2">
         <select
           value={month}
@@ -160,19 +173,6 @@ export function FilterBar({
         <option value="PBX SV">PBX SV</option>
         <option value="PBX GT">PBX GT</option>
       </select>
-
-      {isSuperAdminState && (
-        <select
-          value={filters.pais || 'ALL'}
-          onChange={(e) => persistFilters('pais', e.target.value)}
-          className="text-sm font-medium text-[#1F1D3D] font-semibold bg-transparent outline-none cursor-pointer"
-          title="Super admin: filtrar por país o ver todos"
-        >
-          <option value="ALL">Todos los países</option>
-          <option value="SV">SV</option>
-          <option value="GT">GT</option>
-        </select>
-      )}
 
       <select
         value={filters.tipoLlamada || ''}
