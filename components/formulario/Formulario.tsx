@@ -216,6 +216,28 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
         </select>
       );
     case 'textarea':
+      if (field.id === 'retroalimentacion') {
+        const charsSinEspacios = (value || '').replace(/\s+/g, '').length;
+        const cumpleMin = charsSinEspacios >= 30;
+        return (
+          <div className="space-y-1">
+            <textarea
+              id={id}
+              value={value}
+              onChange={(e) => onChange(field.id, e.target.value)}
+              readOnly={readOnly}
+              required={required}
+              placeholder={field.placeholder}
+              rows={3}
+              minLength={30}
+              className={cn(baseClass, 'resize-y min-h-[5rem]')}
+            />
+            <p className={cn('text-[10px] text-right', cumpleMin ? 'text-emerald-600' : 'text-[#c8151b]')}>
+              {charsSinEspacios} / 30 caracteres (sin espacios) {cumpleMin ? '✓' : '— mínimo 30'}
+            </p>
+          </div>
+        );
+      }
       return (
         <textarea id={id} value={value} onChange={(e) => onChange(field.id, e.target.value)} readOnly={readOnly} required={required} placeholder={field.placeholder} rows={3} className={cn(baseClass, 'resize-y min-h-[5rem]')} />
       );
@@ -416,6 +438,20 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
 
     if (stage.id === 'REUNION' && String(data.industria_sector || '') === 'otro' && !String(data.industria_otro || '').trim()) {
       return { valid: false, firstMissing: 'Especificar Industria' };
+    }
+
+    // La retroalimentacion debe tener al menos 30 caracteres sin contar espacios
+    // para evitar que los vendedores la salten con solo "-"
+    const retroField = stage.fields.find((f) => f.id === 'retroalimentacion');
+    if (retroField && retroField.required) {
+      const texto = String(data.retroalimentacion || '').trim();
+      const charsSinEspacios = texto.replace(/\s+/g, '').length;
+      if (charsSinEspacios < 30) {
+        return {
+          valid: false,
+          firstMissing: `La retroalimentación debe tener al menos 30 caracteres (actual: ${charsSinEspacios})`,
+        };
+      }
     }
 
     return { valid: true, firstMissing: '' };
