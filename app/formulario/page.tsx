@@ -119,8 +119,8 @@ export default function FormularioPage() {
       const key = process.env.API_KEY || '';
 
       const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/by-client/${selectedLead.client_id}/no-agendada`)}`
-        : `${base}audit/by-client/${selectedLead.client_id}/no-agendada`;
+        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/by-client/${selectedLead.client_id}`)}`
+        : `${base}audit/by-client/${selectedLead.client_id}`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export default function FormularioPage() {
       if (res.ok) {
         setShowDeleteDialog(false);
         setDeleteReason('');
-        showSuccess('Lead marcado como no agendado');
+        showSuccess('Lead eliminado definitivamente');
         setSelectedLead(null);
         setSearchTerm('');
       } else {
