@@ -146,7 +146,6 @@ export function FilterBar({
         <option value="">Tipo Lead</option>
         <option value="calificado">Calificado</option>
         <option value="no_calificado">No calificado</option>
-        <option value="pendiente">Pendiente</option>
       </select>
 
       <select

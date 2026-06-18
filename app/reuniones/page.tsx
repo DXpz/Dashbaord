@@ -69,7 +69,6 @@ function getInitialStageFromStageNumber(stageNum?: number): 'REUNION' | 'DEMO' |
 function getLeadTypeLabel(tipoLead?: string) {
   if (tipoLead === 'calificado') return 'Calificado';
   if (tipoLead === 'no_calificado') return 'No calificado';
-  if (tipoLead === 'pendiente') return 'Pendiente';
   return '—';
 }
 
@@ -500,7 +499,6 @@ export default function ReunionesPage() {
                             >
                               <option value="calificado">Calificado</option>
                               <option value="no_calificado">No calificado</option>
-                              <option value="pendiente">Pendiente</option>
                             </select>
                           ) : (
                             <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-1 rounded">{getLeadTypeLabel(reunion.tipo_lead || 'calificado')}</span>
