@@ -65,6 +65,22 @@ export function FilterBar({
   const currentYear = new Date().getFullYear();
   const years = [currentYear - 1, currentYear, currentYear + 1];
 
+  const [isSuperAdminState, setIsSuperAdminState] = React.useState(isSuperAdmin);
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('api_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u?.is_super_admin === true || u?.email === 'ghenriquez@red.com.sv') {
+          setIsSuperAdminState(true);
+          return;
+        }
+      }
+    } catch {}
+    setIsSuperAdminState(isSuperAdmin);
+  }, [isSuperAdmin]);
+
   React.useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
@@ -145,6 +161,19 @@ export function FilterBar({
         <option value="PBX SV">PBX SV</option>
         <option value="PBX GT">PBX GT</option>
       </select>
+
+      {isSuperAdminState && (
+        <select
+          value={filters.pais || 'ALL'}
+          onChange={(e) => persistFilters('pais', e.target.value)}
+          className="text-sm font-medium text-[#1F1D3D] font-semibold bg-transparent outline-none cursor-pointer"
+          title="Super admin: filtrar por país o ver todos"
+        >
+          <option value="ALL">Todos los países</option>
+          <option value="SV">SV</option>
+          <option value="GT">GT</option>
+        </select>
+      )}
 
       <select
         value={filters.tipoLlamada || ''}
