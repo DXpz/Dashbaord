@@ -631,6 +631,11 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       showError('Selecciona un motivo y escribe una descripción');
       return;
     }
+    const descChars = lostDescription.replace(/\s+/g, '').length;
+    if (descChars < 35) {
+      showError(`La descripción debe tener al menos 35 caracteres sin espacios (actual: ${descChars})`);
+      return;
+    }
 
     setClosing(true);
     try {
@@ -962,8 +967,12 @@ const url = isHttps
                 onChange={(e) => setLostDescription(e.target.value)}
                 placeholder="Describe el intento de contacto..."
                 rows={3}
+                minLength={35}
                 className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] resize-y"
               />
+              <p className={cn('text-[10px] text-right', lostDescription.replace(/\s+/g, '').length >= 35 ? 'text-emerald-600' : 'text-[#c8151b]')}>
+                {lostDescription.replace(/\s+/g, '').length} / 35 caracteres (sin espacios) {lostDescription.replace(/\s+/g, '').length >= 35 ? '✓' : '— mínimo 35'}
+              </p>
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -976,7 +985,7 @@ const url = isHttps
             </Button>
             <Button
               onClick={handleCloseAsLost}
-              disabled={closing || !lostReason.trim() || !lostDescription.trim()}
+              disabled={closing || !lostReason.trim() || lostDescription.replace(/\s+/g, '').length < 35}
               className="bg-[#c8151b] hover:bg-[#a50f0f] text-white"
             >
               {closing ? 'Cerrando...' : 'Cerrar como perdido'}
