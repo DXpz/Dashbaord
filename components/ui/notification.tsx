@@ -14,7 +14,7 @@ interface NotificationState {
 
 interface NotificationContextType {
   notification: NotificationState | null;
-  showSuccess: (message: string) => void;
+  showSuccess: (message: string, options?: { title?: string }) => void;
   showError: (message: string, options?: { title?: string; persistent?: boolean }) => void;
   showLoading: (message: string) => void;
   clearNotification: () => void;
@@ -41,10 +41,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, [timerId]);
 
-  const showSuccess = useCallback((message: string) => {
+  const showSuccess = useCallback((message: string, options?: { title?: string }) => {
     clearTimer();
-    setNotification({ type: 'success', message });
-    const id = setTimeout(() => setNotification(null), 3000);
+    setNotification({
+      type: 'success',
+      message,
+      title: options?.title || 'Éxito',
+    });
+    const id = setTimeout(() => setNotification(null), 4000);
     setTimerId(id);
   }, [clearTimer]);
 
@@ -56,7 +60,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       title: options?.title || 'Error',
       persistent: options?.persistent,
     });
-    // Errores duran 8s para dar tiempo a leerlos
     if (!options?.persistent) {
       const id = setTimeout(() => setNotification(null), 8000);
       setTimerId(id);
@@ -65,7 +68,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const showLoading = useCallback((message: string) => {
     clearTimer();
-    setNotification({ type: 'loading', message });
+    setNotification({ type: 'loading', message, title: 'Procesando' });
   }, [clearTimer]);
 
   const clearNotification = useCallback(() => {
@@ -94,48 +97,31 @@ function NotificationBar({
 }) {
   if (!notification) return null;
 
-  // Success: toast pequeño abajo, estilo del sistema
-  if (notification.type === 'success') {
-    return (
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-slide-up">
-        <div className="flex items-center gap-3 px-5 py-3 bg-white border border-[#EEEEEC] rounded-xl shadow-lg">
-          <CheckCircle className="h-5 w-5 text-[#22c55e] shrink-0" />
-          <p className="text-sm font-medium text-[#1F1D3D]">{notification.message}</p>
-        </div>
-      </div>
-    );
-  }
+  // Mismo estilo de card para TODOS los tipos
+  // (bg-white, border-[#EEEEEC], rounded-xl, icon en bg-[#F5F5ED], colores brand)
+  const iconMap = {
+    success: { Icon: CheckCircle, color: 'text-[#22c55e]' },
+    error: { Icon: AlertTriangle, color: 'text-[#c8151b]' },
+    loading: { Icon: Loader2, color: 'text-[#1F1D3D] animate-spin' },
+  };
+  const { Icon, color } = iconMap[notification.type!];
 
-  // Loading: toast pequeño abajo
-  if (notification.type === 'loading') {
-    return (
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100]">
-        <div className="flex items-center gap-3 px-5 py-3 bg-[#1F1D3D] text-white rounded-xl shadow-lg">
-          <Loader2 className="h-5 w-5 animate-spin shrink-0" />
-          <p className="text-sm font-medium">{notification.message}</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error: tarjeta más prominente, arriba al centro, estilo consistente con el sistema
-  // (bg-white, border-[#EEEEEC], rounded-xl, colores brand)
-  if (notification.type === 'error') {
-    return (
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-slide-down max-w-lg w-full mx-4">
-        <div className="bg-white border border-[#EEEEEC] rounded-xl shadow-lg">
-          <div className="flex items-start gap-3 px-5 py-4">
-            <div className="w-10 h-10 rounded-lg bg-[#F5F5ED] flex items-center justify-center shrink-0">
-              <AlertTriangle className="h-5 w-5 text-[#c8151b]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-bold text-[#1F1D3D] mb-0.5">
-                {notification.title || 'Error'}
-              </h4>
-              <p className="text-sm text-[#35325B] leading-relaxed">
-                {notification.message}
-              </p>
-            </div>
+  return (
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-slide-down max-w-lg w-full mx-4">
+      <div className="bg-white border border-[#EEEEEC] rounded-xl shadow-lg">
+        <div className="flex items-start gap-3 px-5 py-4">
+          <div className="w-10 h-10 rounded-lg bg-[#F5F5ED] flex items-center justify-center shrink-0">
+            <Icon className={`h-5 w-5 ${color}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-bold text-[#1F1D3D] mb-0.5">
+              {notification.title}
+            </h4>
+            <p className="text-sm text-[#35325B] leading-relaxed">
+              {notification.message}
+            </p>
+          </div>
+          {notification.type !== 'loading' && (
             <button
               onClick={onClose}
               className="p-1 hover:bg-[#F5F5ED] rounded transition-colors shrink-0"
@@ -143,11 +129,9 @@ function NotificationBar({
             >
               <X className="h-4 w-4 text-[#B5B5AE]" />
             </button>
-          </div>
+          )}
         </div>
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
