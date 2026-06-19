@@ -19,10 +19,12 @@ function LoginPageInner() {
   useEffect(() => {
     if (searchParams.get('bye') === '1') {
       setShowBye(true);
+      // Limpiar el query param para que el banner no aparezca en recargas
+      router.replace('/login');
       const timer = setTimeout(() => setShowBye(false), 5000);
       return () => clearTimeout(timer);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
