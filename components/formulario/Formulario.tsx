@@ -231,8 +231,10 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
           ))}
         </select>
       );
-    case 'textarea':
-      if (field.id === 'retroalimentacion') {
+    case 'textarea': {
+      // Mostrar contador de 35 chars para cualquier textarea required
+      const showCounter = field.required;
+      if (showCounter) {
         const charsSinEspacios = (value || '').replace(/\s+/g, '').length;
         const cumpleMin = charsSinEspacios >= 35;
         return (
@@ -257,6 +259,7 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
       return (
         <textarea id={id} value={value} onChange={(e) => onChange(field.id, e.target.value)} readOnly={readOnly} required={required} placeholder={field.placeholder} rows={3} className={cn(baseClass, 'resize-y min-h-[5rem]')} />
       );
+    }
     case 'number':
       return (
         <input id={id} type="number" step="any" min="0" value={value} onChange={(e) => onChange(field.id, e.target.value)} readOnly={readOnly} required={required} placeholder={field.placeholder} className={baseClass} />
@@ -456,17 +459,18 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       return { valid: false, firstMissing: 'Especificar Industria' };
     }
 
-    // La retroalimentacion debe tener al menos 35 caracteres sin contar espacios
-    // para evitar que los vendedores la salten con solo "-"
-    const retroField = stage.fields.find((f) => f.id === 'retroalimentacion');
-    if (retroField && retroField.required) {
-      const texto = String(data.retroalimentacion || '').trim();
-      const charsSinEspacios = texto.replace(/\s+/g, '').length;
-      if (charsSinEspacios < 35) {
-        return {
-          valid: false,
-          firstMissing: `La retroalimentación debe tener al menos 35 caracteres (actual: ${charsSinEspacios})`,
-        };
+    // Todos los textareas required deben tener al menos 35 caracteres sin contar espacios
+    // para evitar que los vendedores se salten campos importantes con solo "-"
+    for (const field of stage.fields) {
+      if (field.required && field.type === 'textarea') {
+        const texto = String(data[field.id] || '').trim();
+        const charsSinEspacios = texto.replace(/\s+/g, '').length;
+        if (charsSinEspacios < 35) {
+          return {
+            valid: false,
+            firstMissing: `El campo "${field.label}" debe tener al menos 35 caracteres (actual: ${charsSinEspacios})`,
+          };
+        }
       }
     }
 
