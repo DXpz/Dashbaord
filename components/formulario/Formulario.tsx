@@ -646,12 +646,17 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
   const handleCloseAsLost = async () => {
     if (readOnly) return;
     if (!lostReason.trim() || !lostDescription.trim()) {
-      showError('Selecciona un motivo y escribe una descripción');
+      showError('Selecciona un motivo y escribe una descripción', {
+        title: 'Faltan datos',
+      });
       return;
     }
     const descChars = lostDescription.replace(/\s+/g, '').length;
     if (descChars < 35) {
-      showError(`La descripción debe tener al menos 35 caracteres sin espacios (actual: ${descChars})`);
+      showError(
+        `La descripción debe tener al menos 35 caracteres sin espacios (actual: ${descChars}). Escribe una descripción real del intento de contacto.`,
+        { title: 'Descripción muy corta' }
+      );
       return;
     }
 
