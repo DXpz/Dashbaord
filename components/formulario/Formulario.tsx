@@ -260,6 +260,7 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
       if (field.id === 'retroalimentacion' && field.required) {
         const charsSinEspacios = (value || '').replace(/\s+/g, '').length;
         const cumpleMin = charsSinEspacios >= 35;
+        const esSpam = cumpleMin && esTextoSpam(value || '').spam;
         return (
           <div className="space-y-1">
             <textarea
@@ -273,8 +274,10 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
               minLength={35}
               className={cn(baseClass, 'resize-y min-h-[5rem]')}
             />
-            <p className={cn('text-[10px] text-right', cumpleMin ? 'text-emerald-600' : 'text-[#c8151b]')}>
-              {charsSinEspacios} / 35 caracteres (sin espacios) {cumpleMin ? '✓' : '— mínimo 35'}
+            <p className={cn('text-[10px] text-right', esSpam ? 'text-[#c8151b]' : cumpleMin ? 'text-emerald-600' : 'text-[#c8151b]')}>
+              {esSpam
+                ? `${charsSinEspacios} caracteres — texto inválido (spam detectado)`
+                : `${charsSinEspacios} / 35 caracteres (sin espacios) ${cumpleMin ? '✓' : '— mínimo 35'}`}
             </p>
           </div>
         );
@@ -483,7 +486,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
     }
 
     // La retroalimentacion debe tener al menos 35 caracteres sin contar espacios
-    // para evitar que los vendedores la salten con solo "-"
+    // y NO ser spam (repeticiones, patrones repetitivos)
     // (otros textareas como productos_ofrecidos, notes, proximo_paso NO requieren este minimo)
     const retroField = stage.fields.find((f) => f.id === 'retroalimentacion');
     if (retroField && retroField.required) {
@@ -493,6 +496,14 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         return {
           valid: false,
           firstMissing: `La retroalimentación debe tener al menos 35 caracteres (actual: ${charsSinEspacios})`,
+        };
+      }
+      // Anti-spam: detectar repeticiones obvias y patrones spam
+      const spam = esTextoSpam(texto);
+      if (spam.spam) {
+        return {
+          valid: false,
+          firstMissing: `La retroalimentación parece no ser real: ${spam.motivo}. Escribe una descripción real del contacto con el cliente.`,
         };
       }
     }
