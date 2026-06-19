@@ -25,6 +25,31 @@ function extractErrorMessage(data: any, fallback: string = 'Error al guardar'): 
   return msg.replace(/^Value error,\s*/i, '').trim();
 }
 
+function esTextoSpam(texto: string): { spam: boolean; motivo?: string } {
+  if (!texto) return { spam: false };
+  const sinEspacios = texto.replace(/\s+/g, '');
+  if (sinEspacios.length < 35) return { spam: false }; // ya lo valida la longitud
+
+  // Repeticiones consecutivas (4+ caracteres iguales seguidos)
+  if (/(.)\1{3,}/.test(sinEspacios)) {
+    return { spam: true, motivo: 'Repeticiones consecutivas excesivas (ej: aaaa)' };
+  }
+  // Patrones repetitivos (3+ repeticiones de 2+ chars)
+  if (/(.{2,})\1{2,}/.test(texto)) {
+    return { spam: true, motivo: 'Patron repetitivo detectado (ej: ababab)' };
+  }
+  // Ratio de palabras unicas (>= 50%)
+  const palabras = texto.split(/\s+/).filter(p => p.length > 2);
+  if (palabras.length >= 3) {
+    const unicas = new Set(palabras);
+    const ratio = unicas.size / palabras.length;
+    if (ratio < 0.5) {
+      return { spam: true, motivo: 'Muy pocas palabras unicas' };
+    }
+  }
+  return { spam: false };
+}
+
 export type FormStage = 'REUNION' | 'DEMO' | 'PROPUESTA' | 'SEGUIMIENTO' | 'CIERRE';
 
 export const STAGE_ORDER: FormStage[] = ['REUNION', 'DEMO', 'PROPUESTA', 'SEGUIMIENTO', 'CIERRE'];
@@ -661,6 +686,15 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       );
       return;
     }
+    // Anti-spam: rechazar repeticiones y patrones obvios
+    const spam = esTextoSpam(lostDescription);
+    if (spam.spam) {
+      showError(
+        `La descripción parece no ser real: ${spam.motivo}. Escribe una descripción real del intento de contacto con el cliente.`,
+        { title: 'Descripción inválida' }
+      );
+      return;
+    }
 
     setClosing(true);
     try {
@@ -999,8 +1033,18 @@ const url = isHttps
                 minLength={35}
                 className="w-full px-3 py-2 bg-[#F5F5ED] border border-[#EEEEEC] rounded-lg text-sm text-[#1F1D3D] placeholder-[#B5B5AE] focus:outline-none focus:border-[#35325B] resize-y"
               />
-              <p className={cn('text-[10px] text-right', lostDescription.replace(/\s+/g, '').length >= 35 ? 'text-emerald-600' : 'text-[#c8151b]')}>
-                {lostDescription.replace(/\s+/g, '').length} / 35 caracteres (sin espacios) {lostDescription.replace(/\s+/g, '').length >= 35 ? '✓' : '— mínimo 35'}
+              <p className={cn('text-[10px] text-right', (() => {
+                const sinEsp = lostDescription.replace(/\s+/g, '').length;
+                if (sinEsp < 35) return 'text-[#c8151b]';
+                if (esTextoSpam(lostDescription).spam) return 'text-[#c8151b]';
+                return 'text-emerald-600';
+              })())}>
+                {(() => {
+                  const sinEsp = lostDescription.replace(/\s+/g, '').length;
+                  if (sinEsp < 35) return `${sinEsp} / 35 caracteres (sin espacios) — mínimo 35`;
+                  if (esTextoSpam(lostDescription).spam) return `${sinEsp} caracteres — texto inválido (spam detectado)`;
+                  return `${sinEsp} / 35 caracteres (sin espacios) ✓`;
+                })()}
               </p>
             </div>
           </div>
@@ -1014,7 +1058,7 @@ const url = isHttps
             </Button>
             <Button
               onClick={handleCloseAsLost}
-              disabled={closing || !lostReason.trim() || lostDescription.replace(/\s+/g, '').length < 35}
+              disabled={closing || !lostReason.trim() || lostDescription.replace(/\s+/g, '').length < 35 || esTextoSpam(lostDescription).spam}
               className="bg-[#c8151b] hover:bg-[#a50f0f] text-white"
             >
               {closing ? 'Cerrando...' : 'Cerrar como perdido'}
