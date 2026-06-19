@@ -232,9 +232,7 @@ function FieldInput({ field, value, onChange, readOnly = false }: {
         </select>
       );
     case 'textarea': {
-      // Mostrar contador de 35 chars para cualquier textarea required
-      const showCounter = field.required;
-      if (showCounter) {
+      if (field.id === 'retroalimentacion' && field.required) {
         const charsSinEspacios = (value || '').replace(/\s+/g, '').length;
         const cumpleMin = charsSinEspacios >= 35;
         return (
@@ -459,18 +457,18 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       return { valid: false, firstMissing: 'Especificar Industria' };
     }
 
-    // Todos los textareas required deben tener al menos 35 caracteres sin contar espacios
-    // para evitar que los vendedores se salten campos importantes con solo "-"
-    for (const field of stage.fields) {
-      if (field.required && field.type === 'textarea') {
-        const texto = String(data[field.id] || '').trim();
-        const charsSinEspacios = texto.replace(/\s+/g, '').length;
-        if (charsSinEspacios < 35) {
-          return {
-            valid: false,
-            firstMissing: `El campo "${field.label}" debe tener al menos 35 caracteres (actual: ${charsSinEspacios})`,
-          };
-        }
+    // La retroalimentacion debe tener al menos 35 caracteres sin contar espacios
+    // para evitar que los vendedores la salten con solo "-"
+    // (otros textareas como productos_ofrecidos, notes, proximo_paso NO requieren este minimo)
+    const retroField = stage.fields.find((f) => f.id === 'retroalimentacion');
+    if (retroField && retroField.required) {
+      const texto = String(data.retroalimentacion || '').trim();
+      const charsSinEspacios = texto.replace(/\s+/g, '').length;
+      if (charsSinEspacios < 35) {
+        return {
+          valid: false,
+          firstMissing: `La retroalimentación debe tener al menos 35 caracteres (actual: ${charsSinEspacios})`,
+        };
       }
     }
 
