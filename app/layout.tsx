@@ -4,7 +4,7 @@ import { ClientLayout } from '@/components/ClientLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
-  title: 'Dashboard | RED PTT',
+  title: 'ProspektIA | Dashboard',
   description: 'Métricas y Análisis de Ventas',
   icons: {
     icon: '/logos/favicon.png',

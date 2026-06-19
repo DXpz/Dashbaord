@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginBackground } from '@/components/LoginBackground';
 import { useAuth } from '@/lib/auth-context';
 
@@ -10,8 +10,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showBye, setShowBye] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
+
+  useEffect(() => {
+    if (searchParams.get('bye') === '1') {
+      setShowBye(true);
+      const timer = setTimeout(() => setShowBye(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +47,21 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-sm mx-auto px-6">
+        {showBye && (
+          <div className="mb-4 bg-white/90 backdrop-blur-sm border border-[#EEEEEC] rounded-xl px-4 py-3 shadow-md flex items-center gap-3 animate-[slideDown_0.3s_ease-out]">
+            <div className="w-8 h-8 rounded-full bg-[#1F1D3D] flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-[#1F1D3D]">¡Esperamos volverte a ver!</div>
+              <div className="text-xs text-[#B5B5AE]">Cerraste sesión correctamente</div>
+            </div>
+          </div>
+        )}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-[#EEEEEC] shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">

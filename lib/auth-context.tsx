@@ -91,7 +91,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {
     }
-    router.push('/login');
+    router.push('/login?bye=1');
   };
 
   return (
