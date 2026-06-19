@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -13,7 +14,6 @@ import {
   Globe,
   ShieldCheck,
   X,
-  BarChart3,
   CircleDot,
   LogOut,
   Lock,
@@ -126,8 +126,15 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         <div className="flex flex-col h-full p-4">
           <div className="flex items-center justify-between mb-8 px-2">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#1F1D3D] rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 text-[#B5B5AE]" strokeWidth={1.5} />
+              <div className="relative w-10 h-10 rounded-lg overflow-hidden">
+                <Image
+                  src="/logos/logo-grande.png"
+                  alt="RED PTT"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                  priority
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-semibold text-[#1F1D3D] text-sm leading-tight">Dashboard</span>

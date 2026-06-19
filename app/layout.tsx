@@ -4,8 +4,11 @@ import { ClientLayout } from '@/components/ClientLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'Dashboard | RED PTT',
   description: 'Métricas y Análisis de Ventas',
+  icons: {
+    icon: '/logos/favicon.png',
+  },
 };
 
 export default function RootLayout({
