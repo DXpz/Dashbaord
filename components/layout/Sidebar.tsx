@@ -124,18 +124,19 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         )}
       >
         <div className="flex flex-col h-full p-4">
-          <div className="flex items-center justify-center mb-8 px-2">
-            <div className="relative h-14 rounded-lg overflow-hidden">
-              <Image
-                src="/logos/logo-grande.png"
-                alt="RED PTT"
-                width={170}
-                height={56}
-                className="object-contain"
-                priority
-              />
+          <div className="flex items-center justify-between mb-8 px-2">
+            <div className="flex-1 flex items-center justify-center">
+              <div className="relative h-14 rounded-lg overflow-hidden">
+                <Image
+                  src="/logos/logo-grande.png"
+                  alt="RED PTT"
+                  width={170}
+                  height={56}
+                  className="object-contain"
+                  priority
+                />
+              </div>
             </div>
-          </div>
             <button
               onClick={handleClose}
               className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] lg:hidden"
