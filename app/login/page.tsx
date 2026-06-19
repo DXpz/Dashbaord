@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginBackground } from '@/components/LoginBackground';
 import { useAuth } from '@/lib/auth-context';
@@ -51,13 +50,13 @@ function LoginPageInner() {
 
       <div className="relative z-10 w-full max-w-md mx-auto px-6">
         <div className="flex items-center justify-center mb-8">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/logos/prospektia-v2.png"
             alt="ProspektIA"
             width={360}
             height={91}
             className="object-contain"
-            priority
           />
         </div>
         {showBye && (
