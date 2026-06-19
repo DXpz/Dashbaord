@@ -625,7 +625,9 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         return true;
       } else {
         const errorData = await res.json().catch(() => ({}));
-        showError(extractErrorMessage(errorData, 'Error al guardar'));
+        showError(extractErrorMessage(errorData, 'Error al guardar'), {
+          title: 'No se pudo guardar la retroalimentación',
+        });
         return false;
       }
     } catch (err) {
@@ -700,7 +702,9 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         onClose?.();
       } else {
         const errorData = await res.json().catch(() => ({}));
-        showError(extractErrorMessage(errorData, 'Error al cerrar lead'));
+        showError(extractErrorMessage(errorData, 'Error al cerrar lead'), {
+          title: 'No se pudo cerrar el lead',
+        });
       }
     } catch (err) {
       console.error('Error closing:', err);
@@ -757,7 +761,9 @@ const url = isHttps
         onClose?.();
       } else {
         const errorData = await res.json().catch(() => ({}));
-        showError(extractErrorMessage(errorData, 'Error al cerrar lead'));
+        showError(extractErrorMessage(errorData, 'Error al cerrar lead'), {
+          title: 'No se pudo cerrar el lead',
+        });
       }
     } catch (err) {
       console.error('Error closing:', err);
