@@ -123,7 +123,7 @@ function NotificationBar({
   if (notification.type === 'error') {
     return (
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-slide-down max-w-lg w-full mx-4">
-        <div className="bg-white border border-[#EEEEEC] rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white border border-[#EEEEEC] rounded-xl shadow-lg">
           <div className="flex items-start gap-3 px-5 py-4">
             <div className="w-10 h-10 rounded-lg bg-[#F5F5ED] flex items-center justify-center shrink-0">
               <AlertTriangle className="h-5 w-5 text-[#c8151b]" />
@@ -144,7 +144,6 @@ function NotificationBar({
               <X className="h-4 w-4 text-[#B5B5AE]" />
             </button>
           </div>
-          <div className="h-1 bg-[#c8151b]" />
         </div>
       </div>
     );

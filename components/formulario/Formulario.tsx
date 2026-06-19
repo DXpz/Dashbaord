@@ -11,14 +11,18 @@ import { useNotification } from '@/components/ui/notification';
 
 function extractErrorMessage(data: any, fallback: string = 'Error al guardar'): string {
   if (!data) return fallback;
-  if (typeof data.detail === 'string') return data.detail;
-  if (Array.isArray(data.detail) && data.detail.length > 0) {
+  let msg = '';
+  if (typeof data.detail === 'string') msg = data.detail;
+  else if (Array.isArray(data.detail) && data.detail.length > 0) {
     const first = data.detail[0];
-    if (typeof first === 'string') return first;
-    if (first?.msg) return first.msg;
+    if (typeof first === 'string') msg = first;
+    else if (first?.msg) msg = first.msg;
+  } else if (typeof data.detail === 'object' && data.detail?.msg) {
+    msg = data.detail.msg;
   }
-  if (typeof data.detail === 'object' && data.detail?.msg) return data.detail.msg;
-  return fallback;
+  if (!msg) return fallback;
+  // Pydantic prepende "Value error, " automaticamente - lo limpiamos
+  return msg.replace(/^Value error,\s*/i, '').trim();
 }
 
 export type FormStage = 'REUNION' | 'DEMO' | 'PROPUESTA' | 'SEGUIMIENTO' | 'CIERRE';
