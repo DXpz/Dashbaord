@@ -128,7 +128,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             <div className="flex-1 flex items-center justify-center">
               <div className="relative h-14 rounded-lg overflow-hidden">
                 <Image
-                  src="/logos/prospektia-v2.png"
+                  src="/logos/prospektia.png"
                   alt="ProspektIA"
                   width={170}
                   height={43}

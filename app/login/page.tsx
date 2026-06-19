@@ -52,7 +52,7 @@ function LoginPageInner() {
         <div className="flex items-center justify-center mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logos/prospektia-v2.png"
+            src="/logos/prospektia.png"
             alt="ProspektIA"
             width={360}
             height={91}
