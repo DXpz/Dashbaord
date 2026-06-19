@@ -24,7 +24,8 @@ function getStageFields(reunion: any) {
   const s4 = sf['4'] || {};
   const s6 = sf['6'] || {};
   return {
-    tipo: s2.tipo_reunion || '',
+    // tipo: preferir preferred_tipo_llamada (columna) sobre stage_feedback_json
+    tipo: reunion.preferred_tipo_llamada || s2.tipo_reunion || '',
     demo: s2.requiere_demo || '',
     fecha: s2.fecha_reunion || '',
     cantProp: s4.cantidad_equipos || '',
@@ -520,7 +521,7 @@ export default function ReunionesPage() {
                             if (!isNaN(d.getTime())) {
                               return d.toLocaleString('es-ES', {
                                 day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit', hour12: false,
+                                hour: '2-digit', minute: '2-digit', hour12: true,
                               });
                             }
                             return '—';
