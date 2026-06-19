@@ -49,16 +49,6 @@ function LoginPageInner() {
       </div>
 
       <div className="relative z-10 w-full max-w-md mx-auto px-6">
-        <div className="flex items-center justify-center mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logos/prospektia.png"
-            alt="ProspektIA"
-            width={360}
-            height={91}
-            className="object-contain"
-          />
-        </div>
         {showBye && (
           <div className="mb-4 bg-white/90 backdrop-blur-sm border border-[#EEEEEC] rounded-xl px-4 py-3 shadow-md flex items-center gap-3 animate-[slideDown_0.3s_ease-out]">
             <div className="w-8 h-8 rounded-full bg-[#1F1D3D] flex items-center justify-center flex-shrink-0">
