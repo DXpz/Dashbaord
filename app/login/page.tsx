@@ -51,16 +51,14 @@ function LoginPageInner() {
 
       <div className="relative z-10 w-full max-w-md mx-auto px-6">
         <div className="flex items-center justify-center mb-8">
-          <div className="relative h-24">
-            <Image
-              src="/logos/logo-grande.png"
-              alt="ProspektIA"
-              width={360}
-              height={96}
-              className="object-contain"
-              priority
-            />
-          </div>
+          <Image
+            src="/logos/logo-grande.png"
+            alt="ProspektIA"
+            width={360}
+            height={91}
+            className="object-contain"
+            priority
+          />
         </div>
         {showBye && (
           <div className="mb-4 bg-white/90 backdrop-blur-sm border border-[#EEEEEC] rounded-xl px-4 py-3 shadow-md flex items-center gap-3 animate-[slideDown_0.3s_ease-out]">
