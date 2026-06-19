@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: 'Métricas y Análisis de Ventas',
   icons: {
     icon: '/logos/favicon.png',
+    shortcut: '/logos/favicon.png',
+    apple: '/logos/favicon.png',
   },
 };
 
