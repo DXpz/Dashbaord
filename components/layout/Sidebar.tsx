@@ -126,19 +126,15 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         <div className="flex flex-col h-full p-4">
           <div className="flex items-center justify-between mb-8 px-2">
             <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-lg overflow-hidden">
+              <div className="relative h-10 rounded-lg overflow-hidden">
                 <Image
                   src="/logos/logo-grande.png"
                   alt="RED PTT"
-                  width={40}
+                  width={120}
                   height={40}
                   className="object-contain"
                   priority
                 />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-semibold text-[#1F1D3D] text-sm leading-tight">Dashboard</span>
-                <span className="text-[10px] text-[#B5B5AE] leading-tight">Metrics</span>
               </div>
             </div>
             <button
