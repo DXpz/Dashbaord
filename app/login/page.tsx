@@ -47,14 +47,14 @@ function LoginPageInner() {
         <LoginBackground />
       </div>
 
-      <div className="relative z-10 w-full max-w-sm mx-auto px-6">
-        <div className="flex items-center justify-center mb-6">
-          <div className="relative h-14">
+      <div className="relative z-10 w-full max-w-md mx-auto px-6">
+        <div className="flex items-center justify-center mb-8">
+          <div className="relative h-24">
             <Image
               src="/logos/logo-grande.png"
               alt="ProspektIA"
-              width={200}
-              height={56}
+              width={360}
+              height={96}
               className="object-contain"
               priority
             />
