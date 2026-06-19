@@ -5,6 +5,21 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.1.6',
+    fecha: '2026-06-19',
+    cambios: [
+      'Formulario: anti-spam en retroalimentación para todos los stages (Reunión, Demo, Propuesta, Seguimiento, Cierre)',
+      'Formulario: contador "texto inválido (spam detectado)" en retroalimentación cuando se detecta spam',
+      'Backend: bug SLA stage_deadline (psycopg2 interpretaba "%" como placeholder) — ahora usa "%%"',
+      'Backend: refactor auditor loop con try-except por iteración + traceback en errores',
+      'Backend: jefe notificado SOLO cuando SLA vence (no por intervalo)',
+      'Backend: query de escalación incluye stage_*_overdue (antes solo pending)',
+      'Backend: payload del webhook pre-mapea campos para HTMLs de Make (pais_nombre, tipo_reunion_label, client_email_display, fechas, etc)',
+      'Backend: jefe_nombre por país (SV=Carlos Abrego, GT=Alexandra Londono via JEFE_NOMBRE_SV/GT)',
+      'Backend: 6 HTMLs de Make entregados para acciones: alerta, notiREU, notificacion_jefe, retroalimentacion, envio_propuesta, seguimiento_cliente',
+    ],
+  },
+  {
     version: '2.1.5',
     fecha: '2026-06-16',
     cambios: [
