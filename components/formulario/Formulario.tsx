@@ -9,6 +9,18 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { useNotification } from '@/components/ui/notification';
 
+function extractErrorMessage(data: any, fallback: string = 'Error al guardar'): string {
+  if (!data) return fallback;
+  if (typeof data.detail === 'string') return data.detail;
+  if (Array.isArray(data.detail) && data.detail.length > 0) {
+    const first = data.detail[0];
+    if (typeof first === 'string') return first;
+    if (first?.msg) return first.msg;
+  }
+  if (typeof data.detail === 'object' && data.detail?.msg) return data.detail.msg;
+  return fallback;
+}
+
 export type FormStage = 'REUNION' | 'DEMO' | 'PROPUESTA' | 'SEGUIMIENTO' | 'CIERRE';
 
 export const STAGE_ORDER: FormStage[] = ['REUNION', 'DEMO', 'PROPUESTA', 'SEGUIMIENTO', 'CIERRE'];
@@ -613,7 +625,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         return true;
       } else {
         const errorData = await res.json().catch(() => ({}));
-        showError(errorData?.detail || 'Error al guardar');
+        showError(extractErrorMessage(errorData, 'Error al guardar'));
         return false;
       }
     } catch (err) {
@@ -688,7 +700,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         onClose?.();
       } else {
         const errorData = await res.json().catch(() => ({}));
-        showError(errorData?.detail || 'Error al cerrar lead');
+        showError(extractErrorMessage(errorData, 'Error al cerrar lead'));
       }
     } catch (err) {
       console.error('Error closing:', err);
@@ -745,7 +757,7 @@ const url = isHttps
         onClose?.();
       } else {
         const errorData = await res.json().catch(() => ({}));
-        showError(errorData?.detail || 'Error al cerrar lead');
+        showError(extractErrorMessage(errorData, 'Error al cerrar lead'));
       }
     } catch (err) {
       console.error('Error closing:', err);
