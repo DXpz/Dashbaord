@@ -516,17 +516,7 @@ export default function ReunionesPage() {
                           ) : '—'}
                         </TableCell>
                         <TableCell className="text-xs text-[#35325B] whitespace-nowrap">
-                          {reunion.start_time ? (() => {
-                            const d = new Date(reunion.start_time);
-                            if (!isNaN(d.getTime())) {
-                              return d.toLocaleString('es-ES', {
-                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit', hour12: true,
-                                timeZone: 'UTC',
-                              });
-                            }
-                            return '—';
-                          })() : '—'}
+                          {reunion.start_time_display || '—'}
                         </TableCell>
                         <TableCell className="text-xs text-[#35325B]">
                           {sf.cantProp || sf.cantCierre ? (
