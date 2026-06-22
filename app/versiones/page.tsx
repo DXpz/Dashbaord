@@ -5,6 +5,20 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.1.7',
+    fecha: '2026-06-19',
+    cambios: [
+      'Logos: agregados en /public/logos/ (prospektia.png = LOGOG, favicon.png = LOGOC)',
+      'Sidebar: removidos textos "Dashboard / Metrics", ahora solo muestra el logo centrado',
+      'Sidebar: logo más grande (170x43) y centrado con flex-1 wrapper',
+      'Login: title de pestaña "ProspektIA | Dashboard" (metadata.title)',
+      'Login: banner "¡Esperamos volverte a ver!" al hacer logout (5s, limpia ?bye=1 después)',
+      'Login: useSearchParams envuelto en Suspense (fix de build)',
+      'Favicon: usa solo /logos/favicon.png con sizes icon/shortcut/apple',
+      'Reuniones: usa start_time_display del backend (DD/MM/YYYY hh:mm AM/PM, hora SV)',
+    ],
+  },
+  {
     version: '2.1.6',
     fecha: '2026-06-19',
     cambios: [
