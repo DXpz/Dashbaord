@@ -433,6 +433,29 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         }
 
         console.log('[Formulario] mergedStageData:', JSON.stringify(mergedStageData));
+
+        // Recuperar borrador guardado en localStorage (si el vendor cerro sin querer)
+        try {
+          const draftRaw = typeof window !== 'undefined' ? localStorage.getItem(`form_draft_${clientId}`) : null;
+          if (draftRaw) {
+            const draft = JSON.parse(draftRaw);
+            if (draft && typeof draft === 'object') {
+              Object.entries(draft).forEach(([stageKey, fields]) => {
+                const stageNum = Number(stageKey);
+                if (!isNaN(stageNum) && fields && typeof fields === 'object') {
+                  mergedStageData[stageNum] = {
+                    ...(mergedStageData[stageNum] || {}),
+                    ...(fields as Record<string, string>),
+                  } as Record<string, string>;
+                }
+              });
+              console.log('[Formulario] mergedStageData con borrador local:', JSON.stringify(mergedStageData));
+            }
+          }
+        } catch (e) {
+          console.warn('[Formulario] No se pudo recuperar borrador:', e);
+        }
+
         setStageData(mergedStageData);
 
         setLoadedData({
@@ -545,10 +568,21 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
     setValidationError(null);
     setIsDirty(true);
     const stageNum = stages[currentStageIndex]?.stageNumber;
-    setStageData(prev => ({
-      ...prev,
-      [stageNum]: { ...prev[stageNum], [fieldId]: value },
-    }));
+    setStageData(prev => {
+      const next = {
+        ...prev,
+        [stageNum]: { ...prev[stageNum], [fieldId]: value },
+      };
+      // Guardar borrador en localStorage para recuperacion ante cierre accidental
+      try {
+        if (typeof window !== 'undefined' && clientId) {
+          localStorage.setItem(`form_draft_${clientId}`, JSON.stringify(next));
+        }
+      } catch (e) {
+        console.warn('[Formulario] No se pudo guardar borrador:', e);
+      }
+      return next;
+    });
 
     if (fieldId === 'requiere_demo') {
       setRequiresDemo(value === 'si');
@@ -664,6 +698,14 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       if (res.ok) {
         if (showToast) showSuccess('Feedback guardado correctamente');
         setIsDirty(false);
+        // Limpiar borrador de localStorage al guardar exitosamente
+        try {
+          if (typeof window !== 'undefined' && clientId) {
+            localStorage.removeItem(`form_draft_${clientId}`);
+          }
+        } catch (e) {
+          console.warn('[Formulario] No se pudo limpiar borrador:', e);
+        }
         return true;
       } else {
         const errorData = await res.json().catch(() => ({}));
