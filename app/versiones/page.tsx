@@ -5,6 +5,24 @@ import { FileText, Code, Database, Users } from 'lucide-react';
 
 const VERSIONES = [
   {
+    version: '2.1.8',
+    fecha: '2026-06-19',
+    cambios: [
+      'Métricas por Etapas: nueva vista matriz con cabecera doble (nombre de etapa + valor SLA)',
+      'Métricas por Etapas: columnas por etapa (Asignación, Reunión, Demo, Propuesta, Seguimiento, Cierre) con VENCIDO + días',
+      'Métricas por Etapas: SLA total = suma de SLAs desde etapa actual hasta Cierre (17d para Reunión)',
+      'Métricas por Etapas: columna Restante = SLA total - días vencido (positivo ámbar, negativo rojo)',
+      'Métricas por Etapas: columna Días vencido y Estado (Confirmado/Pendiente)',
+      'Métricas por Etapas: removed "Confirmar" button (vista solo para admin)',
+      'Métricas por Etapas: filtrable por asesor, mes y año',
+      'Pipeline de Ventas: tooltip del chart ahora dice "LEADS" en lugar de "Cerradas"',
+      'Formulario: persistencia de borradores en localStorage (recuperación si cierra accidentalmente)',
+      'Backend: lead ahora se puede cerrar como "Lead perdido" desde stage 1 (Asignación)',
+      'Backend: fix timezone - naive datetime se interpreta como hora local SV/GT antes de guardar UTC',
+      'Backend: fix manual DB para LD225 y LD245 (corregidos de 2:30/4:00 AM a 8:30/10:00 AM SV)',
+    ],
+  },
+  {
     version: '2.1.7',
     fecha: '2026-06-19',
     cambios: [
