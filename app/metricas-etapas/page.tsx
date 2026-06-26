@@ -58,6 +58,42 @@ function formatDateTime(iso: string) {
   return d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+// Lee el filtro global persistido (mismo storage que FilterBar / useFilters)
+// y devuelve { month, year } segun el campo `desde`.
+function readGlobalMonthYear(): { month: string; year: string } {
+  if (typeof window === 'undefined') return { month: '', year: '' };
+  try {
+    const raw = localStorage.getItem('dashboard_filters');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const desde = parsed?.desde as string | undefined;
+      if (desde && /^\d{4}-\d{2}-\d{2}$/.test(desde)) {
+        const [y, m] = desde.split('-');
+        return { month: m, year: y };
+      }
+    }
+  } catch {}
+  return { month: '', year: '' };
+}
+
+// Persiste { month, year } en el filtro global, recalculando desde/hasta.
+// Mantiene sincronizado el mes entre metricas-etapas y el resto de vistas.
+function writeGlobalMonthYear(month: string, year: string) {
+  if (typeof window === 'undefined') return;
+  if (!month || !year) return;
+  try {
+    const raw = localStorage.getItem('dashboard_filters');
+    const current = raw ? JSON.parse(raw) : {};
+    const lastDay = new Date(Number(year), Number(month), 0).getDate();
+    const desde = `${year}-${month}-01`;
+    const hasta = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+    localStorage.setItem(
+      'dashboard_filters',
+      JSON.stringify({ ...current, desde, hasta })
+    );
+  } catch {}
+}
+
 function diasVencido(deadline: string): number {
   const d = new Date(deadline);
   if (isNaN(d.getTime())) return 0;
@@ -69,7 +105,7 @@ function diasVencido(deadline: string): number {
 export default function MetricasEtapasPage() {
   const { user } = useAuth();
   const [asesorFilter, setAsesorFilter] = useState('');
-  const [paisFilter, setPaisFilter] = useState<string>(''); // solo super_admin usa esto
+  const [paisFilter, setPaisFilter] = useState<string>(''); // solo super_admin usa esto (independiente del filtro global)
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
 
@@ -99,11 +135,33 @@ export default function MetricasEtapasPage() {
   });
   const allAsesores = (Array.isArray(allAsesoresRaw) ? allAsesoresRaw : []).map((a: string) => ({ value: a, label: a }));
 
+  // Mes/Año sincronizados con el filtro global persistido en localStorage.
+  // Si en otra vista (resumen, leads, etc.) el usuario eligio "Junio 2026",
+  // aqui se muestra "Junio 2026". Si cambia aqui, persiste para las demas vistas.
   useEffect(() => {
+    const global = readGlobalMonthYear();
+    if (global.month && global.year) {
+      setMonth(global.month);
+      setYear(global.year);
+      return;
+    }
+    // Sin global guardado: usar mes/año actual como default
     const now = new Date();
-    if (!month) setMonth(String(now.getMonth() + 1).padStart(2, '0'));
-    if (!year) setYear(String(now.getFullYear()));
+    setMonth(String(now.getMonth() + 1).padStart(2, '0'));
+    setYear(String(now.getFullYear()));
   }, []);
+
+  const handleMonthChange = (newMonth: string) => {
+    setMonth(newMonth);
+    const newYear = year || String(new Date().getFullYear());
+    writeGlobalMonthYear(newMonth, newYear);
+  };
+
+  const handleYearChange = (newYear: string) => {
+    setYear(newYear);
+    const newMonth = month || String(new Date().getMonth() + 1).padStart(2, '0');
+    writeGlobalMonthYear(newMonth, newYear);
+  };
 
   const [allEvents, setAllEvents] = useState<any[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -222,7 +280,8 @@ export default function MetricasEtapasPage() {
 
           <select
             value={month}
-            onChange={e => setMonth(e.target.value)}
+            onChange={e => handleMonthChange(e.target.value)}
+            title="Mes (sincronizado con el filtro global)"
             className="text-sm px-3 py-2 border border-[#EEEEEC] rounded text-[#35325B] bg-[#F5F5ED] outline-none"
           >
             <option value="">Mes</option>
@@ -238,7 +297,8 @@ export default function MetricasEtapasPage() {
 
           <select
             value={year}
-            onChange={e => setYear(e.target.value)}
+            onChange={e => handleYearChange(e.target.value)}
+            title="Año (sincronizado con el filtro global)"
             className="text-sm px-3 py-2 border border-[#EEEEEC] rounded text-[#35325B] bg-[#F5F5ED] outline-none"
           >
             <option value="">Año</option>
