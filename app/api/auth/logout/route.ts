@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
 
   if (token) {
     try {
-      await fetch('http://200.35.189.139/api/auth/logout', {
+      await fetch('https://prospektia.red.com.sv/api/auth/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

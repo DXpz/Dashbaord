@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
 const COOKIE_NAME = 'access_token';
-const UPSTREAM = process.env.API_UPSTREAM || 'http://200.35.189.139';
+const UPSTREAM = process.env.API_UPSTREAM || 'https://prospektia.red.com.sv';
 
 export interface ApiUser {
   id: number;
@@ -60,15 +60,11 @@ export async function callAuthApi(
   req?: Request
 ) {
   const upstreamPath = `/api/auth${path}`;
-  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-  const url = isHttps
-    ? `/api/proxy?_path=${encodeURIComponent(upstreamPath.slice(1))}`
-    : `${UPSTREAM}${upstreamPath}`;
+  const url = `${UPSTREAM}${upstreamPath}`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'X-API-KEY': process.env.API_KEY || '',
-    ...(isHttps ? {} : { 'ngrok-skip-browser-warning': 'true' }),
   };
 
   const token = req ? getTokenFromRequest(new NextRequest(req.url)) : null;

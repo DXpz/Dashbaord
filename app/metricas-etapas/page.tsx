@@ -2,21 +2,50 @@
 
 import { useState, useEffect } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { useAdvisorOverdue, useAdvisorOverdueDetail, useAcknowledgeEvent, OverdueFilters } from '@/hooks';
+import { useAdvisorOverdue, OverdueFilters } from '@/hooks';
 import { useAuth } from '@/lib/auth-context';
-import { Button } from '@/components/ui/button';
-import { AlertTriangle, CheckCircle, Clock, ChevronRight, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useAsesores } from '@/hooks';
+import { API } from '@/services/api';
 
 const STAGE_LABELS: Record<number, string> = {
+  1: 'Asignación',
   2: 'Reunión',
   3: 'Demo',
   4: 'Propuesta',
   5: 'Seguimiento',
+  6: 'Cierre',
+};
+
+// SLA configurado por etapa (en dias habiles)
+const STAGE_SLA_DAYS: Record<number, number> = {
+  1: 0.04,  // 1 hora
+  2: 1,      // 1 dia habil
+  3: 5,      // 5 dias habiles
+  4: 1,      // 1 dia habil
+  5: 10,     // 10 dias habiles
+  6: 0,      // Cierre: sin SLA
+};
+
+// Suma de SLAs desde una etapa hasta Cierre (suma de las etapas restantes)
+function slaRestanteDesde(stage: number): number {
+  let total = 0;
+  for (let s = stage; s <= 6; s++) {
+    total += STAGE_SLA_DAYS[s] || 0;
+  }
+  return total;
+}
+
+const STAGE_BADGE_COLOR: Record<number, string> = {
+  1: 'bg-[#F5F5ED] text-[#35325B]',
+  2: 'bg-[#EEF2FF] text-[#4338CA]',
+  3: 'bg-[#FEF3C7] text-[#92400E]',
+  4: 'bg-[#DBEAFE] text-[#1E40AF]',
+  5: 'bg-[#FCE7F3] text-[#9D174D]',
 };
 
 function getLastDayOfMonth(year: number, month: string) {
@@ -29,12 +58,19 @@ function formatDateTime(iso: string) {
   return d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+function diasVencido(deadline: string): number {
+  const d = new Date(deadline);
+  if (isNaN(d.getTime())) return 0;
+  const ahora = new Date();
+  const diff = ahora.getTime() - d.getTime();
+  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
 export default function MetricasEtapasPage() {
   const { user } = useAuth();
   const [asesorFilter, setAsesorFilter] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
-  const [selectedAdvisor, setSelectedAdvisor] = useState<string | null>(null);
 
   const filters: OverdueFilters = {
     asesor: asesorFilter || undefined,
@@ -43,9 +79,6 @@ export default function MetricasEtapasPage() {
   };
 
   const { advisors, loading, error, totalEvents, refetch } = useAdvisorOverdue(filters);
-  const { detail, loading: detailLoading } = useAdvisorOverdueDetail(selectedAdvisor, filters);
-  const { acknowledge, loading: ackLoading } = useAcknowledgeEvent();
-  const [acknowledgingId, setAcknowledgingId] = useState<number | null>(null);
 
   const allAsesoresRaw = useAsesores({
     desde: month && year ? `${year}-${month}-01` : '',
@@ -64,14 +97,71 @@ export default function MetricasEtapasPage() {
     if (!year) setYear(String(now.getFullYear()));
   }, []);
 
-  const handleAcknowledge = async (eventId: number) => {
-    setAcknowledgingId(eventId);
-    const ok = await acknowledge(eventId);
-    setAcknowledgingId(null);
-    if (ok) {
-      refetch();
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
+  useEffect(() => {
+    if (advisors.length === 0) {
+      setAllEvents([]);
+      return;
     }
-  };
+    let cancelled = false;
+    setLoadingEvents(true);
+    (async () => {
+      try {
+        const promises = advisors.map(a =>
+          API.advisorOverdueDetail(String(a.advisor_id), {
+            desde: filters.desde,
+            hasta: filters.hasta,
+          }).then(d => (d?.events || []).map((ev: any) => ({
+            ...ev,
+            advisor_name: a.advisor_name,
+            advisor_country: a.country,
+            dias_vencido: diasVencido(ev.deadline),
+          }))).catch(() => [])
+        );
+        const results = await Promise.all(promises);
+        if (!cancelled) {
+          // Agrupar por audit_id: un lead puede tener multiples eventos (uno por stage)
+          const allEventsList = results.flat();
+          const byLead: Record<string, any> = {};
+          allEventsList.forEach((ev: any) => {
+            if (!byLead[ev.audit_id]) {
+              byLead[ev.audit_id] = {
+                audit_id: ev.audit_id,
+                client_id: ev.client_id,
+                advisor_name: ev.advisor_name,
+                advisor_country: ev.advisor_country,
+                events: [],
+                max_dias_vencido: 0,
+                current_stage: ev.stage,
+              };
+            }
+            byLead[ev.audit_id].events.push(ev);
+            byLead[ev.audit_id].max_dias_vencido = Math.max(
+              byLead[ev.audit_id].max_dias_vencido,
+              ev.dias_vencido
+            );
+            // El current_stage es el stage MAS ALTO visto (donde esta el lead ahora)
+            if (ev.stage > byLead[ev.audit_id].current_stage) {
+              byLead[ev.audit_id].current_stage = ev.stage;
+            }
+          });
+          const leads = Object.values(byLead);
+          // Ordenar por dias vencido del current stage
+          leads.sort((a: any, b: any) => {
+            const aCur = a.events.find((e: any) => e.stage === a.current_stage);
+            const bCur = b.events.find((e: any) => e.stage === b.current_stage);
+            return (bCur?.dias_vencido || 0) - (aCur?.dias_vencido || 0);
+          });
+          setAllEvents(leads as any);
+        }
+      } finally {
+        if (!cancelled) setLoadingEvents(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [advisors, filters.desde, filters.hasta]);
 
   return (
     <Shell
@@ -85,7 +175,7 @@ export default function MetricasEtapasPage() {
       showFilterBar={false}
     >
       <div className="space-y-4">
-        <div className="bg-white border border-[#EEEEEC] p-4 flex flex-wrap items-center gap-3">
+        <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex flex-wrap items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600" />
           <div>
             <p className="text-sm font-semibold text-[#1F1D3D]">Eventos vencidos en total</p>
@@ -94,7 +184,7 @@ export default function MetricasEtapasPage() {
           <div className="ml-auto text-2xl font-bold text-[#1F1D3D]">{totalEvents}</div>
         </div>
 
-        <div className="bg-white border border-[#EEEEEC] p-4 flex flex-wrap items-center gap-3">
+        <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex flex-wrap items-center gap-3">
           <select
             value={asesorFilter}
             onChange={e => setAsesorFilter(e.target.value)}
@@ -134,139 +224,115 @@ export default function MetricasEtapasPage() {
           </select>
         </div>
 
-        {loading ? (
+        {loading || loadingEvents ? (
           <div className="space-y-2">
             {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12" />)}
           </div>
         ) : error ? (
           <div className="text-sm text-red-500 p-4">{error}</div>
         ) : (
-          <div className="bg-white border border-[#EEEEEC] overflow-hidden">
+          <div className="bg-white border border-[#EEEEEC] rounded-xl overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-[#F5F5ED]">
-                  <TableHead>Asesor</TableHead>
-                  <TableHead>País</TableHead>
-                  <TableHead className="text-center">Total vencidos</TableHead>
-                  <TableHead className="text-center">Reunión</TableHead>
-                  <TableHead className="text-center">Demo</TableHead>
-                  <TableHead className="text-center">Propuesta</TableHead>
-                  <TableHead className="text-center">Seguimiento</TableHead>
-                  <TableHead className="text-center">Confirmados</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead rowSpan={2} className="whitespace-nowrap align-bottom">Cliente</TableHead>
+                  <TableHead rowSpan={2} className="whitespace-nowrap align-bottom">Asesor</TableHead>
+                  <TableHead rowSpan={2} className="whitespace-nowrap align-bottom">País</TableHead>
+                  <TableHead colSpan={6} className="text-center text-[#1F1D3D] border-l border-[#EEEEEC] py-2">Etapa donde venció</TableHead>
+                  <TableHead rowSpan={2} className="text-center whitespace-nowrap align-bottom border-l border-[#EEEEEC]">Días vencido</TableHead>
+                  <TableHead colSpan={2} className="text-center text-[#1F1D3D] border-l border-[#EEEEEC] py-2">SLA</TableHead>
+                </TableRow>
+                <TableRow className="bg-[#F5F5ED]">
+                  {[1, 2, 3, 4, 5, 6].map(s => (
+                    <TableHead key={s} className="text-center whitespace-nowrap border-l border-[#EEEEEC] py-2" style={{ minWidth: 70 }}>
+                      <div className="text-[10px] text-[#B5B5AE] font-normal">
+                        SLA {!STAGE_SLA_DAYS[s] ? 'N/A' : STAGE_SLA_DAYS[s] < 1 ? `${Math.round(STAGE_SLA_DAYS[s] * 24)}h` : `${STAGE_SLA_DAYS[s]}d`}
+                      </div>
+                      <div className="text-xs font-semibold text-[#1F1D3D]">{STAGE_LABELS[s]}</div>
+                    </TableHead>
+                  ))}
+                  <TableHead className="text-center whitespace-nowrap border-l border-[#EEEEEC] py-2">
+                    <div className="text-[10px] text-[#B5B5AE] font-normal">SLA</div>
+                    <div className="text-xs font-semibold text-[#1F1D3D]">Total</div>
+                  </TableHead>
+                  <TableHead className="text-center whitespace-nowrap py-2">
+                    <div className="text-[10px] text-[#B5B5AE] font-normal">SLA</div>
+                    <div className="text-xs font-semibold text-[#1F1D3D]">Restante</div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {advisors.length === 0 ? (
+                {allEvents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-sm text-[#B5B5AE] py-8">
+                    <TableCell colSpan={11} className="text-center text-sm text-[#B5B5AE] py-8">
                       No hay eventos vencidos
                     </TableCell>
                   </TableRow>
                 ) : (
-                  advisors.map((a) => (
-                    <TableRow key={a.advisor_id} className="cursor-pointer hover:bg-[#F5F5ED]" onClick={() => setSelectedAdvisor(String(a.advisor_id))}>
-                      <TableCell className="font-medium text-[#1F1D3D]">{a.advisor_name}</TableCell>
-                      <TableCell>
-                        <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">{a.country}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {a.total_vencidos > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded">
-                            <AlertTriangle className="w-3 h-3" />{a.total_vencidos}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-[#B5B5AE]">0</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center text-xs">{a.stage_2_vencidos}</TableCell>
-                      <TableCell className="text-center text-xs">{a.stage_3_vencidos}</TableCell>
-                      <TableCell className="text-center text-xs">{a.stage_4_vencidos}</TableCell>
-                      <TableCell className="text-center text-xs">{a.stage_5_vencidos}</TableCell>
-                      <TableCell className="text-center text-xs text-[#B5B5AE]">{a.acknowledge_count}</TableCell>
-                      <TableCell>
-                        <ChevronRight className="w-4 h-4 text-[#B5B5AE]" />
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  allEvents.map((lead: any) => {
+                    // Encontrar el evento del current_stage
+                    const currentEvent = lead.events.find((e: any) => e.stage === lead.current_stage);
+                    const totalDiasVencido = lead.events.reduce((sum: number, e: any) => sum + e.dias_vencido, 0);
+                    const maxDiasVencido = lead.max_dias_vencido;
+                    const currentSlaConf = slaRestanteDesde(lead.current_stage);
+                    const currentDiasVencido = currentEvent?.dias_vencido || 0;
+                    const restante = currentSlaConf - currentDiasVencido;
+                    return (
+                      <TableRow key={lead.audit_id} className="hover:bg-[#F8F9FA]">
+                        <TableCell>
+                          <div className="text-sm font-medium text-[#1F1D3D]">{lead.client_id}</div>
+                          {lead.events.length > 1 && (
+                            <div className="text-[10px] text-[#B5B5AE] mt-0.5">{lead.events.length} etapas vencidas</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-[#35325B] whitespace-nowrap">{lead.advisor_name}</TableCell>
+                        <TableCell>
+                          <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">{lead.advisor_country}</span>
+                        </TableCell>
+                        {[1, 2, 3, 4, 5, 6].map(s => {
+                          const eventInStage = lead.events.find((e: any) => e.stage === s);
+                          return (
+                            <TableCell key={s} className="text-center">
+                              {eventInStage ? (
+                                <span className="inline-flex flex-col items-center gap-0.5 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-1 rounded">
+                                  <span>VENCIDO</span>
+                                  <span className="text-sm">{eventInStage.dias_vencido}d</span>
+                                </span>
+                              ) : (
+                                <span className="text-[#EEEEEC]">—</span>
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell className="text-center">
+                          <div className="text-sm font-bold text-red-700">{maxDiasVencido}d</div>
+                          {lead.events.length > 1 && (
+                            <div className="text-[10px] text-[#B5B5AE] mt-0.5">Σ {totalDiasVencido}d</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="text-xs text-[#B5B5AE]">SLA total</div>
+                          <div className="text-sm font-semibold text-[#1F1D3D]">{currentSlaConf}d</div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {(() => {
+                            const esPositivo = restante > 0;
+                            return (
+                              <div className={`text-sm font-bold ${esPositivo ? 'text-amber-600' : 'text-red-700'}`}>
+                                {restante > 0 ? `+${restante}d` : `${restante}d`}
+                              </div>
+                            );
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
           </div>
         )}
       </div>
-
-      {selectedAdvisor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedAdvisor(null)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEEEEC] shrink-0">
-              <div>
-                <h3 className="text-sm font-semibold text-[#1F1D3D]">Detalle de Eventos</h3>
-                <p className="text-xs text-[#B5B5AE]">
-                  {detail?.summary?.total_vencidos || 0} vencidos —{' '}
-                  {STAGE_LABELS[2]}: {detail?.summary?.stage_2_vencidos || 0} ·{' '}
-                  {STAGE_LABELS[3]}: {detail?.summary?.stage_3_vencidos || 0} ·{' '}
-                  {STAGE_LABELS[4]}: {detail?.summary?.stage_4_vencidos || 0} ·{' '}
-                  {STAGE_LABELS[5]}: {detail?.summary?.stage_5_vencidos || 0}
-                </p>
-              </div>
-              <button onClick={() => setSelectedAdvisor(null)} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded transition-colors">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="overflow-y-auto flex-1 p-4">
-              {detailLoading ? (
-                <div className="space-y-2">
-                  {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16" />)}
-                </div>
-              ) : detail?.events && detail.events.length > 0 ? (
-                <div className="space-y-2">
-                  {detail.events.map((ev) => (
-                    <div key={ev.id} className="border border-[#EEEEEC] rounded-lg p-3 flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-semibold text-[#1F1D3D]">{ev.client_id}</span>
-                          <span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded">
-                            {STAGE_LABELS[ev.stage] || `Etapa ${ev.stage}`}
-                          </span>
-                          {ev.acknowledged ? (
-                            <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
-                              <CheckCircle className="w-3 h-3" /> Confirmado
-                            </span>
-                          ) : (
-                            <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> Pendiente
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1 flex items-center gap-4 text-xs text-[#B5B5AE]">
-                          <span>Deadline: {formatDateTime(ev.deadline)}</span>
-                          <span>Activado: {formatDateTime(ev.triggered_at)}</span>
-                          {ev.acknowledged_at && <span>Confirmado: {formatDateTime(ev.acknowledged_at)}</span>}
-                        </div>
-                      </div>
-                      {!ev.acknowledged && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAcknowledge(ev.id)}
-                          disabled={ackLoading && acknowledgingId === ev.id}
-                          className="text-xs h-7 border-[#EEEEEC] text-[#35325B] hover:bg-[#F5F5ED] shrink-0"
-                        >
-                          {ackLoading && acknowledgingId === ev.id ? '...' : 'Confirmar'}
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-[#B5B5AE] text-center py-8">No hay eventos para este asesor</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </Shell>
   );
 }

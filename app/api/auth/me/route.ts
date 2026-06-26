@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const upstream = await fetch('http://200.35.189.139/api/auth/me', {
+    const upstream = await fetch('https://prospektia.red.com.sv/api/auth/me', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

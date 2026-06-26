@@ -4,7 +4,7 @@ export async function POST(req: NextRequest) {
   const { username, password } = await req.json();
 
   try {
-    const upstream = await fetch('http://200.35.189.139/api/auth/login', {
+    const upstream = await fetch('https://prospektia.red.com.sv/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

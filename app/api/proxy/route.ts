@@ -38,7 +38,7 @@ async function handleRequest(req: NextRequest) {
     return NextResponse.json({ detail: 'No autenticado' }, { status: 401 });
   }
 
-  const base = (process.env.API_UPSTREAM ?? 'http://200.35.189.139:3001').trim().replace(/\/+$/, '');
+  const base = (process.env.API_UPSTREAM ?? 'https://prospektia.red.com.sv').trim().replace(/\/+$/, '');
 
   const { searchParams } = req.nextUrl;
   const endpointParam = searchParams.get('endpoint');
@@ -56,6 +56,7 @@ async function handleRequest(req: NextRequest) {
 
   const upstreamHeaders: Record<string, string> = {
     'X-API-KEY': process.env.API_KEY || '',
+    ...(process.env.NODE_ENV !== 'production' && { 'X-Debug-ApiKey-Length': String((process.env.API_KEY || '').length) }),
     'ngrok-skip-browser-warning': 'true',
     'Authorization': `Bearer ${token}`,
   };

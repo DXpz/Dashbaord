@@ -183,7 +183,7 @@ export default function HomePage() {
         labels: flatData.map((s: any) => s.label),
         datasets: [
           {
-            label: 'Cerradas',
+            label: 'LEADS',
             data: cerradas,
             backgroundColor: flatData.map((s: any, i: number) =>
               i === cierreIndex ? '#22c55e' : STAGE_COLORS[i % STAGE_COLORS.length]

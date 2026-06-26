@@ -70,13 +70,10 @@ export default function FormularioPage() {
 
     setReopening(true);
     try {
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
-      const key = process.env.API_KEY || '';
+      const base = 'https://prospektia.red.com.sv/api/';
+      const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
-      const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/${selectedLead.client_id}/reopen`)}`
-        : `${base}audit/${selectedLead.client_id}/reopen`;
+      const url = `${base}audit/${selectedLead.client_id}/reopen`;
 
       const headers: Record<string, string> = {
         'X-API-KEY': key,
@@ -114,13 +111,10 @@ export default function FormularioPage() {
 
     setDeleting(true);
     try {
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
-      const key = process.env.API_KEY || '';
+      const base = 'https://prospektia.red.com.sv/api/';
+      const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
-      const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/by-client/${selectedLead.client_id}`)}`
-        : `${base}audit/by-client/${selectedLead.client_id}`;
+      const url = `${base}audit/by-client/${selectedLead.client_id}`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -159,9 +153,8 @@ export default function FormularioPage() {
 
     setCreating(true);
     try {
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
-      const key = process.env.API_KEY || '';
+      const base = 'https://prospektia.red.com.sv/api/';
+      const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
       const payload: Record<string, string> = {
         nombre: newLead.nombre.trim(),
@@ -177,9 +170,7 @@ export default function FormularioPage() {
       };
       if (newLead.pais) payload.pais = newLead.pais;
 
-const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent('/audit/assign-round-robin?pais=' + newLead.pais)}`
-        : `${base}audit/assign-round-robin?pais=${newLead.pais}`;
+const url = `${base}audit/assign-round-robin?pais=${newLead.pais}&source=manual`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

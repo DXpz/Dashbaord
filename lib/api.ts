@@ -5,6 +5,7 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}): Promise<an
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'X-API-KEY': process.env.NEXT_PUBLIC_API_KEY || '',
       ...options.headers,
     },
     credentials: 'include',

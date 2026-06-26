@@ -344,21 +344,16 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       setLoading(true);
       setError(null);
       try {
-        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-        const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
-        const key = process.env.API_KEY || '';
+        const base = 'https://prospektia.red.com.sv/api/';
+        const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
         const headers = {
           'X-API-KEY': key,
-          'ngrok-skip-browser-warning': 'true',
-          ...(isHttps ? {} : { 'Authorization': `Bearer ${''}` }),
+          'ngrok-skip-browser-warning': 'true'
         };
 
         const fetchUrl = (path: string) => {
-          if (isHttps) {
-            return fetch(`/api/proxy?endpoint=${encodeURIComponent(path)}`, { credentials: 'include' });
-          }
-          return fetch(`${base}${path}`, { headers });
+          return fetch(`${base}${path}`, { headers, credentials: 'include' });
         };
 
         const [stagesRes, auditRes] = await Promise.all([
@@ -606,9 +601,8 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
     try {
       const current = stages[currentStageIndex];
       const data = stageData[current.stageNumber] || {};
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
-      const key = process.env.API_KEY || '';
+      const base = 'https://prospektia.red.com.sv/api/';
+      const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -619,9 +613,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       let body: Record<string, any> = {};
 
       if (current.id === 'REUNION' || current.id === 'DEMO') {
-        url = isHttps
-          ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/retroalimentacion`)}`
-          : `${base}audit/client/${clientId}/retroalimentacion`;
+        url = `${base}/audit/client/${clientId}/retroalimentacion`;
         body = {
           stage: current.stageNumber,
           retroalimentacion: data.retroalimentacion || '',
@@ -635,9 +627,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
           body.cierre_estimado = data.cierre_estimado;
         }
       } else if (current.id === 'PROPUESTA') {
-        url = isHttps
-          ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/propuesta`)}`
-          : `${base}audit/client/${clientId}/propuesta`;
+        url = `${base}/audit/client/${clientId}/propuesta`;
         body = {
           resumen_general: data.resumen_general || '',
           tipo_propuesta: data.tipo_propuesta || '',
@@ -647,9 +637,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
       } else if (current.id === 'SEGUIMIENTO') {
-        url = isHttps
-          ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/seguimiento`)}`
-          : `${base}audit/client/${clientId}/seguimiento`;
+        url = `${base}/audit/client/${clientId}/seguimiento`;
 
         body = {
           resumen_general: data.resumen_general || '',
@@ -658,9 +646,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
       } else if (current.id === 'CIERRE') {
-        url = isHttps
-          ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/cierre`)}`
-          : `${base}audit/client/${clientId}/cierre`;
+        url = `${base}/audit/client/${clientId}/cierre`;
 
         const resultadoCierre = data.resultado_cierre || '';
         const cierreData: Record<string, any> = {
@@ -751,9 +737,8 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
 
     setClosing(true);
     try {
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
-      const key = process.env.API_KEY || '';
+      const base = 'https://prospektia.red.com.sv/api/';
+      const key = process.env.NEXT_PUBLIC_API_KEY || '';
       const current = stages[currentStageIndex];
       const data = stageData[current.stageNumber] || {};
 
@@ -781,9 +766,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         },
       };
 
-      const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/cierre`)}`
-        : `${base}audit/client/${clientId}/cierre`;
+      const url = `${base}/audit/client/${clientId}/cierre`;
 
       const res = await fetch(url, {
         method: 'PUT',
@@ -816,9 +799,8 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
     if (readOnly) return;
     setClosing(true);
     try {
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      const base = isHttps ? '/api/proxy?endpoint=' : 'http://200.35.189.139/api/';
-      const key = process.env.API_KEY || '';
+      const base = 'https://prospektia.red.com.sv/api/';
+      const key = process.env.NEXT_PUBLIC_API_KEY || '';
       const current = stages[currentStageIndex];
       const data = stageData[current.stageNumber] || {};
 
@@ -843,9 +825,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         },
       };
 
-const url = isHttps
-        ? `/api/proxy?endpoint=${encodeURIComponent(`/audit/client/${clientId}/cierre`)}`
-        : `${base}audit/client/${clientId}/cierre`;
+const url = `${base}/audit/client/${clientId}/cierre`;
 
       const res = await fetch(url, {
         method: 'PUT',

@@ -1,11 +1,10 @@
 /**
  * API Service
- * Browser calls backend directly in development (HTTP)
- * Uses /api/proxy in production (HTTPS/Vercel) to avoid CORS
+ * Browser calls backend directly via https://prospektia.red.com.sv
  */
 
-const DEFAULT_UPSTREAM = 'http://200.35.189.139';
-const API_KEY = process.env.API_KEY || '';
+const DEFAULT_UPSTREAM = 'https://prospektia.red.com.sv';
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
 
 const FETCH_TIMEOUT_MS = 25000;
 const DASHBOARD_CACHE_TTL_MS = 30000;
@@ -14,18 +13,8 @@ let _cache: any = null;
 let _cacheKey = '';
 let _cacheExpiry = 0;
 
-function isProduction(): boolean {
-  if (typeof window === 'undefined') return true;
-  return window.location.protocol === 'https:';
-}
-
 function getBase(): string {
   return DEFAULT_UPSTREAM;
-}
-
-function getProxyEndpoint(path: string, params: Record<string, any>): string {
-  const qs = buildQuery(params);
-  return `/api/proxy?endpoint=${encodeURIComponent(path)}${qs}`;
 }
 
 function timeoutError(ms: number): Error {
@@ -99,9 +88,6 @@ async function fetchJson(url: string, init: RequestInit = {}, ms: number = FETCH
 }
 
 function makeUrl(path: string, params: Record<string, any>): string {
-  if (isProduction()) {
-    return getProxyEndpoint(path, params);
-  }
   const base = getBase();
   const qs = buildQuery(params).replace(/^&/, '?');
   return `${base}/api${path}${qs}`;
@@ -113,13 +99,7 @@ async function get(path: string, params: Record<string, any>) {
 }
 
 async function post(path: string, body?: any) {
-  let url: string;
-  if (isProduction()) {
-    url = `/api/proxy?endpoint=${encodeURIComponent(path)}`;
-  } else {
-    url = `${getBase()}/api${path}`;
-  }
-  return fetchJson(url, {
+  return fetchJson(`${getBase()}/api${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
@@ -127,13 +107,7 @@ async function post(path: string, body?: any) {
 }
 
 async function patch(path: string, body?: any) {
-  let url: string;
-  if (isProduction()) {
-    url = `/api/proxy?endpoint=${encodeURIComponent(path)}`;
-  } else {
-    url = `${getBase()}/api${path}`;
-  }
-  return fetchJson(url, {
+  return fetchJson(`${getBase()}/api${path}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
@@ -141,13 +115,7 @@ async function patch(path: string, body?: any) {
 }
 
 async function del(path: string) {
-  let url: string;
-  if (isProduction()) {
-    url = `/api/proxy?endpoint=${encodeURIComponent(path)}`;
-  } else {
-    url = `${getBase()}/api${path}`;
-  }
-  return fetchJson(url, { method: 'DELETE' });
+  return fetchJson(`${getBase()}/api${path}`, { method: 'DELETE' });
 }
 
 export const API = {
