@@ -76,6 +76,7 @@ export default function MetricasEtapasPage() {
     asesor: asesorFilter || undefined,
     desde: month && year ? `${year}-${month}-01` : undefined,
     hasta: month && year ? getLastDayOfMonth(Number(year), month) : undefined,
+    pais: user?.country_code || undefined,
   };
 
   const { advisors, loading, error, totalEvents, refetch } = useAdvisorOverdue(filters);

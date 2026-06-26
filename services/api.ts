@@ -300,11 +300,11 @@ export const API = {
     catch { return false; }
   },
 
-  advisorOverdueList(params: { asesor?: string; desde?: string; hasta?: string } = {}) {
+  advisorOverdueList(params: { asesor?: string; desde?: string; hasta?: string; pais?: string } = {}) {
     return get('/metrics/advisor-overdue', params);
   },
 
-  advisorOverdueDetail(advisorId: string, params: { desde?: string; hasta?: string } = {}) {
+  advisorOverdueDetail(advisorId: string, params: { desde?: string; hasta?: string; pais?: string } = {}) {
     return get(`/metrics/advisor-overdue/${encodeURIComponent(advisorId)}`, params);
   },
 

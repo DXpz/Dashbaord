@@ -42,6 +42,7 @@ export interface OverdueFilters {
   asesor?: string;
   desde?: string;
   hasta?: string;
+  pais?: string;
 }
 
 export function useAdvisorOverdue(filters?: OverdueFilters) {
@@ -60,6 +61,7 @@ export function useAdvisorOverdue(filters?: OverdueFilters) {
         asesor: filters?.asesor || undefined,
         desde: filters?.desde || undefined,
         hasta: filters?.hasta || undefined,
+        pais: filters?.pais || undefined,
       });
       setAdvisors(json.advisors || []);
       setTotalEvents(json.total_events || 0);
@@ -68,7 +70,7 @@ export function useAdvisorOverdue(filters?: OverdueFilters) {
     } finally {
       setLoading(false);
     }
-  }, [user, filters?.asesor, filters?.desde, filters?.hasta]);
+  }, [user, filters?.asesor, filters?.desde, filters?.hasta, filters?.pais]);
 
   useEffect(() => {
     fetchList();
@@ -91,6 +93,7 @@ export function useAdvisorOverdueDetail(advisorId: string | null, filters?: Over
       const json = await API.advisorOverdueDetail(advisorId, {
         desde: filters?.desde || undefined,
         hasta: filters?.hasta || undefined,
+        pais: filters?.pais || undefined,
       });
       setDetail(json);
     } catch (err: any) {
