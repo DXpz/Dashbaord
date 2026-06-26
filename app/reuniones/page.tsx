@@ -462,7 +462,7 @@ export default function ReunionesPage() {
                   <TableHead className="whitespace-nowrap">Asesor</TableHead>
                   <TableHead className="whitespace-nowrap">País</TableHead>
                   <TableHead className="whitespace-nowrap">Canal</TableHead>
-                  <TableHead className="whitespace-nowrap">Estado</TableHead>
+                  <TableHead className="whitespace-nowrap">Etapa</TableHead>
                   <TableHead className="whitespace-nowrap"></TableHead>
                 </TableRow>
               </TableHeader>
