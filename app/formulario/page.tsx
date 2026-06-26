@@ -70,7 +70,7 @@ export default function FormularioPage() {
 
     setReopening(true);
     try {
-      const base = 'https://prospektia.red.com.sv/api/';
+      const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
       const url = `${base}audit/${selectedLead.client_id}/reopen`;
@@ -111,7 +111,7 @@ export default function FormularioPage() {
 
     setDeleting(true);
     try {
-      const base = 'https://prospektia.red.com.sv/api/';
+      const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
       const url = `${base}audit/by-client/${selectedLead.client_id}`;
@@ -153,7 +153,7 @@ export default function FormularioPage() {
 
     setCreating(true);
     try {
-      const base = 'https://prospektia.red.com.sv/api/';
+      const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
       const payload: Record<string, string> = {

@@ -344,7 +344,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       setLoading(true);
       setError(null);
       try {
-        const base = 'https://prospektia.red.com.sv/api/';
+        const base = 'https://prospektia.red.com.sv/api';
         const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
         const headers = {
@@ -353,6 +353,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         };
 
         const fetchUrl = (path: string) => {
+          // Sin slash al inicio para evitar doble slash en la URL final.
           return fetch(`${base}${path}`, { headers, credentials: 'include' });
         };
 
@@ -601,7 +602,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
     try {
       const current = stages[currentStageIndex];
       const data = stageData[current.stageNumber] || {};
-      const base = 'https://prospektia.red.com.sv/api/';
+      const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
       const headers: Record<string, string> = {
@@ -737,7 +738,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
 
     setClosing(true);
     try {
-      const base = 'https://prospektia.red.com.sv/api/';
+      const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
       const current = stages[currentStageIndex];
       const data = stageData[current.stageNumber] || {};
@@ -799,7 +800,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
     if (readOnly) return;
     setClosing(true);
     try {
-      const base = 'https://prospektia.red.com.sv/api/';
+      const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
       const current = stages[currentStageIndex];
       const data = stageData[current.stageNumber] || {};
