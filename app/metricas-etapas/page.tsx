@@ -94,6 +94,36 @@ function writeGlobalMonthYear(month: string, year: string) {
   } catch {}
 }
 
+// Lee el pais persistido en el filtro global (mismo storage que FilterBar).
+// Solo aplica para super admin; el resto de usuarios usa su country_code fijo.
+function readGlobalPais(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const raw = localStorage.getItem('dashboard_filters');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const pais = parsed?.pais as string | undefined;
+      if (pais === 'SV' || pais === 'GT' || pais === 'ALL') return pais;
+    }
+  } catch {}
+  return '';
+}
+
+// Persiste el pais en el filtro global. Asi si el super admin cambia SV/GT/ALL
+// aqui, el resto de vistas (resumen, leads, etc.) tambien lo ven.
+function writeGlobalPais(pais: string) {
+  if (typeof window === 'undefined') return;
+  if (pais !== 'SV' && pais !== 'GT' && pais !== 'ALL') return;
+  try {
+    const raw = localStorage.getItem('dashboard_filters');
+    const current = raw ? JSON.parse(raw) : {};
+    localStorage.setItem(
+      'dashboard_filters',
+      JSON.stringify({ ...current, pais })
+    );
+  } catch {}
+}
+
 function diasVencido(deadline: string, acknowledged_at?: string | null): number {
   const d = new Date(deadline);
   if (isNaN(d.getTime())) return 0;
@@ -157,18 +187,48 @@ export default function MetricasEtapasPage() {
   // Mes/Año sincronizados con el filtro global persistido en localStorage.
   // Si en otra vista (resumen, leads, etc.) el usuario eligio "Junio 2026",
   // aqui se muestra "Junio 2026". Si cambia aqui, persiste para las demas vistas.
+  // Pais: solo super admin, tambien sincronizado con el filtro global.
   useEffect(() => {
     const global = readGlobalMonthYear();
     if (global.month && global.year) {
       setMonth(global.month);
       setYear(global.year);
-      return;
+    } else {
+      // Sin global guardado: usar mes/año actual como default
+      const now = new Date();
+      setMonth(String(now.getMonth() + 1).padStart(2, '0'));
+      setYear(String(now.getFullYear()));
     }
-    // Sin global guardado: usar mes/año actual como default
-    const now = new Date();
-    setMonth(String(now.getMonth() + 1).padStart(2, '0'));
-    setYear(String(now.getFullYear()));
+
+    // Cargar pais persistido (solo aplica si es super admin)
+    if (isSuperAdmin) {
+      const globalPais = readGlobalPais();
+      if (globalPais) setPaisFilter(globalPais);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Escuchar cambios del filtro global desde otras pestañas/ventanas.
+  // Asi si el usuario cambia el mes en resumen, esta vista tambien se actualiza.
+  useEffect(() => {
+    function onStorageChange(e: StorageEvent) {
+      if (e.key !== 'dashboard_filters' || !e.newValue) return;
+      try {
+        const parsed = JSON.parse(e.newValue);
+        if (parsed?.desde && /^\d{4}-\d{2}-\d{2}$/.test(parsed.desde)) {
+          const [y, m] = parsed.desde.split('-');
+          setYear(y);
+          setMonth(m);
+        }
+        if (isSuperAdmin && parsed?.pais && ['SV', 'GT', 'ALL'].includes(parsed.pais)) {
+          setPaisFilter(parsed.pais);
+          setAsesorFilter('');
+        }
+      } catch {}
+    }
+    window.addEventListener('storage', onStorageChange);
+    return () => window.removeEventListener('storage', onStorageChange);
+  }, [isSuperAdmin]);
 
   const handleMonthChange = (newMonth: string) => {
     setMonth(newMonth);
@@ -180,6 +240,14 @@ export default function MetricasEtapasPage() {
     setYear(newYear);
     const newMonth = month || String(new Date().getMonth() + 1).padStart(2, '0');
     writeGlobalMonthYear(newMonth, newYear);
+  };
+
+  const handlePaisChange = (newPais: string) => {
+    setPaisFilter(newPais);
+    writeGlobalPais(newPais);
+    // Resetear el asesor seleccionado al cambiar pais (para no quedar
+    // con un asesor de SV al cambiar a GT).
+    setAsesorFilter('');
   };
 
   const [allEvents, setAllEvents] = useState<any[]>([]);
@@ -267,7 +335,15 @@ export default function MetricasEtapasPage() {
           <AlertTriangle className="w-5 h-5 text-amber-600" />
           <div>
             <p className="text-sm font-semibold text-[#1F1D3D]">Eventos vencidos en total</p>
-            <p className="text-xs text-[#B5B5AE]">Leads que superaron el deadline sin retroalimentación</p>
+            <p className="text-xs text-[#B5B5AE]">
+              Leads que superaron el deadline sin retroalimentación
+              {month && year && (() => {
+                const meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                const nombreMes = meses[parseInt(month, 10)] || month;
+                const paisLabel = isSuperAdmin ? (paisFilter === 'ALL' || !paisFilter ? 'Todos los países' : (paisFilter === 'SV' ? 'El Salvador' : 'Guatemala')) : (user?.country_code === 'SV' ? 'El Salvador' : 'Guatemala');
+                return ` · ${nombreMes} ${year} · ${paisLabel}`;
+              })()}
+            </p>
           </div>
           <div className="ml-auto text-2xl font-bold text-[#1F1D3D]">{totalEvents}</div>
         </div>
@@ -287,14 +363,9 @@ export default function MetricasEtapasPage() {
           {isSuperAdmin && (
             <select
               value={paisFilter}
-              onChange={e => {
-                setPaisFilter(e.target.value);
-                // Resetear el asesor seleccionado: un asesor de SV no debe
-                // quedar activo al cambiar a GT (o viceversa).
-                setAsesorFilter('');
-              }}
+              onChange={e => handlePaisChange(e.target.value)}
               className="text-sm px-3 py-2 border border-[#EEEEEC] rounded text-[#35325B] bg-[#F5F5ED] outline-none"
-              title="Filtro de país (solo super admin)"
+              title="Filtro de país (sincronizado con filtro global)"
             >
               <option value="ALL">Todos los países</option>
               <option value="SV">El Salvador</option>
