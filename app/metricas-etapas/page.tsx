@@ -94,11 +94,15 @@ function writeGlobalMonthYear(month: string, year: string) {
   } catch {}
 }
 
-function diasVencido(deadline: string): number {
+function diasVencido(deadline: string, acknowledged_at?: string | null): number {
   const d = new Date(deadline);
   if (isNaN(d.getTime())) return 0;
-  const ahora = new Date();
-  const diff = ahora.getTime() - d.getTime();
+  // Si el evento ya fue acknowledged (el asesor dio retroalimentacion),
+  // contar los dias hasta ese momento (NO hasta hoy).
+  // Asi "3 dias vencido" significa que el SLA vencio por 3 dias antes de resolverse,
+  // sin importar cuanto tiempo paso desde entonces.
+  const endDate = acknowledged_at ? new Date(acknowledged_at) : new Date();
+  const diff = endDate.getTime() - d.getTime();
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
 }
 
@@ -188,7 +192,7 @@ export default function MetricasEtapasPage() {
             ...ev,
             advisor_name: a.advisor_name,
             advisor_country: a.country,
-            dias_vencido: diasVencido(ev.deadline),
+            dias_vencido: diasVencido(ev.deadline, ev.acknowledged_at),
           }))).catch(() => [])
         );
         const results = await Promise.all(promises);
