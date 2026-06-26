@@ -69,14 +69,21 @@ function diasVencido(deadline: string): number {
 export default function MetricasEtapasPage() {
   const { user } = useAuth();
   const [asesorFilter, setAsesorFilter] = useState('');
+  const [paisFilter, setPaisFilter] = useState<string>(''); // solo super_admin usa esto
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
+
+  const isSuperAdmin = user?.is_super_admin ?? false;
+  // Super admin: usa dropdown (ALL/SV/GT). Resto: auto-filtrado por su pais.
+  const paisValue = isSuperAdmin
+    ? (paisFilter || 'ALL')
+    : (user?.country_code || undefined);
 
   const filters: OverdueFilters = {
     asesor: asesorFilter || undefined,
     desde: month && year ? `${year}-${month}-01` : undefined,
     hasta: month && year ? getLastDayOfMonth(Number(year), month) : undefined,
-    pais: user?.country_code || undefined,
+    pais: paisValue || undefined,
   };
 
   const { advisors, loading, error, totalEvents, refetch } = useAdvisorOverdue(filters);
@@ -162,7 +169,7 @@ export default function MetricasEtapasPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [advisors, filters.desde, filters.hasta]);
+  }, [advisors, filters.desde, filters.hasta, filters.pais]);
 
   return (
     <Shell
@@ -196,6 +203,19 @@ export default function MetricasEtapasPage() {
               <option key={a.value} value={a.value}>{a.label}</option>
             ))}
           </select>
+
+          {isSuperAdmin && (
+            <select
+              value={paisFilter}
+              onChange={e => setPaisFilter(e.target.value)}
+              className="text-sm px-3 py-2 border border-[#EEEEEC] rounded text-[#35325B] bg-[#F5F5ED] outline-none"
+              title="Filtro de país (solo super admin)"
+            >
+              <option value="ALL">Todos los países</option>
+              <option value="SV">El Salvador</option>
+              <option value="GT">Guatemala</option>
+            </select>
+          )}
 
           <select
             value={month}
