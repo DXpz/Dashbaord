@@ -73,7 +73,7 @@ export default function FormularioPage() {
       const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
-      const url = `${base}audit/${selectedLead.client_id}/reopen`;
+      const url = `${base}/audit/${selectedLead.client_id}/reopen`;
 
       const headers: Record<string, string> = {
         'X-API-KEY': key,
@@ -114,7 +114,7 @@ export default function FormularioPage() {
       const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
 
-      const url = `${base}audit/by-client/${selectedLead.client_id}`;
+      const url = `${base}/audit/by-client/${selectedLead.client_id}`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -170,7 +170,7 @@ export default function FormularioPage() {
       };
       if (newLead.pais) payload.pais = newLead.pais;
 
-const url = `${base}audit/assign-round-robin?pais=${newLead.pais}&source=manual`;
+const url = `${base}/audit/assign-round-robin?pais=${newLead.pais}&source=manual`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

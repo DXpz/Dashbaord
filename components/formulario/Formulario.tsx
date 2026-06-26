@@ -629,21 +629,37 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         }
       } else if (current.id === 'PROPUESTA') {
         url = `${base}/audit/client/${clientId}/propuesta`;
+        // Fix F2: enviar SOLO los campos reales del form PROPUESTA_FIELDS.
+        // Antes se enviaban campos inexistentes (resumen_general, tipo_propuesta, etc.).
         body = {
-          resumen_general: data.resumen_general || '',
-          tipo_propuesta: data.tipo_propuesta || '',
-          equipos: data.equipos || '',
-          rubro: data.rubro || '',
-          cantidad_oferta: data.cantidad_oferta || '',
+          productos_propuestos: data.productos_propuestos || '',
+          modelo_equipo_propuesto: data.modelo_equipo_propuesto || '',
+          cantidad_equipos: data.cantidad_equipos || 0,
+          plan_contrato_meses: data.plan_contrato_meses || '',
+          fecha_envio: data.fecha_envio || '',
+          medio_envio: data.medio_envio || '',
+          retroalimentacion: data.retroalimentacion || '',
+          notes: data.notes || '',
+          // resumen_general derivado para el backend (campo legacy)
+          resumen_general: data.productos_propuestos || '',
+          rubro: data.productos_propuestos ? data.productos_propuestos.split(' ').slice(0, 3).join(' ').toLowerCase() : '',
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
       } else if (current.id === 'SEGUIMIENTO') {
         url = `${base}/audit/client/${clientId}/seguimiento`;
 
+        // Fix F2: enviar SOLO los campos reales del form SEGUIMIENTO_FIELDS.
         body = {
-          resumen_general: data.resumen_general || '',
+          fecha_seguimiento: data.fecha_seguimiento || '',
+          medio_seguimiento: data.medio_seguimiento || '',
+          respuesta_cliente: data.respuesta_cliente || '',
+          nivel_avance: data.nivel_avance || '',
+          proximo_paso: data.proximo_paso || '',
+          retroalimentacion: data.retroalimentacion || '',
+          notes: data.notes || '',
           resultado_venta: 'en_seguimiento',
-          cliente_ha_negociado: data.cliente_ha_negociado == 'si' || data.cliente_ha_negociado == true,
+          // resumen_general derivado para el backend
+          resumen_general: data.proximo_paso || '',
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
       } else if (current.id === 'CIERRE') {
@@ -741,7 +757,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
       const current = stages[currentStageIndex];
-      const data = stageData[current.stageNumber] || {};
+      const currentStageData = stageData[current.stageNumber] || {};
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -749,6 +765,20 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       };
 
       const motivoCompleto = `${lostReason}: ${lostDescription}`;
+      // Fix F1: el cierre SIEMPRE se registra en stage 6 (CIERRE), no en el stage actual.
+      // Mantener la data del stage actual tambien para no perderla.
+      const stageFeedbackJson: Record<string, any> = {};
+      if (current.stageNumber !== 6) {
+        stageFeedbackJson[`${current.stageNumber}`] = currentStageData;
+      }
+      stageFeedbackJson['6'] = {
+        resultado_cierre: 'perdido',
+        razon_cierre: motivoCompleto,
+        contacto_exitoso: 'false',
+        motivo_no_contacto: lostReason,
+        descripcion_no_contacto: lostDescription,
+      };
+
       const body = {
         resultado_venta: 'perdida',
         resultado_propuesta: 'perdida',
@@ -756,15 +786,7 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
         resumen_general: motivoCompleto,
         cliente_interesado: false,
         cliente_ha_negociado: false,
-        stage_feedback_json: {
-          [`${current.stageNumber}`]: {
-            resultado_cierre: 'perdido',
-            razon_cierre: motivoCompleto,
-            contacto_exitoso: 'false',
-            motivo_no_contacto: lostReason,
-            descripcion_no_contacto: lostDescription,
-          },
-        },
+        stage_feedback_json: stageFeedbackJson,
       };
 
       const url = `${base}/audit/client/${clientId}/cierre`;
@@ -803,27 +825,33 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
       const base = 'https://prospektia.red.com.sv/api';
       const key = process.env.NEXT_PUBLIC_API_KEY || '';
       const current = stages[currentStageIndex];
-      const data = stageData[current.stageNumber] || {};
+      const currentStageData = stageData[current.stageNumber] || {};
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-API-KEY': key,
       };
 
+      // Fix F1: el cierre SIEMPRE se registra en stage 6 (CIERRE).
+      // Mantener la data del stage actual para no perderla.
+      const stageFeedbackJson: Record<string, any> = {};
+      if (current.stageNumber !== 6) {
+        stageFeedbackJson[`${current.stageNumber}`] = currentStageData;
+      }
+      stageFeedbackJson['6'] = {
+        resultado_cierre: 'ganado',
+        fecha_cierre_real: currentStageData.fecha_cierre_real || new Date().toISOString().split('T')[0],
+        razon_cierre: currentStageData.razon_cierre || '',
+      };
+
       const body = {
         resultado_venta: 'cerrada',
         resultado_propuesta: 'ganada',
         motivo_perdida: '',
-        resumen_general: data.resumen_general || data.razon_cierre || '',
+        resumen_general: currentStageData.resumen_general || currentStageData.razon_cierre || '',
         cliente_interesado: true,
         cliente_ha_negociado: true,
-        stage_feedback_json: {
-          [`${current.stageNumber}`]: {
-            resultado_cierre: 'ganado',
-            fecha_cierre_real: data.fecha_cierre_real || new Date().toISOString().split('T')[0],
-            razon_cierre: data.razon_cierre || '',
-          },
-        },
+        stage_feedback_json: stageFeedbackJson,
       };
 
 const url = `${base}/audit/client/${clientId}/cierre`;
