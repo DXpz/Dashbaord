@@ -127,7 +127,9 @@ export default function MetricasEtapasPage() {
   const allAsesoresRaw = useAsesores({
     desde: month && year ? `${year}-${month}-01` : '',
     hasta: month && year ? getLastDayOfMonth(Number(year), month) : '',
-    pais: user?.country_code || '',
+    // Super admin: usar el pais seleccionado (SV/GT/ALL). Resto: auto por su pais.
+    // Asi el dropdown "Todos los asesores" se actualiza segun el pais del filtro.
+    pais: isSuperAdmin ? (paisFilter || 'ALL') : (user?.country_code || ''),
     asesor: '',
     tipoLead: '',
     origen: '',
@@ -268,7 +270,12 @@ export default function MetricasEtapasPage() {
           {isSuperAdmin && (
             <select
               value={paisFilter}
-              onChange={e => setPaisFilter(e.target.value)}
+              onChange={e => {
+                setPaisFilter(e.target.value);
+                // Resetear el asesor seleccionado: un asesor de SV no debe
+                // quedar activo al cambiar a GT (o viceversa).
+                setAsesorFilter('');
+              }}
               className="text-sm px-3 py-2 border border-[#EEEEEC] rounded text-[#35325B] bg-[#F5F5ED] outline-none"
               title="Filtro de país (solo super admin)"
             >
