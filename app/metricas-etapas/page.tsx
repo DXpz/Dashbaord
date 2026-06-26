@@ -106,6 +106,19 @@ function diasVencido(deadline: string, acknowledged_at?: string | null): number 
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
 }
 
+function formatVencido(deadline: string, acknowledged_at?: string | null): string {
+  const d = new Date(deadline);
+  if (isNaN(d.getTime())) return '0d';
+  const endDate = acknowledged_at ? new Date(acknowledged_at) : new Date();
+  const diffMs = endDate.getTime() - d.getTime();
+  if (diffMs < 0) return '0d';
+  const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (totalHours < 24) return `${totalHours}h`;
+  const dias = Math.floor(totalHours / 24);
+  const horas = totalHours % 24;
+  return horas > 0 ? `${dias}d ${horas}h` : `${dias}d`;
+}
+
 export default function MetricasEtapasPage() {
   const { user } = useAuth();
   const [asesorFilter, setAsesorFilter] = useState('');
@@ -391,7 +404,7 @@ export default function MetricasEtapasPage() {
                               {eventInStage ? (
                                 <span className="inline-flex flex-col items-center gap-0.5 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-1 rounded">
                                   <span>VENCIDO</span>
-                                  <span className="text-sm">{eventInStage.dias_vencido}d</span>
+                                  <span className="text-sm">{formatVencido(eventInStage.deadline, eventInStage.acknowledged_at)}</span>
                                 </span>
                               ) : (
                                 <span className="text-[#EEEEEC]">—</span>
@@ -400,9 +413,17 @@ export default function MetricasEtapasPage() {
                           );
                         })}
                         <TableCell className="text-center">
-                          <div className="text-sm font-bold text-red-700">{maxDiasVencido}d</div>
+                          <div className="text-sm font-bold text-red-700">
+                            {(() => {
+                              // Buscar el evento con el mayor dias_vencido real (no el truncado)
+                              const topEv = lead.events.reduce((a: any, b: any) => (a.dias_vencido >= b.dias_vencido ? a : b));
+                              return formatVencido(topEv.deadline, topEv.acknowledged_at);
+                            })()}
+                          </div>
                           {lead.events.length > 1 && (
-                            <div className="text-[10px] text-[#B5B5AE] mt-0.5">Σ {totalDiasVencido}d</div>
+                            <div className="text-[10px] text-[#B5B5AE] mt-0.5">
+                              Σ {lead.events.reduce((sum: number, e: any) => sum + e.dias_vencido, 0)}d
+                            </div>
                           )}
                         </TableCell>
                         <TableCell className="text-center">
