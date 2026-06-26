@@ -479,27 +479,12 @@ export default function MetricasEtapasPage() {
                           {(() => {
                             const cierre = lead.cierre_resultado;
                             if (cierre === 'concretada') {
-                              return (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-1 rounded">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                  CONCRETADA
-                                </span>
-                              );
+                              return <span className="text-sm font-bold text-green-700">CONCRETADA</span>;
                             }
                             if (cierre === 'perdida') {
-                              return (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-1 rounded">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                                  LEAD PERDIDO
-                                </span>
-                              );
+                              return <span className="text-sm font-bold text-red-700">LEAD PERDIDO</span>;
                             }
-                            return (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                EN PROCESO
-                              </span>
-                            );
+                            return <span className="text-sm font-bold text-amber-600">EN PROCESO</span>;
                           })()}
                         </TableCell>
                         {[1, 2, 3, 4, 5, 6].map(s => {
@@ -507,9 +492,8 @@ export default function MetricasEtapasPage() {
                           return (
                             <TableCell key={s} className="text-center">
                               {eventInStage ? (
-                                <span className="inline-flex flex-col items-center gap-0.5 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-1 rounded">
-                                  <span>VENCIDO</span>
-                                  <span className="text-sm">{formatVencido(eventInStage.deadline, eventInStage.acknowledged_at)}</span>
+                                <span className="text-sm font-bold text-red-700">
+                                  {formatVencido(eventInStage.deadline, eventInStage.acknowledged_at)}
                                 </span>
                               ) : (
                                 <span className="text-[#EEEEEC]">—</span>
