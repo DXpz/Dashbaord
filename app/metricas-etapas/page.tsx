@@ -286,8 +286,10 @@ export default function MetricasEtapasPage() {
               byLead[ev.audit_id] = {
                 audit_id: ev.audit_id,
                 client_id: ev.client_id,
+                client_name: ev.client_name,
                 advisor_name: ev.advisor_name,
                 advisor_country: ev.advisor_country,
+                cierre_resultado: ev.cierre_resultado,
                 events: [],
                 max_dias_vencido: 0,
                 current_stage: ev.stage,
@@ -415,8 +417,10 @@ export default function MetricasEtapasPage() {
               <TableHeader>
                 <TableRow className="bg-[#F5F5ED]">
                   <TableHead rowSpan={2} className="whitespace-nowrap align-bottom">Cliente</TableHead>
+                  <TableHead rowSpan={2} className="whitespace-nowrap align-bottom">Nombre</TableHead>
                   <TableHead rowSpan={2} className="whitespace-nowrap align-bottom">Asesor</TableHead>
                   <TableHead rowSpan={2} className="whitespace-nowrap align-bottom">País</TableHead>
+                  <TableHead rowSpan={2} className="whitespace-nowrap align-bottom">Cierre</TableHead>
                   <TableHead colSpan={6} className="text-center text-[#1F1D3D] border-l border-[#EEEEEC] py-2">Etapa donde venció</TableHead>
                   <TableHead rowSpan={2} className="text-center whitespace-nowrap align-bottom border-l border-[#EEEEEC]">Días vencido</TableHead>
                   <TableHead colSpan={2} className="text-center text-[#1F1D3D] border-l border-[#EEEEEC] py-2">SLA</TableHead>
@@ -443,7 +447,7 @@ export default function MetricasEtapasPage() {
               <TableBody>
                 {allEvents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-sm text-[#B5B5AE] py-8">
+                    <TableCell colSpan={13} className="text-center text-sm text-[#B5B5AE] py-8">
                       No hay eventos vencidos
                     </TableCell>
                   </TableRow>
@@ -464,9 +468,39 @@ export default function MetricasEtapasPage() {
                             <div className="text-[10px] text-[#B5B5AE] mt-0.5">{lead.events.length} etapas vencidas</div>
                           )}
                         </TableCell>
+                        <TableCell className="text-xs text-[#35325B] whitespace-nowrap">
+                          {lead.client_name || <span className="text-[#B5B5AE]">—</span>}
+                        </TableCell>
                         <TableCell className="text-xs text-[#35325B] whitespace-nowrap">{lead.advisor_name}</TableCell>
                         <TableCell>
                           <span className="text-xs bg-[#F5F5ED] text-[#35325B] px-2 py-0.5 rounded">{lead.advisor_country}</span>
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const cierre = lead.cierre_resultado;
+                            if (cierre === 'concretada') {
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-1 rounded">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                  CONCRETADA
+                                </span>
+                              );
+                            }
+                            if (cierre === 'perdida') {
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-1 rounded">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                  LEAD PERDIDO
+                                </span>
+                              );
+                            }
+                            return (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                EN PROCESO
+                              </span>
+                            );
+                          })()}
                         </TableCell>
                         {[1, 2, 3, 4, 5, 6].map(s => {
                           const eventInStage = lead.events.find((e: any) => e.stage === s);
