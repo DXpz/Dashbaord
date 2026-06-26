@@ -300,12 +300,32 @@ export const API = {
     catch { return false; }
   },
 
-  advisorOverdueList(params: { asesor?: string; desde?: string; hasta?: string; pais?: string } = {}) {
-    return get('/metrics/advisor-overdue', params);
+  advisorOverdueList(params: { asesor?: string; desde?: string; hasta?: string; pais?: string; tipoLead?: string; origen?: string; tipoLlamada?: string } = {}) {
+    return get('/metrics/advisor-overdue', {
+      asesor: params.asesor,
+      desde: params.desde,
+      hasta: params.hasta,
+      pais: params.pais,
+      tipo_lead: params.tipoLead,
+      origen: params.origen,
+      tipo_llamada: params.tipoLlamada,
+    });
   },
 
   advisorOverdueDetail(advisorId: string, params: { desde?: string; hasta?: string; pais?: string } = {}) {
     return get(`/metrics/advisor-overdue/${encodeURIComponent(advisorId)}`, params);
+  },
+
+  stageOverdueSummary(params: { asesor?: string; desde?: string; hasta?: string; pais?: string; tipoLead?: string; origen?: string; tipoLlamada?: string } = {}) {
+    return get('/metrics/stage-overdue-summary', {
+      asesor: params.asesor,
+      desde: params.desde,
+      hasta: params.hasta,
+      pais: params.pais,
+      tipo_lead: params.tipoLead,
+      origen: params.origen,
+      tipo_llamada: params.tipoLlamada,
+    });
   },
 
   advisorOverdueAcknowledge(eventId: number) {

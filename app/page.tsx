@@ -1,12 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { useAdminDashboard, useConnectionStatus, useAsesores, useFilters } from '@/hooks';
 import { useAuth } from '@/lib/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
 import { ChartCard } from '@/components/charts/ChartCard';
+import { API } from '@/services/api';
+import { AlertTriangle } from 'lucide-react';
 
 const STAGE_COLORS = [
   '#1F1D3D',
@@ -30,6 +32,50 @@ export default function HomePage() {
 
   const isSuperAdmin = user?.is_super_admin === true || user?.email === 'ghenriquez@red.com.sv';
   const showPaisFilter = isSuperAdmin || user?.country_code === 'SV';
+
+  // Resolver pais del filtro global (para alimentar el chart de SLA vencidos)
+  const resolvedPais = useMemo(() => {
+    if (isSuperAdmin) return filters.pais || 'ALL';
+    return user?.country_code || 'SV';
+  }, [isSuperAdmin, filters.pais, user?.country_code]);
+
+  // SLA vencidos por etapa (alimenta el pipeline chart de la parte baja)
+  const [slaByStage, setSlaByStage] = useState<{ total: number; by_stage: Record<number, number> }>({
+    total: 0,
+    by_stage: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+  });
+  const [loadingSla, setLoadingSla] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingSla(true);
+    API.stageOverdueSummary({
+      desde: filters.desde,
+      hasta: filters.hasta,
+      asesor: filters.asesor,
+      pais: resolvedPais,
+      tipoLead: filters.tipoLead,
+      origen: filters.origen,
+      tipoLlamada: filters.tipoLlamada,
+    })
+      .then((data: any) => {
+        if (!cancelled) {
+          setSlaByStage({
+            total: data?.total ?? 0,
+            by_stage: {
+              1: data?.by_stage?.['1'] ?? 0,
+              2: data?.by_stage?.['2'] ?? 0,
+              3: data?.by_stage?.['3'] ?? 0,
+              4: data?.by_stage?.['4'] ?? 0,
+              5: data?.by_stage?.['5'] ?? 0,
+              6: data?.by_stage?.['6'] ?? 0,
+            },
+          });
+        }
+      })
+      .catch(() => { if (!cancelled) setSlaByStage({ total: 0, by_stage: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 } }); })
+      .finally(() => { if (!cancelled) setLoadingSla(false); });
+    return () => { cancelled = true; };
+  }, [filters.desde, filters.hasta, filters.asesor, resolvedPais, filters.tipoLead, filters.origen, filters.tipoLlamada]);
 
   const metricas = data?.metricas || {};
   const resumen = data?.resumen || {};
@@ -413,6 +459,88 @@ export default function HomePage() {
                   },
                   y: {
                     stacked: chartData.isStacked,
+                    grid: { display: false },
+                    ticks: {
+                      font: { size: 12, family: 'Inter', weight: '500' },
+                      color: '#35325B',
+                    },
+                  },
+                },
+              }}
+            />
+          )}
+        </div>
+
+        <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 lg:p-6">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <div>
+              <h2 className="text-sm lg:text-base font-semibold text-[#1F1D3D] flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                SLAs Vencidos por Etapa
+              </h2>
+              <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">
+                Eventos SLA que superaron el deadline (filtrado por mes, país, asesor, etc.)
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-xl lg:text-2xl font-bold text-red-700">{slaByStage.total}</span>
+              <p className="text-[10px] lg:text-xs text-[#B5B5AE]">Total eventos vencidos</p>
+            </div>
+          </div>
+
+          {loadingSla ? (
+            <div className="space-y-2">
+              {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}
+            </div>
+          ) : (
+            <ChartWrapper
+              type="bar"
+              data={{
+                labels: ['Asignación', 'Reunión', 'Demo', 'Propuesta', 'Seguimiento', 'Cierre'],
+                datasets: [{
+                  label: 'Vencidos',
+                  data: [
+                    slaByStage.by_stage[1] || 0,
+                    slaByStage.by_stage[2] || 0,
+                    slaByStage.by_stage[3] || 0,
+                    slaByStage.by_stage[4] || 0,
+                    slaByStage.by_stage[5] || 0,
+                    slaByStage.by_stage[6] || 0,
+                  ],
+                  backgroundColor: [
+                    '#1F1D3D',
+                    '#4338CA',
+                    '#92400E',
+                    '#1E40AF',
+                    '#9D174D',
+                    '#B5B5AE',
+                  ],
+                  borderRadius: 6,
+                  barThickness: 22,
+                }],
+              }}
+              height="260px"
+              options={{
+                indexAxis: 'y' as const,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx: any) => ` ${ctx.raw} eventos vencidos`,
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.04)' },
+                    ticks: {
+                      font: { size: 11, family: 'Inter' },
+                      color: '#B5B5AE',
+                      precision: 0,
+                    },
+                  },
+                  y: {
                     grid: { display: false },
                     ticks: {
                       font: { size: 12, family: 'Inter', weight: '500' },
