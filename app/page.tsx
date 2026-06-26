@@ -474,31 +474,27 @@ export default function HomePage() {
         <div className="bg-white border border-[#EEEEEC] rounded-xl p-4 lg:p-6">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div>
-              <h2 className="text-sm lg:text-base font-semibold text-[#1F1D3D] flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                SLAs Vencidos por Etapa
-              </h2>
+              <h2 className="text-sm lg:text-base font-semibold text-[#1F1D3D]">SLAs Vencidos por Etapa</h2>
               <p className="text-[10px] lg:text-xs text-[#B5B5AE] mt-0.5">
-                Eventos SLA que superaron el deadline (filtrado por mes, país, asesor, etc.)
+                Distribución de eventos SLA que superaron el deadline
               </p>
             </div>
             <div className="text-right">
-              <span className="text-xl lg:text-2xl font-bold text-red-700">{slaByStage.total}</span>
+              <span className="text-xl lg:text-2xl font-bold text-[#1F1D3D]">{slaByStage.total}</span>
               <p className="text-[10px] lg:text-xs text-[#B5B5AE]">Total eventos vencidos</p>
             </div>
           </div>
 
           {loadingSla ? (
-            <div className="space-y-2">
-              {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}
+            <div className="flex items-center justify-center py-8 lg:py-12">
+              <Skeleton className="h-6 w-32" />
             </div>
           ) : (
             <ChartWrapper
               type="bar"
               data={{
-                labels: ['Asignación', 'Reunión', 'Demo', 'Propuesta', 'Seguimiento', 'Cierre'],
+                labels: ['ASIGNACION', 'REUNION', 'DEMO', 'ENVIO DE PROPUESTA', 'SEGUIMIENTO', 'CIERRE'],
                 datasets: [{
-                  label: 'Vencidos',
                   data: [
                     slaByStage.by_stage[1] || 0,
                     slaByStage.by_stage[2] || 0,
@@ -507,40 +503,38 @@ export default function HomePage() {
                     slaByStage.by_stage[5] || 0,
                     slaByStage.by_stage[6] || 0,
                   ],
-                  backgroundColor: [
-                    '#1F1D3D',
-                    '#4338CA',
-                    '#92400E',
-                    '#1E40AF',
-                    '#9D174D',
-                    '#B5B5AE',
-                  ],
-                  borderRadius: 6,
-                  barThickness: 22,
+                  backgroundColor: STAGE_COLORS,
+                  borderRadius: 0,
+                  borderSkipped: false,
                 }],
               }}
-              height="260px"
+              height="280px"
               options={{
                 indexAxis: 'y' as const,
                 plugins: {
                   legend: { display: false },
                   tooltip: {
                     callbacks: {
-                      label: (ctx: any) => ` ${ctx.raw} eventos vencidos`,
+                      label: (ctx: any) => {
+                        const total = slaByStage.total || 1;
+                        const val = ctx.raw;
+                        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                        return ` ${val} vencidos (${pct}%)`;
+                      },
                     },
                   },
                 },
                 scales: {
                   x: {
-                    beginAtZero: true,
+                    stacked: false,
                     grid: { color: 'rgba(0,0,0,0.04)' },
                     ticks: {
                       font: { size: 11, family: 'Inter' },
                       color: '#B5B5AE',
-                      precision: 0,
                     },
                   },
                   y: {
+                    stacked: false,
                     grid: { display: false },
                     ticks: {
                       font: { size: 12, family: 'Inter', weight: '500' },
