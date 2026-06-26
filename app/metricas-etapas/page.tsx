@@ -117,10 +117,13 @@ export default function MetricasEtapasPage() {
     setLoadingEvents(true);
     (async () => {
       try {
-        const promises = advisors.map(a =>
+        // Solo fetch detail para advisors con advisor_id valido (excluir null/undefined legacy)
+        const advisorsConId = advisors.filter((a: any) => a.advisor_id != null);
+        const promises = advisorsConId.map((a: any) =>
           API.advisorOverdueDetail(String(a.advisor_id), {
             desde: filters.desde,
             hasta: filters.hasta,
+            pais: filters.pais,
           }).then(d => (d?.events || []).map((ev: any) => ({
             ...ev,
             advisor_name: a.advisor_name,
