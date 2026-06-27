@@ -642,7 +642,9 @@ export function Formulario({ clientId, initialStage = 'REUNION', onClose, readOn
           notes: data.notes || '',
           // resumen_general derivado para el backend (campo legacy)
           resumen_general: data.productos_propuestos || '',
-          rubro: data.productos_propuestos ? data.productos_propuestos.split(' ').slice(0, 3).join(' ').toLowerCase() : '',
+          rubro: typeof data.productos_propuestos === 'string' && data.productos_propuestos
+            ? data.productos_propuestos.split(' ').slice(0, 3).join(' ').toLowerCase()
+            : '',
           stage_feedback_json: { [`${current.stageNumber}`]: data },
         };
       } else if (current.id === 'SEGUIMIENTO') {
