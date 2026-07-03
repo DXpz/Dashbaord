@@ -42,6 +42,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const [isOpenDesktop, setIsOpenDesktop] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Todas las carpetas inician colapsadas. El usuario las abre manualmente.
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   const items = useMemo(() => {
@@ -105,20 +106,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   const isVisible = isOpen || isOpenDesktop;
 
-  // Auto-expande el grupo que contiene la ruta activa.
-  useEffect(() => {
-    setCollapsedGroups((prev) => {
-      const next = { ...prev };
-      for (const item of items) {
-        if (isGroup(item)) {
-          const hasActive = item.items.some((i) => pathname === i.href);
-          if (hasActive) next[item.id] = false;
-        }
-      }
-      return next;
-    });
-  }, [pathname, items]);
-
   const toggleGroup = (id: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [id]: !prev[id] }));
   };
@@ -136,84 +123,84 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          'fixed top-0 left-0 z-40 h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
-          'transform transition-transform duration-200 ease-out overflow-y-auto',
+          'fixed top-0 left-0 z-40 h-screen w-60 bg-[#F5F5ED] border-r border-[#EEEEEC] flex flex-col',
+          'transform transition-transform duration-200 ease-out',
           isVisible ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex flex-col h-full p-4">
-          <div className="flex items-center justify-between mb-8 px-2">
-            <div className="flex-1 flex items-center justify-center">
-              <div className="relative h-14 rounded-lg overflow-hidden">
-                <Image
-                  src="/logos/prospektia.png"
-                  alt="ProspektIA"
-                  width={170}
-                  height={43}
-                  className="object-contain"
-                  priority
-                />
-              </div>
+        <div className="flex items-center justify-between px-3 pt-4 pb-3 flex-shrink-0">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative h-9 rounded overflow-hidden">
+              <Image
+                src="/logos/prospektia.png"
+                alt="ProspektIA"
+                width={130}
+                height={33}
+                className="object-contain"
+                priority
+              />
             </div>
-            <button
-              onClick={handleClose}
-              className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] lg:hidden"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
+          <button
+            onClick={handleClose}
+            className="w-7 h-7 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] lg:hidden"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
+        <div className="px-3 flex-shrink-0">
           <EcosystemSwitcher />
+        </div>
 
-          <nav className="flex-1 space-y-0.5 mt-2">
-            {items.map((entry) => {
-              if (isGroup(entry)) {
-                return (
-                  <GroupSection
-                    key={entry.id}
-                    group={entry}
-                    pathname={pathname}
-                    isAdmin={isAdmin}
-                    collapsed={!!collapsedGroups[entry.id]}
-                    onToggle={() => toggleGroup(entry.id)}
-                    onItemClick={handleClose}
-                  />
-                );
-              }
+        <nav className="flex-1 min-h-0 px-3 mt-2 space-y-0.5 overflow-hidden">
+          {items.map((entry) => {
+            if (isGroup(entry)) {
               return (
-                <NavLink
-                  key={entry.href}
-                  item={entry}
+                <GroupSection
+                  key={entry.id}
+                  group={entry}
                   pathname={pathname}
                   isAdmin={isAdmin}
-                  onClick={handleClose}
+                  collapsed={!!collapsedGroups[entry.id]}
+                  onToggle={() => toggleGroup(entry.id)}
+                  onItemClick={handleClose}
                 />
               );
-            })}
-            <Link
-              href="/change-password"
-              onClick={handleClose}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                pathname === '/change-password'
-                  ? 'bg-[#1F1D3D] text-[#F5F5ED]'
-                  : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-              )}
-            >
-              <Lock className="w-4 h-4" />
-              <span>Cambiar contraseña</span>
-            </Link>
-          </nav>
+            }
+            return (
+              <NavLink
+                key={entry.href}
+                item={entry}
+                pathname={pathname}
+                isAdmin={isAdmin}
+                onClick={handleClose}
+              />
+            );
+          })}
+          <Link
+            href="/change-password"
+            onClick={handleClose}
+            className={cn(
+              'flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-colors',
+              pathname === '/change-password'
+                ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+                : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+            )}
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Cambiar contraseña</span>
+          </Link>
+        </nav>
 
-          <div className="mt-4 px-2">
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#B5B5AE] hover:text-[#c8151b] hover:bg-red-50 rounded transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Cerrar sesión
-            </button>
-          </div>
+        <div className="flex-shrink-0 px-3 py-3 border-t border-[#EEEEEC] bg-[#F5F5ED]">
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 w-full px-2.5 py-2 text-xs text-[#35325B] hover:text-[#c8151b] hover:bg-red-50 rounded transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Cerrar sesión
+          </button>
         </div>
       </aside>
     </>
@@ -238,13 +225,13 @@ function NavLink({
       href={item.href}
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+        'flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-colors',
         isActive
           ? 'bg-[#1F1D3D] text-[#F5F5ED]'
           : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
       )}
     >
-      <item.icon className="w-4 h-4" />
+      <item.icon className="w-3.5 h-3.5 flex-shrink-0" />
       <span>{item.label}</span>
     </Link>
   );
@@ -273,28 +260,28 @@ function GroupSection({
   if (visibleItems.length === 0) return null;
 
   return (
-    <div className="mb-1">
+    <div className="mb-0.5">
       <button
         onClick={onToggle}
         className={cn(
-          'w-full flex items-center justify-between px-3 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-colors',
+          'w-full flex items-center justify-between px-2.5 py-1.5 rounded text-[10px] font-semibold uppercase tracking-wider transition-colors',
           'text-[#B5B5AE] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]',
           hasActive && 'text-[#1F1D3D]'
         )}
         aria-expanded={!collapsed}
       >
-        <span className="inline-flex items-center gap-2">
-          {group.icon && <group.icon className="w-3.5 h-3.5" />}
+        <span className="inline-flex items-center gap-1.5">
+          {group.icon && <group.icon className="w-3 h-3" />}
           {group.label}
         </span>
         {collapsed ? (
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3 h-3" />
         ) : (
-          <ChevronDown className="w-3.5 h-3.5" />
+          <ChevronDown className="w-3 h-3" />
         )}
       </button>
       {!collapsed && (
-        <div className="mt-0.5 ml-2 pl-3 border-l border-[#EEEEEC] space-y-0.5">
+        <div className="mt-0.5 ml-2 pl-2.5 border-l border-[#EEEEEC] space-y-0.5">
           {visibleItems.map((item) => (
             <NavLink
               key={item.href}
