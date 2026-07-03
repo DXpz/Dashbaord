@@ -18,6 +18,8 @@ import {
   ResultadoLlamada,
   RESULTADO_BADGE,
   CLASIFICACION_BADGE,
+  HISTORIAL_JORNADA_ANTERIOR,
+  HistorialCliente,
 } from '../jornada-data';
 
 function formatMoney(n: number): string {
@@ -172,6 +174,8 @@ export default function JornadaPage() {
             <KpiCard label="Saldo total" value={formatMoney(saldoTotal)} accent="#0c6aa1" isMoney />
             <KpiCard label="Mora +90 dias" value={formatMoney(moraMas90)} accent="#ef4444" isMoney />
           </div>
+
+          <HistorialTable historial={HISTORIAL_JORNADA_ANTERIOR} />
         </div>
       </Shell>
     );
@@ -375,6 +379,8 @@ export default function JornadaPage() {
           )}
         </div>
       </div>
+
+      <HistorialTable historial={HISTORIAL_JORNADA_ANTERIOR} />
 
       {modalCliente && (
         <GestionModal
@@ -602,4 +608,83 @@ function MiniStat({
       </p>
     </div>
   );
+}
+
+function HistorialTable({ historial }: { historial: HistorialCliente[] }) {
+  if (historial.length === 0) return null;
+  return (
+    <div className="bg-white border border-[#EEEEEC] rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-[#EEEEEC]">
+        <h3 className="text-sm font-semibold text-[#1F1D3D]">Jornada anterior</h3>
+        <p className="text-xs text-[#B5B5AE] mt-0.5">
+          Ultima gestion conocida de cada cliente — referencia rapida antes de llamar
+        </p>
+      </div>
+      <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-[#F5F5ED] sticky top-0 z-10">
+            <tr className="text-left text-[10px] uppercase tracking-wider text-[#B5B5AE] font-semibold">
+              <th className="px-3 py-2.5">#</th>
+              <th className="px-3 py-2.5">Codigo</th>
+              <th className="px-3 py-2.5">Cliente</th>
+              <th className="px-3 py-2.5">Gestor</th>
+              <th className="px-3 py-2.5">Fecha gestion</th>
+              <th className="px-3 py-2.5">Resultado</th>
+              <th className="px-3 py-2.5">Compromiso</th>
+              <th className="px-3 py-2.5">Comentario</th>
+            </tr>
+          </thead>
+          <tbody>
+            {historial.map((h, idx) => {
+              const badge = RESULTADO_BADGE[h.resultado];
+              return (
+                <tr key={h.codigo + idx} className="border-t border-[#EEEEEC] hover:bg-[#F5F5ED]/40">
+                  <td className="px-3 py-2.5 text-xs text-[#B5B5AE] font-mono text-center">
+                    {idx + 1}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs font-medium text-[#1F1D3D] font-mono">
+                    {h.codigo}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-[#1F1D3D]">
+                    {clienteNombre(h.codigo)}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-[#35325B]">{h.gestor}</td>
+                  <td className="px-3 py-2.5 text-xs text-[#35325B] font-mono whitespace-nowrap">
+                    {h.fecha}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium ${badge.bg} ${badge.text}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                      {badge.label}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="text-xs text-[#1F1D3D]">
+                      {h.montoPrometido ? (
+                        <span className="font-mono font-semibold text-emerald-700">
+                          {formatMoney(h.montoPrometido)}
+                        </span>
+                      ) : (
+                        <span className="text-[#B5B5AE]">—</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-[#35325B] mt-0.5 leading-snug max-w-[480px]">
+                      {h.comentario}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function clienteNombre(codigo: string): string {
+  const c = CLIENTES_JORNADA.find((x) => x.codigo === codigo);
+  return c ? c.empresa : codigo;
 }
