@@ -121,10 +121,23 @@ export function getEcosystemByRoute(pathname: string): EcosystemConfig | undefin
 }
 
 /**
- * Devuelve los ecosistemas a los que un usuario tiene acceso.
- * super_admin ve todos. Otros ven solo los que su rol permite.
+ * Devuelve los ecosistemas que el usuario puede SELECCIONAR en el switcher.
+ *
+ * - Super admin: prospektia + datared (Cobros no se muestra, se accede por URL directa).
+ * - gestor_cobros: solo cobros.
+ * - admin/manager: prospektia + datared.
+ * - advisor: solo prospektia.
  */
 export function getEcosystemsForRole(role: string, isSuperAdmin: boolean): EcosystemConfig[] {
-  if (isSuperAdmin) return listEcosystems();
+  if (isGestorCobrosRole(role)) {
+    return [ECOSYSTEM_REGISTRY.cobros];
+  }
+  if (isSuperAdmin || role === 'admin' || role === 'manager') {
+    return [ECOSYSTEM_REGISTRY.prospektia, ECOSYSTEM_REGISTRY.datared];
+  }
   return listEcosystems().filter((e) => e.allowedRoles.includes(role));
+}
+
+function isGestorCobrosRole(role: string): boolean {
+  return role === 'gestor_cobros';
 }

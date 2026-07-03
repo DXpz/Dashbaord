@@ -31,13 +31,11 @@ export function EcosystemSwitcher() {
     }
   };
 
-  // Para 2 opciones el switcher es binario (mitad y mitad).
-  // Para 3+ opciones se calcula el ancho del indicador proporcional.
   const indicatorWidth = `calc(${100 / options.length}% - ${4 / options.length}px)`;
-  const activeIndex = options.indexOf(ecosystem);
+  const activeIndex = Math.max(0, options.indexOf(ecosystem));
   const translateX = activeIndex <= 0
     ? '2px'
-    : `calc(${activeIndex * 100}% + ${activeIndex * 0}px)`;
+    : `calc(${activeIndex * 100}% + ${activeIndex}px)`;
 
   return (
     <div className="mx-2 mb-4">
