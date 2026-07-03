@@ -189,3 +189,59 @@ export const CLASIFICACION_BADGE: Record<Clasificacion, string> = {
   C: 'bg-amber-50 text-amber-700',
   D: 'bg-red-50 text-red-700',
 };
+
+// -----------------------------------------------------------------------------
+// Historial de la jornada ANTERIOR (referencia para el agente).
+// Cada entrada es la ultima gestion conocida de un cliente.
+// -----------------------------------------------------------------------------
+
+export interface HistorialCliente {
+  codigo: string;
+  gestor: string;
+  fecha: string;
+  resultado: ResultadoLlamada;
+  montoPrometido?: number;
+  comentario: string;
+}
+
+export const HISTORIAL_JORNADA_ANTERIOR: HistorialCliente[] = [
+  { codigo: 'CL003300', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-29 09:30', resultado: 'contactado', comentario: 'Cliente confirma pago para el viernes. Ofrecer 5% descuento si paga completo.' },
+  { codigo: 'CL002620', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-29 10:15', resultado: 'no_contesta', comentario: 'Telefono apagado. Reintentar en horario de oficina.' },
+  { codigo: 'CL003217', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-29 11:00', resultado: 'promesa_pago', montoPrometido: 211.31, comentario: 'Promete pagar el monto completo antes del viernes. Anotar en sistema.' },
+  { codigo: 'CL001855', gestor: 'Roberto Mendez', fecha: '2026-06-28 14:20', resultado: 'contactado', comentario: 'Buen pagador. Solo necesita recordatorio. Pidio enviar factura por correo.' },
+  { codigo: 'CL002910', gestor: 'Roberto Mendez', fecha: '2026-06-28 15:45', resultado: 'promesa_pago', montoPrometido: 650, comentario: 'Cliente paga $650 esta semana y resto el lunes. Muy probable que cumpla.' },
+  { codigo: 'CL002811', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-28 16:00', resultado: 'rechazo', comentario: 'Indica que no pagara por disputa contractual. Escalar a juridico.' },
+  { codigo: 'CL003405', gestor: 'Roberto Mendez', fecha: '2026-06-27 09:00', resultado: 'contactado', comentario: 'Pago confirmado para el lunes siguiente. Cliente satisfecho con el servicio.' },
+  { codigo: 'CL002740', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-27 10:30', resultado: 'no_contesta', comentario: 'No contesta. Intentar despues de las 2pm.' },
+  { codigo: 'CL002199', gestor: 'Roberto Mendez', fecha: '2026-06-27 11:45', resultado: 'reagendar', comentario: 'Cliente solicito llamada para el viernes en la manana.' },
+  { codigo: 'CL003044', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-26 13:00', resultado: 'promesa_pago', montoPrometido: 1100, comentario: 'Renovacion firmada. Pagos mensuales automaticos a partir del proximo mes.' },
+  { codigo: 'CL002891', gestor: 'Roberto Mendez', fecha: '2026-06-26 14:30', resultado: 'contactado', comentario: 'Cliente renueva contrato. Sin problemas de pago.' },
+  { codigo: 'CL002712', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-26 16:15', resultado: 'contactado', comentario: 'Pago programado, verificar cumplimiento el viernes.' },
+  { codigo: 'CL003088', gestor: 'Roberto Mendez', fecha: '2026-06-25 09:20', resultado: 'rechazo', comentario: 'Caso judicial. No insistir por telefono.' },
+  { codigo: 'CL003301', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-25 10:00', resultado: 'promesa_pago', montoPrometido: 850, comentario: 'Pago quincenal. Cliente cumplio el mes anterior.' },
+  { codigo: 'CL002661', gestor: 'Roberto Mendez', fecha: '2026-06-25 11:30', resultado: 'contactado', comentario: 'Verificar estado del servicio. Cliente sin quejas.' },
+  { codigo: 'CL002922', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-25 14:00', resultado: 'no_contesta', comentario: 'Reintentar por la tarde.' },
+  { codigo: 'CL003066', gestor: 'Roberto Mendez', fecha: '2026-06-24 15:20', resultado: 'contactado', comentario: 'Pago recibido en ventanilla. Caso cerrado.' },
+  { codigo: 'CL002533', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-24 16:30', resultado: 'contactado', comentario: 'Recordatorio enviado. Paga automaticamente.' },
+  { codigo: 'CL002780', gestor: 'Roberto Mendez', fecha: '2026-06-24 09:45', resultado: 'promesa_pago', montoPrometido: 320, comentario: 'Cliente paga solo una parte. Coordinar resto del pago.' },
+  { codigo: 'CL003155', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-23 10:00', resultado: 'contactado', comentario: 'Cliente confirma recibo de factura electronica.' },
+  { codigo: 'CL002901', gestor: 'Roberto Mendez', fecha: '2026-06-23 11:15', resultado: 'rechazo', comentario: 'Cliente indico que no pagara por error en factura.' },
+  { codigo: 'CL002644', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-23 13:45', resultado: 'promesa_pago', montoPrometido: 950, comentario: 'Pago completo fin de semana.' },
+  { codigo: 'CL003200', gestor: 'Roberto Mendez', fecha: '2026-06-23 15:00', resultado: 'contactado', comentario: 'Buena disposicion al pago. Verificar el viernes.' },
+  { codigo: 'CL002455', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-22 09:30', resultado: 'no_contesta', comentario: 'No contesto el telefono. Reintentar por la manana.' },
+  { codigo: 'CL003301b', gestor: 'Roberto Mendez', fecha: '2026-06-22 10:45', resultado: 'no_contesta', comentario: 'Telefono fuera de servicio. Verificar correo.' },
+  { codigo: 'CL002188', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-22 12:00', resultado: 'contactado', comentario: 'Cliente paga en mostrador el lunes.' },
+  { codigo: 'CL002977', gestor: 'Roberto Mendez', fecha: '2026-06-22 14:15', resultado: 'promesa_pago', montoPrometido: 1100, comentario: 'Pago completo despues de quincena.' },
+  { codigo: 'CL002909', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-22 15:30', resultado: 'contactado', comentario: 'Cliente renueva plan anual.' },
+  { codigo: 'CL003122', gestor: 'Roberto Mendez', fecha: '2026-06-21 09:00', resultado: 'contactado', comentario: 'Cliente cumplio pago en tiempo. Felicitaciones.' },
+  { codigo: 'CL002833', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-21 10:30', resultado: 'no_contesta', comentario: 'No contesto. Reintentar mas tarde.' },
+  { codigo: 'CL002244', gestor: 'Roberto Mendez', fecha: '2026-06-21 11:45', resultado: 'contactado', comentario: 'Cliente paga anualmente. Sin problemas.' },
+  { codigo: 'CL002677', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-21 13:00', resultado: 'promesa_pago', montoPrometido: 320, comentario: 'Pago fin de semana.' },
+  { codigo: 'CL002922b', gestor: 'Roberto Mendez', fecha: '2026-06-20 14:30', resultado: 'rechazo', comentario: 'Cliente renuncio al servicio. Caso cerrado.' },
+  { codigo: 'CL003400', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-20 15:45', resultado: 'promesa_pago', montoPrometido: 950, comentario: 'Pago completo fin de semana.' },
+  { codigo: 'CL002488', gestor: 'Roberto Mendez', fecha: '2026-06-20 16:30', resultado: 'contactado', comentario: 'Cliente recibio factura.' },
+  { codigo: 'CL003220', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-20 09:15', resultado: 'contactado', comentario: 'Buen pagador.' },
+  { codigo: 'CL002711', gestor: 'Roberto Mendez', fecha: '2026-06-20 10:30', resultado: 'no_contesta', comentario: 'Reintentar despues.' },
+  { codigo: 'CL002866', gestor: 'Mirna Dalila Castillo', fecha: '2026-06-20 11:45', resultado: 'contactado', comentario: 'Cliente confirma pago.' },
+  { codigo: 'CL002544', gestor: 'Roberto Mendez', fecha: '2026-06-20 13:15', resultado: 'contactado', comentario: 'Recordatorio enviado.' },
+];

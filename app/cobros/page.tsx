@@ -175,60 +175,9 @@ export default function CobrosPanelPage() {
           />
         </section>
 
-        {/* Acciones rapidas + Top 5 prioritarios */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Acciones rapidas */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-[#1F1D3D]">Acciones rapidas</h3>
-            <Link
-              href="/cobros/jornada"
-              className="bg-white border border-[#EEEEEC] rounded-lg p-4 flex items-center justify-between hover:border-[#1F1D3D] hover:shadow-sm transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#1F1D3D] text-white flex items-center justify-center">
-                  <Play className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-[#1F1D3D]">Iniciar jornada</p>
-                  <p className="text-xs text-[#B5B5AE]">40 clientes asignados</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-[#B5B5AE] group-hover:text-[#1F1D3D] transition-colors" />
-            </Link>
-            <Link
-              href="/cobros/clientes"
-              className="bg-white border border-[#EEEEEC] rounded-lg p-4 flex items-center justify-between hover:border-[#1F1D3D] hover:shadow-sm transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#0c6aa1] text-white flex items-center justify-center">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-[#1F1D3D]">Clientes con deuda</p>
-                  <p className="text-xs text-[#B5B5AE]">{CLIENTES_DEUDORES.length} clientes</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-[#B5B5AE] group-hover:text-[#1F1D3D] transition-colors" />
-            </Link>
-            <Link
-              href="/cobros/clientes"
-              className="bg-white border border-[#EEEEEC] rounded-lg p-4 flex items-center justify-between hover:border-[#1F1D3D] hover:shadow-sm transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
-                  <Receipt className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-[#1F1D3D]">Ver clientes con deuda</p>
-                  <p className="text-xs text-[#B5B5AE]">Por antiguedad de mora</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-[#B5B5AE] group-hover:text-[#1F1D3D] transition-colors" />
-            </Link>
-          </div>
-
-          {/* Top 5 clientes prioritarios */}
-          <div className="lg:col-span-2 bg-white border border-[#EEEEEC] rounded-xl overflow-hidden">
+        {/* Top 5 clientes prioritarios */}
+        <section>
+          <div className="bg-white border border-[#EEEEEC] rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-[#EEEEEC] flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-[#1F1D3D]">Prioridad hoy</h3>
