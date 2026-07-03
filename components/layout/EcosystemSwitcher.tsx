@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffectiveUser } from '@/lib/role-context';
 import { useEcosystem, EcosystemId } from '@/lib/ecosystem-context';
-import { ECOSYSTEM_REGISTRY, getEcosystemsForRole } from '@/lib/ecosystem-registry';
+import { ECOSYSTEM_REGISTRY, getEcosystemsForRole, getEcosystemByRoute } from '@/lib/ecosystem-registry';
 import { cn } from '@/lib/utils';
 
 export function EcosystemSwitcher() {
@@ -12,7 +12,6 @@ export function EcosystemSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Visible para super admin y gestor_cobros.
   if (!isSuperAdmin && !isGestorCobros) return null;
 
   const role = user?.role || 'advisor';
@@ -26,9 +25,11 @@ export function EcosystemSwitcher() {
     setEcosystem(id);
     const config = ECOSYSTEM_REGISTRY[id];
     const target = config?.rootPrefix || '/';
-    if (target !== pathname && !pathname.startsWith(target)) {
-      router.push(target);
-    }
+    // Determinar el ecosistema actual por la URL (no por el state).
+    // Esto evita el bug donde /datared/clientes.startsWith('') = true y nunca navega.
+    const currentEcosystem = getEcosystemByRoute(pathname);
+    if (currentEcosystem?.id === id) return;
+    router.push(target || '/');
   };
 
   const indicatorWidth = `calc(${100 / options.length}% - ${4 / options.length}px)`;

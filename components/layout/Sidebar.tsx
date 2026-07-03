@@ -8,12 +8,18 @@ import { useAuth } from '@/lib/auth-context';
 import { useEffectiveUser } from '@/lib/role-context';
 import { useEcosystem } from '@/lib/ecosystem-context';
 import { EcosystemSwitcher } from '@/components/layout/EcosystemSwitcher';
-import { ECOSYSTEM_REGISTRY } from '@/lib/ecosystem-registry';
+import {
+  ECOSYSTEM_REGISTRY,
+  SidebarItem,
+  SidebarGroup,
+} from '@/lib/ecosystem-registry';
 import { cn } from '@/lib/utils';
 import {
   X,
   LogOut,
   Lock,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 
 const EDGE_TRIGGER_WIDTH = 60;
@@ -24,6 +30,10 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
+function isGroup(item: SidebarItem | SidebarGroup): item is SidebarGroup {
+  return Array.isArray((item as SidebarGroup).items);
+}
+
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
@@ -32,6 +42,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const [isOpenDesktop, setIsOpenDesktop] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   const items = useMemo(() => {
     const config = ECOSYSTEM_REGISTRY[ecosystem];
@@ -94,6 +105,24 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   const isVisible = isOpen || isOpenDesktop;
 
+  // Auto-expande el grupo que contiene la ruta activa.
+  useEffect(() => {
+    setCollapsedGroups((prev) => {
+      const next = { ...prev };
+      for (const item of items) {
+        if (isGroup(item)) {
+          const hasActive = item.items.some((i) => pathname === i.href);
+          if (hasActive) next[item.id] = false;
+        }
+      }
+      return next;
+    });
+  }, [pathname, items]);
+
+  const toggleGroup = (id: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   return (
     <>
       {isVisible && (
@@ -108,7 +137,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         onMouseLeave={handleMouseLeave}
         className={cn(
           'fixed top-0 left-0 z-40 h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC]',
-          'transform transition-transform duration-200 ease-out',
+          'transform transition-transform duration-200 ease-out overflow-y-auto',
           isVisible ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -136,25 +165,29 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
           <EcosystemSwitcher />
 
-          <nav className="flex-1 space-y-0.5">
-            {items.map((item) => {
-              if (item.adminOnly && !isAdmin) return null;
-              const isActive = pathname === item.href;
+          <nav className="flex-1 space-y-0.5 mt-2">
+            {items.map((entry) => {
+              if (isGroup(entry)) {
+                return (
+                  <GroupSection
+                    key={entry.id}
+                    group={entry}
+                    pathname={pathname}
+                    isAdmin={isAdmin}
+                    collapsed={!!collapsedGroups[entry.id]}
+                    onToggle={() => toggleGroup(entry.id)}
+                    onItemClick={handleClose}
+                  />
+                );
+              }
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
+                <NavLink
+                  key={entry.href}
+                  item={entry}
+                  pathname={pathname}
+                  isAdmin={isAdmin}
                   onClick={handleClose}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
-                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
+                />
               );
             })}
             <Link
@@ -184,5 +217,95 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         </div>
       </aside>
     </>
+  );
+}
+
+function NavLink({
+  item,
+  pathname,
+  isAdmin,
+  onClick,
+}: {
+  item: SidebarItem;
+  pathname: string;
+  isAdmin: boolean;
+  onClick: () => void;
+}) {
+  if (item.adminOnly && !isAdmin) return null;
+  const isActive = pathname === item.href;
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+        isActive
+          ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+          : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+      )}
+    >
+      <item.icon className="w-4 h-4" />
+      <span>{item.label}</span>
+    </Link>
+  );
+}
+
+function GroupSection({
+  group,
+  pathname,
+  isAdmin,
+  collapsed,
+  onToggle,
+  onItemClick,
+}: {
+  group: SidebarGroup;
+  pathname: string;
+  isAdmin: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
+  onItemClick: () => void;
+}) {
+  // Grupo activo: tiene un item en la ruta actual.
+  const hasActive = group.items.some((i) => pathname === i.href);
+  const visibleItems = group.items.filter(
+    (i) => !(i.adminOnly && !isAdmin)
+  );
+  if (visibleItems.length === 0) return null;
+
+  return (
+    <div className="mb-1">
+      <button
+        onClick={onToggle}
+        className={cn(
+          'w-full flex items-center justify-between px-3 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-colors',
+          'text-[#B5B5AE] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]',
+          hasActive && 'text-[#1F1D3D]'
+        )}
+        aria-expanded={!collapsed}
+      >
+        <span className="inline-flex items-center gap-2">
+          {group.icon && <group.icon className="w-3.5 h-3.5" />}
+          {group.label}
+        </span>
+        {collapsed ? (
+          <ChevronRight className="w-3.5 h-3.5" />
+        ) : (
+          <ChevronDown className="w-3.5 h-3.5" />
+        )}
+      </button>
+      {!collapsed && (
+        <div className="mt-0.5 ml-2 pl-3 border-l border-[#EEEEEC] space-y-0.5">
+          {visibleItems.map((item) => (
+            <NavLink
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              isAdmin={isAdmin}
+              onClick={onItemClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

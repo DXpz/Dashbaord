@@ -22,6 +22,9 @@ import {
   CircleDot,
   Globe,
   TrendingUp,
+  Briefcase,
+  BarChart3,
+  Settings,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -32,15 +35,37 @@ export interface SidebarItem {
   adminOnly?: boolean;
 }
 
+export interface SidebarGroup {
+  /** ID unico del grupo (para keys y estado de colapso). */
+  id: string;
+  /** Etiqueta visible del grupo (la "carpeta"). */
+  label: string;
+  /** Icono opcional del grupo. Si no se da, no se muestra. */
+  icon?: LucideIcon;
+  /** Items dentro del grupo. */
+  items: SidebarItem[];
+  /** Si es true, se muestra colapsado por default. */
+  defaultCollapsed?: boolean;
+}
+
 export interface EcosystemConfig {
   id: string;
   label: string;
   shortLabel: string;
   description: string;
   rootPrefix: string;
-  sidebarItems: SidebarItem[];
+  /**
+   * Items del sidebar. Puede ser SidebarItem[] (plano) o SidebarGroup[] (agrupado).
+   * Si se pasa un array mixto, los SidebarItem sin 'items' se renderizan sueltos
+   * y los SidebarGroup con 'items' se renderizan como carpetas.
+   */
+  sidebarItems: Array<SidebarItem | SidebarGroup>;
   /** Roles que pueden ver este ecosistema (ademas de super_admin que ve todos). */
   allowedRoles: string[];
+}
+
+function isGroup(item: SidebarItem | SidebarGroup): item is SidebarGroup {
+  return Array.isArray((item as SidebarGroup).items);
 }
 
 export const ECOSYSTEM_REGISTRY: Record<string, EcosystemConfig> = {
@@ -53,15 +78,37 @@ export const ECOSYSTEM_REGISTRY: Record<string, EcosystemConfig> = {
     allowedRoles: ['admin', 'manager', 'advisor'],
     sidebarItems: [
       { href: '/', label: 'Resumen', icon: LayoutDashboard },
-      { href: '/asesores', label: 'Asesores', icon: Users },
-      { href: '/propuestas', label: 'Propuestas', icon: FileText },
-      { href: '/reuniones', label: 'Reuniones', icon: Calendar },
-      { href: '/metricas-etapas', label: 'Métricas Etapas', icon: AlertTriangle, adminOnly: true },
-      { href: '/round-robin', label: 'Round Robin', icon: CircleDot },
-      { href: '/origen-leads', label: 'Origen Leads', icon: Globe },
-      { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
-      { href: '/formulario', label: 'Formulario', icon: FileText },
-      { href: '/versiones', label: 'Versiones', icon: Info },
+      {
+        id: 'operaciones',
+        label: 'Operaciones',
+        icon: Briefcase,
+        items: [
+          { href: '/asesores', label: 'Asesores', icon: Users },
+          { href: '/propuestas', label: 'Propuestas', icon: FileText },
+          { href: '/reuniones', label: 'Reuniones', icon: Calendar },
+          { href: '/round-robin', label: 'Round Robin', icon: CircleDot },
+        ],
+      },
+      {
+        id: 'metricas',
+        label: 'Métricas',
+        icon: BarChart3,
+        items: [
+          { href: '/metricas-etapas', label: 'Métricas Etapas', icon: AlertTriangle, adminOnly: true },
+          { href: '/origen-leads', label: 'Origen Leads', icon: Globe },
+          { href: '/negociacion', label: 'Negociación', icon: TrendingUp },
+        ],
+      },
+      {
+        id: 'administracion',
+        label: 'Administración',
+        icon: Settings,
+        items: [
+          { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
+          { href: '/formulario', label: 'Formulario', icon: FileText },
+          { href: '/versiones', label: 'Versiones', icon: Info },
+        ],
+      },
     ],
   },
   datared: {
@@ -73,9 +120,16 @@ export const ECOSYSTEM_REGISTRY: Record<string, EcosystemConfig> = {
     allowedRoles: ['admin', 'manager'],
     sidebarItems: [
       { href: '/datared', label: 'Panel DataRed', icon: LayoutDashboard },
-      { href: '/datared/clientes', label: 'Clientes', icon: Users },
-      { href: '/datared/reuniones', label: 'Reuniones', icon: Calendar },
-      { href: '/datared/usuarios', label: 'Usuarios', icon: ShieldCheck },
+      {
+        id: 'dr-gestion',
+        label: 'Gestión',
+        icon: Briefcase,
+        items: [
+          { href: '/datared/clientes', label: 'Clientes', icon: Users },
+          { href: '/datared/reuniones', label: 'Reuniones', icon: Calendar },
+          { href: '/datared/usuarios', label: 'Usuarios', icon: ShieldCheck },
+        ],
+      },
       { href: '/datared/versiones', label: 'Versiones', icon: Info },
     ],
   },
