@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useEcosystem } from '@/lib/ecosystem-context';
+import { EcosystemSwitcher } from '@/components/layout/EcosystemSwitcher';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -45,6 +47,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { ecosystem } = useEcosystem();
   const [isOpenDesktop, setIsOpenDesktop] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -145,8 +148,79 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </button>
           </div>
 
+          <EcosystemSwitcher />
+
           <nav className="flex-1 space-y-0.5">
-            {navItems.map((item) => {
+            {ecosystem === 'datared' && (
+              <>
+                <Link
+                  href="/datared"
+                  onClick={handleClose}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                    pathname === '/datared'
+                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+                  )}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Panel DataRed</span>
+                </Link>
+                <Link
+                  href="/datared/clientes"
+                  onClick={handleClose}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                    pathname === '/datared/clientes'
+                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+                  )}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Clientes</span>
+                </Link>
+                <Link
+                  href="/datared/reuniones"
+                  onClick={handleClose}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                    pathname === '/datared/reuniones'
+                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+                  )}
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Reuniones</span>
+                </Link>
+                <Link
+                  href="/datared/usuarios"
+                  onClick={handleClose}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                    pathname === '/datared/usuarios'
+                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+                  )}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Usuarios</span>
+                </Link>
+                <Link
+                  href="/datared/versiones"
+                  onClick={handleClose}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                    pathname === '/datared/versiones'
+                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+                  )}
+                >
+                  <Info className="w-4 h-4" />
+                  <span>Versiones</span>
+                </Link>
+              </>
+            )}
+            {ecosystem === 'prospektia' && navItems.map((item) => {
               if (item.adminOnly && user?.role !== 'admin') return null;
               const isActive = pathname === item.href;
               return (

@@ -8,6 +8,11 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "unrs-resolver"
+    ]
+  },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.44.0",
     "@elevenlabs/react": "^1.2.1",
