@@ -7,10 +7,19 @@
 
 export type EstadoCliente = 'CLIENTE' | 'PROSPECTO' | 'SUSPENDIDO' | 'BAJA';
 export type Clasificacion = 'A' | 'B' | 'C' | 'D';
+export type ResultadoLlamada =
+  | 'sin_gestion'
+  | 'contactado'
+  | 'promesa_pago'
+  | 'no_contesta'
+  | 'rechazo'
+  | 'numero_invalido'
+  | 'reagendar';
 
 export interface ClienteJornada {
   codigo: string;
   cliente: string;
+  empresa: string;
   estado: EstadoCliente;
   clasificacion: Clasificacion | '';
   motivo: string;
@@ -23,7 +32,23 @@ export interface ClienteJornada {
   fechaEvaluacion: string;
   telefono: string;
   correo: string;
+  // Campos de gestion del dia (se llenan al gestionar)
+  resultado?: ResultadoLlamada;
+  montoPromesa?: number;
+  fechaPromesa?: string;
+  notas?: string;
+  horaGestion?: string;
 }
+
+export const RESULTADO_BADGE: Record<ResultadoLlamada, { label: string; bg: string; text: string; dot: string }> = {
+  sin_gestion: { label: 'Sin gestion', bg: 'bg-slate-100', text: 'text-slate-500', dot: 'bg-slate-400' },
+  contactado: { label: 'Contactado', bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
+  promesa_pago: { label: 'Promesa pago', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  no_contesta: { label: 'No contesta', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
+  rechazo: { label: 'Rechazo', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
+  numero_invalido: { label: 'Numero invalido', bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-500' },
+  reagendar: { label: 'Reagendar', bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
+};
 
 function fmt(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -71,6 +96,19 @@ function build(): ClienteJornada[] {
     ['CL002711', 'CLIENTE', 'B', 'ATRASO MENOR', [280, 0, 0, 0, 0], '78621127', 'reina@wilbot.com.sv'],
     ['CL002866', 'CLIENTE', '', '', [0, 0, 1100, 0, 0], '+502 2290-9000', 'alopez@tigo.com.gt'],
     ['CL002544', 'CLIENTE', 'C', 'COBRO ACTIVO', [1100, 0, 0, 0, 0], '2290-9000', 'cobros@tigo.com.sv'],
+  ];
+
+  const NOMBRES: string[] = [
+    'Maria Rodriguez', 'Jose Martinez', 'Carlos Barrera', 'Joel Rodriguez',
+    'Norma Vargas', 'Diego Delgado', 'Eduardo Herrera', 'Roberto Mendez',
+    'Ana Lopez', 'Carlos Mendez', 'Reina Vasquez', 'Karla Lopez',
+    'Alvaro Mendez', 'Patricia Salinas', 'Luis Cardona', 'Sofia Reyes',
+    'Fernando Pinto', 'Gabriela Torres', 'Miguel Salazar', 'Daniela Cruz',
+    'Ricardo Pena', 'Valentina Ruiz', 'Andres Molina', 'Camila Vega',
+    'Sergio Castillo', 'Isabella Romero', 'Javier Ortega', 'Lucia Conde',
+    'Pablo Fuentes', 'Adriana Mejia', 'Tomas Aguilar', 'Ximena Cordero',
+    'Manuel Estrada', 'Renata Orellana', 'Hugo Sandoval', 'Elena Maldonado',
+    'Victor Palma', 'Natalia Quiroz', 'Oscar Trejo', 'Carla Bonilla',
   ];
 
   const clientes: string[] = [
@@ -125,7 +163,8 @@ function build(): ClienteJornada[] {
     fechaBase.setDate(today.getDate() - (i % 7));
     return {
       codigo,
-      cliente: clientes[i] || `CLIENTE ${codigo}`,
+      cliente: NOMBRES[i] || `CONTACTO ${codigo}`,
+      empresa: clientes[i] || `EMPRESA ${codigo}`,
       estado,
       clasificacion,
       motivo,
