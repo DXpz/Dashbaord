@@ -25,6 +25,7 @@ import {
   Briefcase,
   BarChart3,
   Settings,
+  Lock,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -107,6 +108,7 @@ export const ECOSYSTEM_REGISTRY: Record<string, EcosystemConfig> = {
           { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
           { href: '/formulario', label: 'Formulario', icon: FileText },
           { href: '/versiones', label: 'Versiones', icon: Info },
+          { href: '/change-password', label: 'Cambiar contraseña', icon: Lock },
         ],
       },
     ],
@@ -128,6 +130,7 @@ export const ECOSYSTEM_REGISTRY: Record<string, EcosystemConfig> = {
           { href: '/datared/clientes', label: 'Clientes', icon: Users },
           { href: '/datared/reuniones', label: 'Reuniones', icon: Calendar },
           { href: '/datared/usuarios', label: 'Usuarios', icon: ShieldCheck },
+          { href: '/change-password', label: 'Cambiar contraseña', icon: Lock },
         ],
       },
       { href: '/datared/versiones', label: 'Versiones', icon: Info },
@@ -144,6 +147,14 @@ export const ECOSYSTEM_REGISTRY: Record<string, EcosystemConfig> = {
       { href: '/cobros', label: 'Panel Cobros', icon: LayoutDashboard },
       { href: '/cobros/jornada', label: 'Jornada', icon: Calendar },
       { href: '/cobros/clientes', label: 'Clientes', icon: Users },
+      {
+        id: 'cobros-cuenta',
+        label: 'Mi cuenta',
+        icon: Settings,
+        items: [
+          { href: '/change-password', label: 'Cambiar contraseña', icon: Lock },
+        ],
+      },
     ],
   },
   ventas: {

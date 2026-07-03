@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import {
   X,
   LogOut,
-  Lock,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
@@ -178,19 +177,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               />
             );
           })}
-          <Link
-            href="/change-password"
-            onClick={handleClose}
-            className={cn(
-              'flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-colors',
-              pathname === '/change-password'
-                ? 'bg-[#1F1D3D] text-[#F5F5ED]'
-                : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-            )}
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Cambiar contraseña</span>
-          </Link>
         </nav>
 
         <div className="flex-shrink-0 px-3 py-3 border-t border-[#EEEEEC] bg-[#F5F5ED]">
@@ -252,8 +238,6 @@ function GroupSection({
   onToggle: () => void;
   onItemClick: () => void;
 }) {
-  // Grupo activo: tiene un item en la ruta actual.
-  const hasActive = group.items.some((i) => pathname === i.href);
   const visibleItems = group.items.filter(
     (i) => !(i.adminOnly && !isAdmin)
   );
@@ -264,9 +248,8 @@ function GroupSection({
       <button
         onClick={onToggle}
         className={cn(
-          'w-full flex items-center justify-between px-2.5 py-1.5 rounded text-[10px] font-semibold uppercase tracking-wider transition-colors',
-          'text-[#B5B5AE] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]',
-          hasActive && 'text-[#1F1D3D]'
+          'w-full flex items-center justify-between px-2.5 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wider transition-colors',
+          'text-[#1F1D3D] hover:bg-[#EEEEEC]'
         )}
         aria-expanded={!collapsed}
       >
