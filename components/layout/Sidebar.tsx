@@ -3,38 +3,18 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useEffectiveUser } from '@/lib/role-context';
 import { useEcosystem } from '@/lib/ecosystem-context';
 import { EcosystemSwitcher } from '@/components/layout/EcosystemSwitcher';
+import { ECOSYSTEM_REGISTRY } from '@/lib/ecosystem-registry';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Calendar,
-  Globe,
-  ShieldCheck,
   X,
-  CircleDot,
   LogOut,
   Lock,
-  Info,
-  AlertTriangle,
 } from 'lucide-react';
-
-const navItems = [
-  { href: '/', label: 'Resumen', icon: LayoutDashboard },
-  { href: '/asesores', label: 'Asesores', icon: Users },
-  { href: '/propuestas', label: 'Propuestas', icon: FileText },
-  { href: '/reuniones', label: 'Reuniones', icon: Calendar },
-  { href: '/metricas-etapas', label: 'Métricas Etapas', icon: AlertTriangle, adminOnly: true },
-  { href: '/round-robin', label: 'Round Robin', icon: CircleDot },
-  { href: '/origen-leads', label: 'Origen Leads', icon: Globe },
-  { href: '/gestion-asesores', label: 'Gestión', icon: ShieldCheck },
-  { href: '/formulario', label: 'Formulario', icon: FileText },
-  { href: '/versiones', label: 'Versiones', icon: Info },
-];
 
 const EDGE_TRIGGER_WIDTH = 60;
 const LEAVE_DELAY_MS = 2000;
@@ -46,11 +26,17 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { isAdmin } = useEffectiveUser();
   const { ecosystem } = useEcosystem();
   const [isOpenDesktop, setIsOpenDesktop] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const items = useMemo(() => {
+    const config = ECOSYSTEM_REGISTRY[ecosystem];
+    return config?.sidebarItems ?? [];
+  }, [ecosystem]);
 
   const clearLeaveTimeout = useCallback(() => {
     if (leaveTimeoutRef.current) {
@@ -151,77 +137,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           <EcosystemSwitcher />
 
           <nav className="flex-1 space-y-0.5">
-            {ecosystem === 'datared' && (
-              <>
-                <Link
-                  href="/datared"
-                  onClick={handleClose}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                    pathname === '/datared'
-                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
-                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-                  )}
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>Panel DataRed</span>
-                </Link>
-                <Link
-                  href="/datared/clientes"
-                  onClick={handleClose}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                    pathname === '/datared/clientes'
-                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
-                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-                  )}
-                >
-                  <Users className="w-4 h-4" />
-                  <span>Clientes</span>
-                </Link>
-                <Link
-                  href="/datared/reuniones"
-                  onClick={handleClose}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                    pathname === '/datared/reuniones'
-                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
-                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-                  )}
-                >
-                  <Calendar className="w-4 h-4" />
-                  <span>Reuniones</span>
-                </Link>
-                <Link
-                  href="/datared/usuarios"
-                  onClick={handleClose}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                    pathname === '/datared/usuarios'
-                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
-                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-                  )}
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Usuarios</span>
-                </Link>
-                <Link
-                  href="/datared/versiones"
-                  onClick={handleClose}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                    pathname === '/datared/versiones'
-                      ? 'bg-[#1F1D3D] text-[#F5F5ED]'
-                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-                  )}
-                >
-                  <Info className="w-4 h-4" />
-                  <span>Versiones</span>
-                </Link>
-              </>
-            )}
-            {ecosystem === 'prospektia' && navItems.map((item) => {
-              if (item.adminOnly && user?.role !== 'admin') return null;
+            {items.map((item) => {
+              if (item.adminOnly && !isAdmin) return null;
               const isActive = pathname === item.href;
               return (
                 <Link

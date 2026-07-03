@@ -76,7 +76,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof window !== 'undefined' && userData?.email) {
         localStorage.setItem('api_user', JSON.stringify(userData));
       }
-      router.push(userData.role === 'advisor' ? '/vendedor' : '/');
+      const target = userData.role === 'advisor'
+        ? '/vendedor'
+        : userData.role === 'gestor_cobros'
+          ? '/cobros'
+          : '/';
+      router.push(target);
       return { ok: true };
     } catch (e) {
       return { ok: false, error: 'No se pudo conectar al servidor' };

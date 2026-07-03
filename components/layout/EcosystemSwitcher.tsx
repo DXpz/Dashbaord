@@ -1,29 +1,43 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
-import { useEcosystem, EcosystemId, ECOSYSTEMS } from '@/lib/ecosystem-context';
+import { useEffectiveUser } from '@/lib/role-context';
+import { useEcosystem, EcosystemId } from '@/lib/ecosystem-context';
+import { ECOSYSTEM_REGISTRY, getEcosystemsForRole } from '@/lib/ecosystem-registry';
 import { cn } from '@/lib/utils';
 
 export function EcosystemSwitcher() {
-  const { user } = useAuth();
+  const { isSuperAdmin, isGestorCobros, user } = useEffectiveUser();
   const { ecosystem, setEcosystem } = useEcosystem();
   const router = useRouter();
   const pathname = usePathname();
 
-  if (!user?.is_super_admin) return null;
+  // Visible para super admin y gestor_cobros.
+  if (!isSuperAdmin && !isGestorCobros) return null;
 
-  const options: EcosystemId[] = ['prospektia', 'datared'];
+  const role = user?.role || 'advisor';
+  const allowed = getEcosystemsForRole(role, isSuperAdmin);
+  const options = allowed.map((e) => e.id as EcosystemId);
+
+  if (options.length < 2) return null;
 
   const handleSelect = (id: EcosystemId) => {
     if (id === ecosystem) return;
     setEcosystem(id);
-    if (id === 'datared' && !pathname.startsWith('/datared')) {
-      router.push('/datared');
-    } else if (id === 'prospektia' && pathname.startsWith('/datared')) {
-      router.push('/');
+    const config = ECOSYSTEM_REGISTRY[id];
+    const target = config?.rootPrefix || '/';
+    if (target !== pathname && !pathname.startsWith(target)) {
+      router.push(target);
     }
   };
+
+  // Para 2 opciones el switcher es binario (mitad y mitad).
+  // Para 3+ opciones se calcula el ancho del indicador proporcional.
+  const indicatorWidth = `calc(${100 / options.length}% - ${4 / options.length}px)`;
+  const activeIndex = options.indexOf(ecosystem);
+  const translateX = activeIndex <= 0
+    ? '2px'
+    : `calc(${activeIndex * 100}% + ${activeIndex * 0}px)`;
 
   return (
     <div className="mx-2 mb-4">
@@ -48,19 +62,19 @@ export function EcosystemSwitcher() {
                   : 'text-[#35325B] hover:text-[#1F1D3D]'
               )}
             >
-              {ECOSYSTEMS[id].shortLabel}
+              {ECOSYSTEM_REGISTRY[id]?.shortLabel || id}
             </button>
           );
         })}
         <span
           aria-hidden
           className={cn(
-            'absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md bg-[#1F1D3D]',
-            'transition-transform duration-200 ease-out',
-            ecosystem === 'prospektia'
-              ? 'translate-x-[4px]'
-              : 'translate-x-[calc(100%+0px)]'
+            'absolute top-1 bottom-1 rounded-md bg-[#1F1D3D] transition-transform duration-200 ease-out',
           )}
+          style={{
+            width: indicatorWidth,
+            transform: `translateX(${translateX})`,
+          }}
         />
       </div>
     </div>

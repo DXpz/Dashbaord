@@ -1,0 +1,73 @@
+'use client';
+
+import { useState, useCallback, useEffect } from 'react';
+
+function getDefaultDates() {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  return { desde: fmt(firstDay), hasta: fmt(lastDay) };
+}
+
+export interface FiltersState {
+  desde: string;
+  hasta: string;
+  pais: string;
+  asesor: string;
+  tipoLead: string;
+  origen: string;
+  tipoLlamada: string;
+}
+
+export function useFilters() {
+  const [filters, setFilters] = useState<FiltersState>(() => {
+    if (typeof window === 'undefined') return { desde: '', hasta: '', pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '' };
+    const defaults = getDefaultDates();
+    const initial = { ...defaults, pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '' };
+    try {
+      const saved = localStorage.getItem('dashboard_filters');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        Object.keys(parsed).forEach((key) => {
+          if (parsed[key] !== undefined && (parsed[key] !== '')) {
+            (initial as any)[key] = parsed[key];
+          }
+        });
+      }
+    } catch {}
+    return initial;
+  });
+
+  const handleFilterChange = useCallback((key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleFiltrar = useCallback(() => {
+    // Filters are applied reactively, nothing needed here
+  }, []);
+
+  const handleLimpiar = useCallback(() => {
+    const defaults = getDefaultDates();
+    setFilters({ ...defaults, pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '' });
+    window.location.reload();
+  }, []);
+
+  return { filters, handleFilterChange, handleFiltrar, handleLimpiar };
+}
+
+export function useFiltersInit() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+    const getInitialFilters = useCallback((): FiltersState => {
+      if (!mounted) return { desde: '', hasta: '', pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '' };
+      const defaults = getDefaultDates();
+      return { ...defaults, pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '' };
+    }, [mounted]);
+
+  return { mounted, getInitialFilters };
+}
