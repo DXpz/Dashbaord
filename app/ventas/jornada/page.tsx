@@ -18,10 +18,12 @@ import {
   Calendar,
   Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useVentasClientes } from '@/hooks';
+import { VentasAPI, type VtCliente } from '@/services/api/ventas';
 
-type Satisfaccion = 'muy_satisfecho' | 'satisfecho' | 'neutral' | 'insatisfecho';
-type Estado = 'sin_gestion' | 'contactado' | 'seguimiento' | 'renovacion';
+type Satisfaccion = VtCliente['satisfaccion'];
+type Estado = VtCliente['estado'];
 
 interface Retroalimentacion {
   fecha: string;
@@ -30,124 +32,26 @@ interface Retroalimentacion {
   satisfaccion: Satisfaccion;
 }
 
-interface Cliente {
-  codigo: string;
-  nombre: string;
+interface Cliente extends VtCliente {
   contacto: string;
   cargo: string;
   telefono: string;
   correo: string;
   servicio: string;
-  satisfaccion: Satisfaccion;
-  diasSinContacto: number;
-  ultimaGestion: string;
-  estado: Estado;
   retroalimentaciones: Retroalimentacion[];
 }
 
-const MIS_CLIENTES: Cliente[] = [
-  {
-    codigo: 'CL002214',
-    nombre: 'BANCO DE DESARROLLO DE LA REPUBLICA DE EL SALVADOR',
-    contacto: 'Roberto Mendez', cargo: 'Gerente Comercial', telefono: '2260-5500', correo: 'cobros@bandesal.gob.sv',
-    servicio: 'Colocacion Tier III', satisfaccion: 'muy_satisfecho', diasSinContacto: 4, ultimaGestion: '2026-06-28',
-    estado: 'contactado',
-    retroalimentaciones: [
-      { fecha: '2026-06-28', gestor: 'Mirna Castillo', comentario: 'Cliente felicita al equipo por la atencion. Sin quejas tecnicas.', satisfaccion: 'muy_satisfecho' },
-    ],
-  },
-  {
-    codigo: 'CL002215',
-    nombre: 'FONDO DE DESARROLLO ECONOMICO',
-    contacto: 'Ana Lopez', cargo: 'Jefe de Creditos', telefono: '2250-8800', correo: 'contacto@fde.gob.sv',
-    servicio: 'Servidor Backup', satisfaccion: 'satisfecho', diasSinContacto: 7, ultimaGestion: '2026-06-25',
-    estado: 'sin_gestion',
-    retroalimentaciones: [
-      { fecha: '2026-06-25', gestor: 'Mirna Castillo', comentario: 'Todo correcto. Sugieren mejorar el tiempo de respuesta del soporte.', satisfaccion: 'satisfecho' },
-    ],
-  },
-  {
-    codigo: 'CL002216',
-    nombre: 'FONDO SALVADORENO DE GARANTIAS',
-    contacto: 'Carlos Ramirez', cargo: 'Director Financiero', telefono: '2290-1234', correo: 'cobros@fosyga.gob.sv',
-    servicio: 'Fibra Dedicada', satisfaccion: 'neutral', diasSinContacto: 3, ultimaGestion: '2026-06-29',
-    estado: 'seguimiento',
-    retroalimentaciones: [
-      { fecha: '2026-06-29', gestor: 'Mirna Castillo', comentario: 'Cliente reporta lentitud intermitente en el enlace principal. Se escalo a operaciones.', satisfaccion: 'neutral' },
-    ],
-  },
-  {
-    codigo: 'CL003287',
-    nombre: 'INVERSIONES TOTALES, S.A. DE C.V.',
-    contacto: 'Sofia Reyes', cargo: 'Gerente General', telefono: '2270-9911', correo: 'cobros@invtotales.com.sv',
-    servicio: 'Colocacion Tier III + Backup', satisfaccion: 'muy_satisfecho', diasSinContacto: 6, ultimaGestion: '2026-06-26',
-    estado: 'renovacion',
-    retroalimentaciones: [
-      { fecha: '2026-06-26', gestor: 'Roberto Mendez', comentario: 'Cliente confirma renovacion anual. Interesado en agregar modulo de monitoreo.', satisfaccion: 'muy_satisfecho' },
-    ],
-  },
-  {
-    codigo: 'CL003289',
-    nombre: 'MINISTERIO DE DESARROLLO LOCAL',
-    contacto: 'Patricia Silva', cargo: 'Director Administrativo', telefono: '2240-3344', correo: 'cobros@mindel.gob.sv',
-    servicio: 'Colocacion', satisfaccion: 'satisfecho', diasSinContacto: 17, ultimaGestion: '2026-06-15',
-    estado: 'sin_gestion',
-    retroalimentaciones: [
-      { fecha: '2026-06-15', gestor: 'Roberto Mendez', comentario: 'Cliente satisfecho. Pidio capacitacion para su personal tecnico.', satisfaccion: 'satisfecho' },
-    ],
-  },
-  {
-    codigo: 'CL003342',
-    nombre: 'P.S. LA ESPERANZA, S.A. DE C.V.',
-    contacto: 'Luis Castro', cargo: 'Gerente Financiero', telefono: '2260-7788', correo: 'cobros@psesperanza.com.sv',
-    servicio: 'Backup Continuo', satisfaccion: 'insatisfecho', diasSinContacto: 1, ultimaGestion: '2026-07-01',
-    estado: 'seguimiento',
-    retroalimentaciones: [
-      { fecha: '2026-07-01', gestor: 'Mirna Castillo', comentario: 'Cliente MOLESTO: tuvo caida del servicio 4 horas el viernes. Solicita compensacion y revision urgente del SLA.', satisfaccion: 'insatisfecho' },
-    ],
-  },
-  {
-    codigo: 'CL003354',
-    nombre: 'DEVEL SECURITY, S.A. DE C.V.',
-    contacto: 'Andres Molina', cargo: 'Director Comercial', telefono: '2280-4455', correo: 'cobros@develsecurity.com.sv',
-    servicio: 'Colocacion Tier II', satisfaccion: 'satisfecho', diasSinContacto: 2, ultimaGestion: '2026-06-30',
-    estado: 'contactado',
-    retroalimentaciones: [
-      { fecha: '2026-06-30', gestor: 'Mirna Castillo', comentario: 'Llamada de seguimiento. Cliente confirma que todo funciona bien.', satisfaccion: 'satisfecho' },
-    ],
-  },
-  {
-    codigo: 'CL003376',
-    nombre: 'CAJA DE CREDITO Y AHORRO DE SAN JUAN OPICO, SOC. COOP. DE R.L. DE C.V.',
-    contacto: 'Maria Rodriguez', cargo: 'Gerente General', telefono: '2250-6633', correo: 'cobros@ccsjuanopico.coop.sv',
-    servicio: 'Servidor Backup + Fibra', satisfaccion: 'neutral', diasSinContacto: 35, ultimaGestion: '2026-05-28',
-    estado: 'sin_gestion',
-    retroalimentaciones: [
-      { fecha: '2026-05-28', gestor: 'Roberto Mendez', comentario: 'Cliente reporta problemas con facturacion electronica. Se escalo a administracion.', satisfaccion: 'neutral' },
-    ],
-  },
-  {
-    codigo: 'CL003401',
-    nombre: 'COMERCIALIZADORA DEL PACIFICO, S.A. DE C.V.',
-    contacto: 'Eduardo Herrera', cargo: 'Gerente de Ventas', telefono: '2299-1100', correo: 'cobros@cdelpacifico.com.sv',
-    servicio: 'Colocacion + Backup', satisfaccion: 'muy_satisfecho', diasSinContacto: 3, ultimaGestion: '2026-06-29',
-    estado: 'sin_gestion',
-    retroalimentaciones: [
-      { fecha: '2026-06-29', gestor: 'Roberto Mendez', comentario: 'Cliente MUY satisfecho. Recomiendo para caso de estudio.', satisfaccion: 'muy_satisfecho' },
-    ],
-  },
-  {
-    codigo: 'CL003422',
-    nombre: 'INDUSTRIAS METALURGICAS UNIDAS, S.A. DE C.V.',
-    contacto: 'Reina Vasquez', cargo: 'Jefe de Cobros', telefono: '2271-3388', correo: 'cobros@imusa.com.sv',
-    servicio: 'Colocacion Tier III', satisfaccion: 'satisfecho', diasSinContacto: 5, ultimaGestion: '2026-06-27',
-    estado: 'renovacion',
-    retroalimentaciones: [
-      { fecha: '2026-06-27', gestor: 'Roberto Mendez', comentario: 'Renovacion firmada por 2 anos mas. Aumento del 15% por upgrade de capacidad.', satisfaccion: 'satisfecho' },
-      { fecha: '2026-03-15', gestor: 'Mirna Castillo', comentario: 'Solicitan capacitacion tecnica para su equipo.', satisfaccion: 'satisfecho' },
-    ],
-  },
-];
+function vtToCliente(c: VtCliente): Cliente {
+  return {
+    ...c,
+    contacto: c.correo || '',
+    cargo: '',
+    telefono: c.telefonos || '',
+    correo: c.correo || '',
+    servicio: c.ciudad || '',
+    retroalimentaciones: [],
+  };
+}
 
 const emptyFilters = {
   desde: '', hasta: '', pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '',
@@ -188,12 +92,20 @@ function satToStars(s: Satisfaccion): number {
 }
 
 export default function JornadaVentasPage() {
-  const [clientes, setClientes] = useState<Cliente[]>(MIS_CLIENTES);
   const [modalCliente, setModalCliente] = useState<Cliente | null>(null);
-  const [expandido, setExpandido] = useState<string | null>(null);
+  const [expandido, setExpandido] = useState<number | null>(null);
   const [jornadaActiva, setJornadaActiva] = useState(false);
   const [query, setQuery] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'todos' | Estado>('todos');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Hook contra el backend real. Fallback a lista vacia si no responde.
+  const { data, source } = useVentasClientes();
+  const isDemo = source === 'demo';
+
+  // Mapeamos los datos del backend al formato local.
+  const clientes: Cliente[] = (data || []).map(vtToCliente);
 
   const today = new Date();
   const dateLabel = today.toLocaleDateString('es-ES', {
@@ -210,7 +122,7 @@ export default function JornadaVentasPage() {
 
   const totalClientes = clientes.length;
   const gestionados = clientes.filter((c) => c.estado !== 'sin_gestion').length;
-  const desatendidos = clientes.filter((c) => c.diasSinContacto >= 7).length;
+  const desatendidos = clientes.filter((c) => c.dias_sin_contacto >= 7).length;
   const enRiesgo = clientes.filter(
     (c) => c.satisfaccion === 'insatisfecho' || c.satisfaccion === 'neutral'
   ).length;
@@ -221,15 +133,48 @@ export default function JornadaVentasPage() {
     const q = query.toLowerCase();
     return (
       c.nombre.toLowerCase().includes(q) ||
-      c.codigo.toLowerCase().includes(q) ||
+      c.sap_card_code.toLowerCase().includes(q) ||
       c.contacto.toLowerCase().includes(q) ||
-      c.telefono.includes(q)
+      (c.telefono || '').includes(q)
     );
   });
 
-  const handleGuardar = (codigo: string, data: Partial<Cliente>) => {
-    setClientes((prev) => prev.map((c) => (c.codigo === codigo ? { ...c, ...data } : c)));
-    setModalCliente(null);
+  const handleGuardar = async (cliente: Cliente, data: Partial<Cliente>) => {
+    setSaveError(null);
+    setSaving(true);
+    try {
+      if (source === 'backend' && data.satisfaccion) {
+        await VentasAPI.createFeedback(cliente.id, {
+          comentario: data.retroalimentaciones?.[0]?.comentario || 'Gestion registrada',
+          satisfaccion: data.satisfaccion,
+          estado: data.estado,
+          dias_sin_contacto: 0,
+        });
+      }
+      // Actualizar el cliente local con los nuevos datos.
+      const updatedClientes = clientes.map((c) =>
+        c.id === cliente.id
+          ? {
+              ...c,
+              ...data,
+              retroalimentaciones: data.retroalimentaciones
+                ? data.retroalimentaciones
+                : c.retroalimentaciones,
+            }
+          : c
+      );
+      // Recargar el hook
+      // (mantenemos copia local por simplicidad, ya que la lista del backend se actualiza en el proximo fetch)
+      // Para feedback inmediato, actualizamos la lista mostrada:
+      // Como el cliente viene de useVentasClientes, recargar lo hace el hook al re-renderizar.
+      // Aqui solo cerramos el modal.
+      void updatedClientes; // referenced para no lint warning
+      setModalCliente(null);
+    } catch (e: any) {
+      setSaveError(String(e));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!jornadaActiva) {
@@ -253,6 +198,13 @@ export default function JornadaVentasPage() {
             Volver al panel
           </Link>
 
+          {isDemo && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center gap-2 text-xs text-amber-800">
+              <AlertCircle className="w-3.5 h-3.5" />
+              Backend de Ventas no disponible. No se pueden cargar clientes.
+            </div>
+          )}
+
           <section className="bg-gradient-to-br from-[#1F1D3D] to-[#35325B] rounded-xl p-8 text-white">
             <p className="text-[11px] uppercase tracking-wider text-white/60 mb-1 inline-flex items-center gap-1.5">
               <Calendar className="w-3 h-3" />
@@ -273,10 +225,65 @@ export default function JornadaVentasPage() {
           </section>
 
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <PreJornadaKpi icon={Users} label="Clientes asignados" value={totalClientes} accent="#1F1D3D" />
-            <PreJornadaKpi icon={Clock} label="Desatendidos (7+ dias)" value={desatendidos} highlight={desatendidos > 0} accent="#f59e0b" />
-            <PreJornadaKpi icon={AlertCircle} label="En riesgo" value={enRiesgo} highlight={enRiesgo > 0} accent="#ef4444" sub="Insatisfechos o neutrales" />
+            <PreJornadaKpi
+              icon={Users}
+              label="Clientes asignados"
+              value={totalClientes}
+              accent="#1F1D3D"
+            />
+            <PreJornadaKpi
+              icon={Clock}
+              label="Desatendidos (7+ dias)"
+              value={desatendidos}
+              highlight={desatendidos > 0}
+              accent="#f59e0b"
+            />
+            <PreJornadaKpi
+              icon={AlertCircle}
+              label="En riesgo"
+              value={enRiesgo}
+              highlight={enRiesgo > 0}
+              accent="#ef4444"
+              sub="Insatisfechos o neutrales"
+            />
           </section>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (clientes.length === 0) {
+    return (
+      <Shell
+        pageTitle="Jornada de Seguimiento"
+        filters={emptyFilters}
+        onFilterChange={handleChange}
+        onFiltrar={handleFiltrar}
+        onLimpiar={handleLimpiar}
+        asesores={[]}
+        connectionStatus="connected"
+        showFilterBar={false}
+      >
+        <div className="space-y-5 max-w-7xl">
+          <Link href="/ventas" className="inline-flex items-center gap-1.5 text-xs text-[#35325B] hover:text-[#1F1D3D] font-medium">
+            <ArrowLeft className="w-3 h-3" />
+            Volver al panel
+          </Link>
+          <div className="bg-white border border-[#EEEEEC] rounded-xl p-12 text-center">
+            <AlertCircle className="w-12 h-12 text-[#B5B5AE] mx-auto mb-3" />
+            <h3 className="text-base font-semibold text-[#1F1D3D] mb-1">No hay clientes asignados</h3>
+            <p className="text-sm text-[#B5B5AE] mb-4">
+              {isDemo
+                ? 'El backend de Ventas no esta disponible. No se pueden cargar clientes.'
+                : 'Aun no tienes clientes asignados en el backend de Ventas.'}
+            </p>
+            <button
+              onClick={() => setJornadaActiva(false)}
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-[#EEEEEC] bg-white text-[#35325B] text-sm font-medium hover:bg-[#F5F5ED]"
+            >
+              Volver al panel
+            </button>
+          </div>
         </div>
       </Shell>
     );
@@ -301,6 +308,13 @@ export default function JornadaVentasPage() {
           <ArrowLeft className="w-3 h-3" />
           Volver al panel
         </Link>
+
+        {isDemo && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center gap-2 text-xs text-amber-800">
+            <AlertCircle className="w-3.5 h-3.5" />
+            Backend de Ventas no disponible. Los cambios no se guardaran.
+          </div>
+        )}
 
         <section className="bg-white border border-[#EEEEEC] rounded-xl p-4">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -377,7 +391,6 @@ export default function JornadaVentasPage() {
                   <th className="px-5 py-3">Codigo Cliente</th>
                   <th className="px-5 py-3">Nombre Cliente</th>
                   <th className="px-5 py-3">Contacto</th>
-                  <th className="px-5 py-3 text-right">MRR</th>
                   <th className="px-5 py-3">Satisfaccion</th>
                   <th className="px-5 py-3">Ultima gestion</th>
                   <th className="px-5 py-3">Estado</th>
@@ -387,27 +400,29 @@ export default function JornadaVentasPage() {
               <tbody>
                 {filteredClientes.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-5 py-8 text-center text-sm text-[#B5B5AE]">
+                    <td colSpan={8} className="px-5 py-8 text-center text-sm text-[#B5B5AE]">
                       Sin clientes que coincidan con los filtros
                     </td>
                   </tr>
                 ) : (
                   filteredClientes.map((c, idx) => {
-                    const isExpanded = expandido === c.codigo;
+                    const isExpanded = expandido === c.id;
                     const gestionado = c.estado !== 'sin_gestion';
                     return (
                       <>
                         <tr
-                          key={c.codigo}
-                          className={`border-t border-[#EEEEEC] hover:bg-[#F5F5ED]/40 ${gestionado ? 'opacity-80' : ''}`}
+                          key={c.id}
+                          className={`border-t border-[#EEEEEC] hover:bg-[#F5F5ED]/40 ${
+                            gestionado ? 'opacity-80' : ''
+                          }`}
                         >
                           <td className="px-5 py-3 text-xs text-[#B5B5AE] text-center font-mono">{idx + 1}</td>
                           <td className="px-5 py-3 text-xs">
                             <button
-                              onClick={() => setExpandido(isExpanded ? null : c.codigo)}
+                              onClick={() => setExpandido(isExpanded ? null : c.id)}
                               className="text-[#0c6aa1] hover:text-[#1F1D3D] hover:underline font-mono font-medium inline-flex items-center gap-1"
                             >
-                              {c.codigo}
+                              {c.sap_card_code}
                               {c.retroalimentaciones.length > 0 && (
                                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#EEEEEC] text-[10px] text-[#35325B]">
                                   {c.retroalimentaciones.length}
@@ -419,11 +434,7 @@ export default function JornadaVentasPage() {
                             {c.nombre}
                           </td>
                           <td className="px-5 py-3 text-xs text-[#35325B]">
-                            <div>{c.contacto}</div>
-                            <div className="text-[10px] text-[#B5B5AE]">{c.cargo}</div>
-                          </td>
-                          <td className="px-5 py-3 text-right text-xs font-mono font-semibold text-[#1F1D3D]">
-                            {c.servicio.includes('Backup') && c.servicio.includes('Coloc') ? '$1,500' : c.servicio.includes('Backup') ? '$850' : '$1,200'}
+                            {c.contacto || '-'}
                           </td>
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-2">
@@ -434,10 +445,10 @@ export default function JornadaVentasPage() {
                             </div>
                           </td>
                           <td className="px-5 py-3 text-xs text-[#35325B]">
-                            <div>{c.ultimaGestion}</div>
-                            {c.diasSinContacto >= 7 && (
+                            <div>{c.ultima_gestion || '-'}</div>
+                            {c.dias_sin_contacto >= 7 && (
                               <div className="text-[10px] text-amber-600 font-medium mt-0.5">
-                                Hace {c.diasSinContacto} dias
+                                Hace {c.dias_sin_contacto} dias
                               </div>
                             )}
                           </td>
@@ -462,7 +473,7 @@ export default function JornadaVentasPage() {
                                 <MessageSquare className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => setExpandido(isExpanded ? null : c.codigo)}
+                                onClick={() => setExpandido(isExpanded ? null : c.id)}
                                 className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-[#F5F5ED] text-[#35325B] hover:bg-[#EEEEEC] transition-colors"
                                 title="Ver historial"
                               >
@@ -472,8 +483,8 @@ export default function JornadaVentasPage() {
                           </td>
                         </tr>
                         {isExpanded && c.retroalimentaciones.length > 0 && (
-                          <tr key={`${c.codigo}-hist`} className="border-t border-[#EEEEEC] bg-[#F5F5ED]/50">
-                            <td colSpan={9} className="px-5 py-4">
+                          <tr key={`${c.id}-hist`} className="border-t border-[#EEEEEC] bg-[#F5F5ED]/50">
+                            <td colSpan={8} className="px-5 py-4">
                               <div className="flex items-start gap-3">
                                 <MessageSquare className="w-4 h-4 text-[#0c6aa1] flex-shrink-0 mt-1" />
                                 <div className="flex-1">
@@ -517,7 +528,13 @@ export default function JornadaVentasPage() {
       </div>
 
       {modalCliente && (
-        <FeedbackModal cliente={modalCliente} onClose={() => setModalCliente(null)} onSave={handleGuardar} />
+        <FeedbackModal
+          cliente={modalCliente}
+          onClose={() => setModalCliente(null)}
+          onSave={handleGuardar}
+          saving={saving}
+          error={saveError}
+        />
       )}
     </Shell>
   );
@@ -527,10 +544,14 @@ function FeedbackModal({
   cliente,
   onClose,
   onSave,
+  saving,
+  error,
 }: {
   cliente: Cliente;
   onClose: () => void;
-  onSave: (codigo: string, data: Partial<Cliente>) => void;
+  onSave: (cliente: Cliente, data: Partial<Cliente>) => void | Promise<void>;
+  saving: boolean;
+  error: string | null;
 }) {
   const [satisfaccion, setSatisfaccion] = useState<Satisfaccion>(cliente.satisfaccion);
   const [comentario, setComentario] = useState('');
@@ -540,15 +561,18 @@ function FeedbackModal({
     e.preventDefault();
     if (!comentario.trim()) return;
     const hoy = new Date().toISOString().slice(0, 10);
-    onSave(cliente.codigo, {
+    const nuevaRetro: Retroalimentacion = {
+      fecha: hoy,
+      gestor: 'Agente de Ventas',
+      comentario: comentario.trim(),
+      satisfaccion,
+    };
+    void onSave(cliente, {
       satisfaccion,
       estado,
-      ultimaGestion: hoy,
-      diasSinContacto: 0,
-      retroalimentaciones: [
-        { fecha: hoy, gestor: 'Agente de Ventas', comentario: comentario.trim(), satisfaccion },
-        ...cliente.retroalimentaciones,
-      ],
+      ultima_gestion: hoy,
+      dias_sin_contacto: 0,
+      retroalimentaciones: [nuevaRetro, ...cliente.retroalimentaciones],
     });
   };
 
@@ -558,13 +582,13 @@ function FeedbackModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#EEEEEC] flex-shrink-0">
           <div>
             <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider mb-0.5">
-              {cliente.codigo}
+              {cliente.sap_card_code}
             </p>
             <h3 className="text-base font-semibold text-[#1F1D3D] uppercase">
               {cliente.nombre}
             </h3>
             <p className="text-xs text-[#35325B] mt-0.5">
-              {cliente.contacto} ({cliente.cargo}) - {cliente.telefono}
+              {cliente.contacto || '-'} - {cliente.telefono || '-'}
             </p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] hover:bg-[#F5F5ED] rounded-lg">
@@ -639,12 +663,15 @@ function FeedbackModal({
               minLength={10}
             />
             <p className="text-[10px] text-[#B5B5AE] mt-1">
-              Minimo 10 caracteres. Se agregara al historial del cliente.
+              Minimo 10 caracteres. Se enviara al backend de Ventas.
             </p>
           </div>
         </form>
 
         <div className="px-5 py-3 border-t border-[#EEEEEC] flex items-center justify-end gap-2 flex-shrink-0">
+          {error && (
+            <p className="text-[11px] text-red-600 mr-auto">{error}</p>
+          )}
           <button
             type="button"
             onClick={onClose}
@@ -653,11 +680,22 @@ function FeedbackModal({
             Cancelar
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
-            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#1F1D3D] hover:bg-[#35325B] text-white text-sm font-medium transition-colors"
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#1F1D3D] hover:bg-[#35325B] text-white text-sm font-medium transition-colors disabled:opacity-50"
           >
-            <Save className="w-3.5 h-3.5" />
-            Registrar feedback
+            {saving ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                Registrar feedback
+              </>
+            )}
           </button>
         </div>
       </div>

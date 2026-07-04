@@ -6,11 +6,13 @@
  *   import { API } from '@/services/api/prospektia';     // ProspektIA (recomendado)
  *   import { DataRedAPI } from '@/services/api/datared'; // DataRed
  *   import { CobrosAPI } from '@/services/api/cobros';   // Cobros
+ *   import { VentasAPI } from '@/services/api/ventas';   // Ventas
  */
 
 export { API } from './prospektia';
 export { DataRedAPI } from './datared';
 export { CobrosAPI } from './cobros';
+export { VentasAPI } from './ventas';
 export {
   getBase,
   invalidateCache,

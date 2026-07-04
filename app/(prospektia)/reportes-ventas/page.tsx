@@ -15,7 +15,9 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useVentasReporteDiario } from '@/hooks';
 import { RoleGuard } from '@/lib/role-guard';
+import type { VtCliente } from '@/services/api/ventas';
 
 const emptyFilters = {
   desde: '', hasta: '', pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '',
@@ -24,7 +26,7 @@ const handleChange = () => {};
 const handleFiltrar = () => {};
 const handleLimpiar = () => {};
 
-type Satisfaccion = 'muy_satisfecho' | 'satisfecho' | 'neutral' | 'insatisfecho';
+type Satisfaccion = VtCliente['satisfaccion'];
 
 interface Actividad {
   hora: string;
@@ -46,7 +48,8 @@ interface Pendiente {
   estado: 'sin_gestion' | 'contactado' | 'seguimiento' | 'renovacion';
 }
 
-const PENDIENTES_HOY: Pendiente[] = [
+// Datos demo para fallback si el backend no responde.
+const DEMO_PENDIENTES: Pendiente[] = [
   { id: 1, codigo: 'CL003342', nombre: 'P.S. LA ESPERANZA, S.A. DE C.V.', ciudad: 'San Salvador', telefono: '2260-7788', diasSinContacto: 1, satisfaccion: 'insatisfecho', estado: 'seguimiento' },
   { id: 2, codigo: 'CL003289', nombre: 'MINISTERIO DE DESARROLLO LOCAL', ciudad: 'San Salvador', telefono: '2240-3344', diasSinContacto: 17, satisfaccion: 'satisfecho', estado: 'sin_gestion' },
   { id: 3, codigo: 'CL003376', nombre: 'CAJA DE CREDITO Y AHORRO DE SAN JUAN OPICO', ciudad: 'San Juan Opico', telefono: '2250-6633', diasSinContacto: 35, satisfaccion: 'neutral', estado: 'sin_gestion' },
@@ -55,7 +58,7 @@ const PENDIENTES_HOY: Pendiente[] = [
   { id: 6, codigo: 'CL002216', nombre: 'FONDO SALVADORENO DE GARANTIAS', ciudad: 'San Salvador', telefono: '2290-1234', diasSinContacto: 3, satisfaccion: 'neutral', estado: 'seguimiento' },
 ];
 
-const ACTIVIDADES_HOY: Actividad[] = [
+const DEMO_ACTIVIDADES: Actividad[] = [
   { hora: '10:42', codigo: 'CL003354', cliente: 'DEVEL SECURITY', accion: 'Llamada de seguimiento registrada', estado: 'contactado' },
   { hora: '11:15', codigo: 'CL003401', cliente: 'COMERCIALIZADORA DEL PACIFICO', accion: 'Feedback de satisfaccion registrado', satisfaccion: 'muy_satisfecho', estado: 'sin_gestion' },
   { hora: '13:30', codigo: 'CL002216', cliente: 'FONDO SALVADORENO DE GARANTIAS', accion: 'Reunion tecnica agendada para el viernes', estado: 'seguimiento' },
@@ -101,19 +104,58 @@ export default function ReportesVentasPage() {
   const [fecha, setFecha] = useState<string>(today);
   const [expandido, setExpandido] = useState<string | null>(null);
 
-  // KPIs demo
-  const kpis = {
-    vendedor: 'Agente de Ventas Demo',
-    email: 'ventas@red.com.sv',
-    fecha,
-    asignados: 10,
-    gestionados: 4,
-    pendientes: 6,
-    insatisfechos: 1,
-    neutrales: 2,
-    desatendidos: 3,
-    cumplimiento: 40,
-  };
+  // Hook contra el backend real. Fallback a data demo si no responde.
+  const { data, source, loading } = useVentasReporteDiario(fecha);
+  const isDemo = source === 'demo';
+
+  // Mapear datos del backend al formato de UI, con fallback a demo.
+  const pendientes: Pendiente[] =
+    data?.pendientes.map((c) => ({
+      id: c.id,
+      codigo: c.sap_card_code,
+      nombre: c.nombre,
+      ciudad: c.ciudad || '',
+      telefono: c.telefonos || '',
+      diasSinContacto: c.dias_sin_contacto,
+      satisfaccion: c.satisfaccion,
+      estado: c.estado,
+    })) || DEMO_PENDIENTES;
+
+  const actividades: Actividad[] =
+    data?.recientes.map((r, i) => ({
+      hora: r.hora,
+      cliente: r.cliente_nombre,
+      codigo: r.sap_card_code,
+      accion: r.comentario,
+      satisfaccion: r.satisfaccion,
+      estado: r.estado,
+    })) || DEMO_ACTIVIDADES;
+
+  const kpis = data
+    ? {
+        vendedor: data.vendedor.full_name || data.vendedor.email,
+        email: data.vendedor.email,
+        fecha: data.fecha,
+        asignados: data.kpis.asignados,
+        gestionados: data.kpis.gestionados,
+        pendientes: data.kpis.pendientes,
+        insatisfechos: data.kpis.insatisfechos,
+        neutrales: data.kpis.neutrales,
+        desatendidos: data.kpis.desatendidos,
+        cumplimiento: data.kpis.cumplimiento_pct,
+      }
+    : {
+        vendedor: 'Agente de Ventas Demo',
+        email: 'ventas@red.com.sv',
+        fecha,
+        asignados: 10,
+        gestionados: 4,
+        pendientes: 6,
+        insatisfechos: 1,
+        neutrales: 2,
+        desatendidos: 3,
+        cumplimiento: 40,
+      };
 
   return (
     <RoleGuard>
@@ -135,6 +177,13 @@ export default function ReportesVentasPage() {
             <ArrowLeft className="w-3 h-3" />
             Volver al panel
           </Link>
+
+          {isDemo && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center gap-2 text-xs text-amber-800">
+              <AlertCircle className="w-3.5 h-3.5" />
+              Backend de Ventas no disponible. Mostrando datos demo.
+            </div>
+          )}
 
           <section className="bg-white border border-[#EEEEEC] rounded-xl p-4 flex items-center justify-between flex-wrap gap-3">
             <div>
@@ -179,7 +228,13 @@ export default function ReportesVentasPage() {
           <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <ReporteKpi icon={Users} label="Asignados" value={kpis.asignados} accent="#1F1D3D" />
             <ReporteKpi icon={Clock} label="Atendidos" value={kpis.gestionados} accent="#10b981" />
-            <ReporteKpi icon={AlertCircle} label="Pendientes" value={kpis.pendientes} accent="#ef4444" highlight={kpis.pendientes > 0} />
+            <ReporteKpi
+              icon={AlertCircle}
+              label="Pendientes"
+              value={kpis.pendientes}
+              accent="#ef4444"
+              highlight={kpis.pendientes > 0}
+            />
             <ReporteKpi label="Cumplimiento" value={`${kpis.cumplimiento}%`} accent="#0c6aa1" />
           </section>
 
@@ -195,7 +250,7 @@ export default function ReportesVentasPage() {
                 </span>
               </div>
               <div className="divide-y divide-[#EEEEEC] max-h-[480px] overflow-y-auto">
-                {PENDIENTES_HOY.map((p) => {
+                {pendientes.map((p) => {
                   const sat = SATISFACCION_BADGE[p.satisfaccion];
                   const estado = ESTADO_BADGE[p.estado];
                   return (
@@ -250,11 +305,11 @@ export default function ReportesVentasPage() {
                   <h3 className="text-sm font-semibold text-[#1F1D3D]">Gestiones de hoy</h3>
                 </div>
                 <span className="text-[10px] font-semibold text-[#0c6aa1] bg-blue-50 px-2 py-0.5 rounded-full">
-                  {ACTIVIDADES_HOY.length} acciones
+                  {actividades.length} acciones
                 </span>
               </div>
               <div className="divide-y divide-[#EEEEEC] max-h-[480px] overflow-y-auto">
-                {ACTIVIDADES_HOY.map((a, i) => {
+                {actividades.map((a, i) => {
                   const estado = ESTADO_BADGE[a.estado];
                   return (
                     <div key={i} className="px-5 py-3 hover:bg-[#F5F5ED]/40 flex items-start gap-3">

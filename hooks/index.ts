@@ -4,3 +4,4 @@ export type { FiltersState } from './prospektia/useFilters';
 export { useEquiposCount } from './prospektia/useEquiposCount';
 export { useAdvisorOverdue, useAdvisorOverdueDetail, useAcknowledgeEvent } from './prospektia/useAdvisorOverdue';
 export type { OverdueFilters } from './prospektia/useAdvisorOverdue';
+export { useVentasClientes, useVentasDashboard, useVentasReporteDiario } from './ventas';
