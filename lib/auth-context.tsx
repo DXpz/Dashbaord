@@ -23,6 +23,56 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+/**
+ * Keys de localStorage y sessionStorage que cachean estado por usuario.
+ * Se limpian en login/logout para que el siguiente usuario NO vea datos
+ * del anterior. Incluye caches de EcosystemContext, filtros de vendedor,
+ * usuario actual (api_user), y prefijos genericos (cualquier cosa que
+ * las paginas cacheen por usuario).
+ */
+const PER_USER_STORAGE_KEYS = [
+  'api_user',
+  'prospektia_ecosystem',
+  'vendedor_filters',
+  'prospektia_last_user_id',
+];
+
+const PER_USER_STORAGE_PREFIXES = [
+  'swr-',
+  'tanstack-query-',
+  'react-query-',
+  'prospektia_',
+  'ventas_',
+  'cobros_',
+  'datared_',
+];
+
+function clearUserCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    // Borrar keys exactas
+    PER_USER_STORAGE_KEYS.forEach((k) => {
+      try {
+        localStorage.removeItem(k);
+        sessionStorage.removeItem(k);
+      } catch {}
+    });
+    // Borrar keys por prefijo (caches de SWR, TanStack Query, etc.)
+    const clean = (storage: Storage) => {
+      const keys: string[] = [];
+      for (let i = 0; i < storage.length; i++) {
+        const k = storage.key(i);
+        if (k && PER_USER_STORAGE_PREFIXES.some((p) => k.startsWith(p))) {
+          keys.push(k);
+        }
+      }
+      keys.forEach((k) => storage.removeItem(k));
+    };
+    clean(localStorage);
+    clean(sessionStorage);
+  } catch {}
+}
+
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<ApiUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +91,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setUser(null);
-        if (typeof window !== 'undefined') localStorage.removeItem('api_user');
+        clearUserCache();
       }
     } catch {
       setUser(null);
@@ -56,6 +106,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }, [checkAuth]);
 
   const login = async (username: string, password: string): Promise<{ ok: boolean; error?: string; mustChangePassword?: boolean }> => {
+    // Limpiar cache del usuario anterior ANTES de autenticar al nuevo.
+    clearUserCache();
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -63,7 +115,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
-      if (!res.ok) return { ok: false, error: data.detail || data.error || 'Error al iniciar sesión' };
+      if (!res.ok) {
+        // Login fallo: el cache ya esta limpio, dejar al usuario en /login.
+        return { ok: false, error: data.detail || data.error || 'Error al iniciar sesión' };
+      }
       const userData = data.user || data.data || data;
       if (userData.must_change_password) {
         setUser(userData);
@@ -80,7 +135,9 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         ? '/vendedor'
         : userData.role === 'gestor_cobros'
           ? '/cobros'
-          : '/';
+          : userData.role === 'gestor_ventas'
+            ? '/ventas'
+            : '/';
       router.push(target);
       return { ok: true };
     } catch (e) {
@@ -89,9 +146,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    // Limpiar TODO el cache del usuario antes de redirigir al login.
+    clearUserCache();
     setUser(null);
     setLoading(true);
-    if (typeof window !== 'undefined') localStorage.removeItem('api_user');
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {
