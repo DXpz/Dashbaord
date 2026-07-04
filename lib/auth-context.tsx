@@ -138,7 +138,13 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           : userData.role === 'gestor_ventas'
             ? '/ventas'
             : '/';
-      router.push(target);
+      // Forzar recarga completa para reiniciar Providers con estado limpio
+      // (EcosystemContext, hooks de TanStack/SWR, etc.) del usuario nuevo.
+      if (typeof window !== 'undefined') {
+        window.location.href = target;
+      } else {
+        router.push(target);
+      }
       return { ok: true };
     } catch (e) {
       return { ok: false, error: 'No se pudo conectar al servidor' };
@@ -148,13 +154,18 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     // Limpiar TODO el cache del usuario antes de redirigir al login.
     clearUserCache();
-    setUser(null);
-    setLoading(true);
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {
     }
-    router.push('/login?bye=1');
+    // Forzar recarga completa de la pagina para reiniciar Providers (EcosystemContext,
+    // hooks de TanStack/SWR, etc.) con estado limpio. router.push mantiene los
+    // Providers en memoria y el cache cacheado del usuario anterior se ve.
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login?bye=1';
+    } else {
+      router.push('/login?bye=1');
+    }
   };
 
   return (
