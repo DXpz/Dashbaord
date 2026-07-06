@@ -79,9 +79,13 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [checked, setChecked] = useState(false);
   const router = useRouter();
 
+  // URL directa del backend (evita pasar por Vercel Edge, que tiene timeout).
+  // ProspektIA y Ventas corren en el mismo server, accesibles desde la red del usuario.
+  const DIRECT_BACKEND = 'https://prospektia.red.com.sv';
+
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      const res = await fetch(`${DIRECT_BACKEND}/api/auth/me`, { cache: 'no-store', credentials: 'include' });
       if (res.ok) {
         const userData = await res.json();
         const u = userData.user || userData.data || userData;
@@ -109,9 +113,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     // Limpiar cache del usuario anterior ANTES de autenticar al nuevo.
     clearUserCache();
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${DIRECT_BACKEND}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
