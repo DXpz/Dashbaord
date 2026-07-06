@@ -7,12 +7,12 @@ import { ECOSYSTEM_REGISTRY, getEcosystemsForRole, getEcosystemByRoute } from '@
 import { cn } from '@/lib/utils';
 
 export function EcosystemSwitcher() {
-  const { isSuperAdmin, isGestorCobros, user } = useEffectiveUser();
+  const { isSuperAdmin, isGestorCobros, isGestorVentas, user } = useEffectiveUser();
   const { ecosystem, setEcosystem } = useEcosystem();
   const router = useRouter();
   const pathname = usePathname();
 
-  if (!isSuperAdmin && !isGestorCobros) return null;
+  if (!isSuperAdmin && !isGestorCobros && !isGestorVentas) return null;
 
   const role = user?.role || 'advisor';
   const allowed = getEcosystemsForRole(role, isSuperAdmin);

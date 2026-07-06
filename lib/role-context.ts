@@ -9,6 +9,7 @@ export interface EffectiveUser {
   effectiveRole: EffectiveRole;
   isSuperAdmin: boolean;
   isGestorCobros: boolean;
+  isGestorVentas: boolean;
   isAdmin: boolean;
   isAdvisor: boolean;
 }
@@ -30,6 +31,7 @@ export function useEffectiveUser(): EffectiveUser {
     effectiveRole,
     isSuperAdmin: user?.is_super_admin === true,
     isGestorCobros: user?.role === 'gestor_cobros',
+    isGestorVentas: user?.role === 'gestor_ventas',
     isAdmin: user?.role === 'admin' || user?.is_super_admin === true,
     isAdvisor: user?.role === 'advisor',
   };

@@ -52,6 +52,7 @@ const VALID: EcosystemId[] = ['prospektia', 'datared', 'cobros', 'ventas'];
 
 const DEFAULT_BY_ROLE: Record<string, EcosystemId> = {
   gestor_cobros: 'cobros',
+  gestor_ventas: 'ventas',
   // demas roles arrancan en prospektia
 };
 
@@ -84,11 +85,13 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     // Si el ecosistema actual no esta en los permitidos del rol, switchear.
     const allowed: EcosystemId[] = role === 'gestor_cobros'
       ? ['cobros']
-      : role === 'admin' || role === 'manager'
-        ? ['prospektia', 'datared', 'cobros']
-        : role === 'advisor'
-          ? ['prospektia']
-          : ['prospektia'];
+      : role === 'gestor_ventas'
+        ? ['ventas']
+        : role === 'admin' || role === 'manager'
+          ? ['prospektia', 'datared', 'cobros']
+          : role === 'advisor'
+            ? ['prospektia']
+            : ['prospektia'];
     if (!allowed.includes(ecosystem)) {
       const next = allowed[0];
       setEcosystemState(next);

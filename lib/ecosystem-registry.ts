@@ -161,11 +161,13 @@ export const ECOSYSTEM_REGISTRY: Record<string, EcosystemConfig> = {
     id: 'ventas',
     label: 'Ventas',
     shortLabel: 'Ventas',
-    description: 'Modulo de ventas (pendiente)',
+    description: 'Modulo de gestion de ventas a clientes',
     rootPrefix: '/ventas',
-    allowedRoles: ['admin'],
+    allowedRoles: ['gestor_ventas', 'admin'],
     sidebarItems: [
       { href: '/ventas', label: 'Panel Ventas', icon: TrendingUp },
+      { href: '/ventas/clientes', label: 'Mis Clientes', icon: Users },
+      { href: '/ventas/jornada', label: 'Jornada', icon: Calendar },
     ],
   },
 };
@@ -190,12 +192,16 @@ export function getEcosystemByRoute(pathname: string): EcosystemConfig | undefin
  *
  * - Super admin: prospektia + datared (Cobros no se muestra, se accede por URL directa).
  * - gestor_cobros: solo cobros.
+ * - gestor_ventas: solo ventas.
  * - admin/manager: prospektia + datared.
  * - advisor: solo prospektia.
  */
 export function getEcosystemsForRole(role: string, isSuperAdmin: boolean): EcosystemConfig[] {
   if (isGestorCobrosRole(role)) {
     return [ECOSYSTEM_REGISTRY.cobros];
+  }
+  if (isGestorVentasRole(role)) {
+    return [ECOSYSTEM_REGISTRY.ventas];
   }
   if (isSuperAdmin || role === 'admin' || role === 'manager') {
     return [ECOSYSTEM_REGISTRY.prospektia, ECOSYSTEM_REGISTRY.datared];
@@ -205,4 +211,8 @@ export function getEcosystemsForRole(role: string, isSuperAdmin: boolean): Ecosy
 
 function isGestorCobrosRole(role: string): boolean {
   return role === 'gestor_cobros';
+}
+
+function isGestorVentasRole(role: string): boolean {
+  return role === 'gestor_ventas';
 }
