@@ -82,10 +82,17 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   // URL directa del backend (evita pasar por Vercel Edge, que tiene timeout).
   // ProspektIA y Ventas corren en el mismo server, accesibles desde la red del usuario.
   const DIRECT_BACKEND = 'https://prospektia.red.com.sv';
+  // API key expuesta al browser (NEXT_PUBLIC_API_KEY). ProspektIA requiere X-API-Key
+  // en /api/auth/* cuando API_KEY esta configurado en el server.
+  const API_KEY_BROWSER = process.env.NEXT_PUBLIC_API_KEY || '';
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch(`${DIRECT_BACKEND}/api/auth/me`, { cache: 'no-store', credentials: 'include' });
+      const res = await fetch(`${DIRECT_BACKEND}/api/auth/me`, {
+        cache: 'no-store',
+        credentials: 'include',
+        headers: API_KEY_BROWSER ? { 'X-API-Key': API_KEY_BROWSER } : {},
+      });
       if (res.ok) {
         const userData = await res.json();
         const u = userData.user || userData.data || userData;
@@ -115,7 +122,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch(`${DIRECT_BACKEND}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(API_KEY_BROWSER ? { 'X-API-Key': API_KEY_BROWSER } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
