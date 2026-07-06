@@ -1,10 +1,9 @@
 /**
  * Cliente HTTP para el backend de Ventas.
  *
- * Usa el mismo patron que ProspektIA: llamada directa a getBase() (configurable
- * via NEXT_PUBLIC_API_UPSTREAM, default https://prospektia.red.com.sv) y el
- * backend vive en /api/ventas/* gracias al routing de nginx que envia ese path
- * al container ventas-api en :3002.
+ * Las llamadas pasan por /api/ventas/* (proxy de Next.js, mismo origen) que
+ * agrega Authorization: Bearer <token> desde la cookie api_token. Esto evita
+ * problemas de CORS y SameSite.
  *
  * Si el backend no responde, las paginas deben usar data hardcoded como
  * fallback (ver el patron de los hooks en hooks/ventas/).
@@ -78,7 +77,7 @@ export const VentasAPI = {
   health: async () => {
     try {
       return await fetchJson<{ ok: boolean; ecosystem: string; version: string; db: string }>(
-        `${getBase()}/api/ventas/health`
+        '/api/ventas/health'
       );
     } catch {
       return { ok: false, ecosystem: 'ventas', version: '0.0.0', db: 'down' };
@@ -87,20 +86,29 @@ export const VentasAPI = {
 
   me: () =>
     fetchJson<{ id: number; email: string; role: string; full_name: string; is_super_admin: boolean; ecosystem: string }>(
-      `${getBase()}/api/ventas/auth/me`
+      '/api/ventas/auth/me'
     ),
 
   dashboard: () =>
-    fetchJson<VtDashboardKpis>(`${getBase()}/api/ventas/dashboard`),
+    fetchJson<VtDashboardKpis>('/api/ventas/dashboard'),
 
-  listClientes: (params: { estado?: string; satisfaccion?: string; search?: string } = {}) =>
-    get<VtCliente[]>('/ventas/clientes', params),
+  listClientes: (params: { estado?: string; satisfaccion?: string; search?: string } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, String(v));
+    });
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return fetchJson<VtCliente[]>(`/api/ventas/clientes${suffix}`);
+  },
 
   getCliente: (id: number) =>
-    fetchJson<VtCliente>(`${getBase()}/api/ventas/clientes/${id}`),
+    fetchJson<VtCliente>(`/api/ventas/clientes/${id}`),
 
   updateCliente: (id: number, data: Partial<VtCliente>) =>
-    patch<{ ok: boolean; updated_fields: string[] }>(`/ventas/clientes/${id}`, data),
+    fetchJson<{ ok: boolean; updated_fields: string[] }>(`/api/ventas/clientes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   createFeedback: (
     clienteId: number,
@@ -111,11 +119,16 @@ export const VentasAPI = {
       dias_sin_contacto?: number;
     }
   ) =>
-    post<VtFeedback>(`/ventas/clientes/${clienteId}/feedback`, data),
+    fetchJson<VtFeedback>(`/api/ventas/clientes/${clienteId}/feedback`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   listFeedback: (clienteId: number, limit = 20) =>
-    get<VtFeedback[]>('/ventas/clientes/' + clienteId + '/feedback', { limit }),
+    fetchJson<VtFeedback[]>(`/api/ventas/clientes/${clienteId}/feedback?limit=${limit}`),
 
   reporteDiario: (fecha?: string) =>
-    get<VtReporteDiario>('/ventas/reportes/diario', fecha ? { fecha } : {}),
+    fetchJson<VtReporteDiario>(
+      `/api/ventas/reportes/diario${fecha ? `?fecha=${fecha}` : ''}`
+    ),
 };
