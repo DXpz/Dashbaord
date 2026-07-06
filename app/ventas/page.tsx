@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
+
 import { Shell } from '@/components/layout/Shell';
 import Link from 'next/link';
 import {
@@ -83,18 +85,22 @@ function satBadge(s: Satisfaccion): string {
 }
 
 export default function VentasPage() {
-  const today = new Date();
-  const dateLabel = today.toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-  const saludo =
-    today.getHours() < 12
-      ? 'Buenos dias'
-      : today.getHours() < 19
-        ? 'Buenas tardes'
-        : 'Buenas noches';
+  // Calcular fecha y saludo en el cliente para evitar hydration mismatch
+  // (el server renderiza en UTC, el cliente en timezone local).
+  const [dateLabel, setDateLabel] = useState('');
+  const [saludo, setSaludo] = useState('');
+  useEffect(() => {
+    const today = new Date();
+    setDateLabel(
+      today.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })
+    );
+    const h = today.getHours();
+    setSaludo(h < 12 ? 'Buenos dias' : h < 19 ? 'Buenas tardes' : 'Buenas noches');
+  }, []);
 
   // Hooks contra el backend real. Fallback a DEMO si el backend no responde.
   const { data: dataClientes, source: sourceClientes } = useVentasClientes();
