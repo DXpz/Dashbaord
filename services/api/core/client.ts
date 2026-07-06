@@ -66,7 +66,7 @@ export function asesorParam(asesor: string | undefined) {
   return { asesor: String(asesor).trim() };
 }
 
-export async function fetchJson(url: string, init: RequestInit = {}, ms: number = FETCH_TIMEOUT_MS): Promise<any> {
+export async function fetchJson<T = any>(url: string, init: RequestInit = {}, ms: number = FETCH_TIMEOUT_MS): Promise<T> {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
   try {
@@ -92,25 +92,25 @@ export function makeUrl(path: string, params: Record<string, any>): string {
   return `${base}/api${path}${qs}`;
 }
 
-export async function get(path: string, params: Record<string, any>) {
+export async function get<T = any>(path: string, params: Record<string, any>): Promise<T> {
   const url = makeUrl(path, params);
-  return fetchJson(url);
+  return fetchJson(url) as Promise<T>;
 }
 
-export async function post(path: string, body?: any) {
+export async function post<T = any>(path: string, body?: any): Promise<T> {
   return fetchJson(`${getBase()}/api${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
-  });
+  }) as Promise<T>;
 }
 
-export async function patch(path: string, body?: any) {
+export async function patch<T = any>(path: string, body?: any): Promise<T> {
   return fetchJson(`${getBase()}/api${path}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
-  });
+  }) as Promise<T>;
 }
 
 export async function del(path: string) {
