@@ -70,11 +70,23 @@ export async function fetchJson<T = any>(url: string, init: RequestInit = {}, ms
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
   try {
+    // Si el caller ya paso Authorization, lo respetamos.
+    // Si no, intentamos leer el JWT de la cookie api_token (que setea el login).
     const headers: Record<string, string> = {
       'X-API-Key': API_KEY,
       'ngrok-skip-browser-warning': 'true',
       ...(init.headers as Record<string, string>),
     };
+    if (!headers['Authorization'] && typeof document !== 'undefined') {
+      const cookieToken = document.cookie
+        .split(';')
+        .map((c) => c.trim())
+        .find((c) => c.startsWith('api_token='));
+      if (cookieToken) {
+        const token = decodeURIComponent(cookieToken.substring('api_token='.length));
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
     const res = await fetch(url, { ...init, signal: ctrl.signal, headers, credentials: 'include' });
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     return await res.json();
