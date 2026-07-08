@@ -1,26 +1,35 @@
 /**
  * Cliente HTTP para el backend de Ventas.
  *
- * Las llamadas pasan por /api/ventas/* (proxy de Next.js, mismo origen) que
- * agrega Authorization: Bearer <token> desde la cookie api_token. Esto evita
- * problemas de CORS y SameSite.
+ * Todas las llamadas van directo a prospektia.red.com.sv (no pasan por Vercel
+ * proxy), usando getBase() que lee NEXT_PUBLIC_API_UPSTREAM del env.
  *
- * Si el backend no responde, las paginas deben usar data hardcoded como
- * fallback (ver el patron de los hooks en hooks/ventas/).
+ * Vercel Edge Function tiene timeout fijo de 10s al hacer fetch() a destinos
+ * externos. Para evitar eso, el browser del usuario habla directo con el
+ * backend, que está en la misma red (El Salvador).
+ *
+ * Cookies con SameSite=None+Secure permiten enviar cookies cross-site.
+ * CORS esta configurado en nginx para reflejar $http_origin + Allow-Credentials.
+ *
+ * NOTA: A partir de la version con sincronizacion SAP, el identificador externo
+ * de un cliente es `sap_card_code` (string tipo "CL000004"), NO `id` (numero).
+ * El backend hace UPSERT por sap_card_code.
  */
 
-import { get, post, patch, getBase, fetchJson, FETCH_TIMEOUT_MS } from '../core/client';
+import { fetchJson, getBase } from '../core/client';
 
 export interface VtCliente {
-  id: number;
   sap_card_code: string;
   nombre: string;
   direccion: string | null;
   telefonos: string | null;
   ciudad: string | null;
-  categoria: string | null;
+  municipio?: string | null;
   correo: string | null;
-  vendedor_id: number;
+  categoria: string | null;
+  vendedor_email: string;
+  vendedor_nombre?: string;
+  pais: string;
   satisfaccion: 'muy_satisfecho' | 'satisfecho' | 'neutral' | 'insatisfecho';
   dias_sin_contacto: number;
   ultima_gestion: string | null;
@@ -30,6 +39,7 @@ export interface VtCliente {
 export interface VtFeedback {
   id: number;
   cliente_id: number;
+  sap_card_code: string;
   vendedor_id: number;
   fecha: string;
   comentario: string;
@@ -73,10 +83,32 @@ export interface VtReporteDiario {
   }>;
 }
 
+const DIRECT_API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
+
+function ventUrl(path: string, params: Record<string, unknown> = {}): string {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') qs.set(k, String(v));
+  });
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  return `${getBase()}${path}${suffix}`;
+}
+
+function ventFetch<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
+  return fetchJson(`${getBase()}${path}`, {
+    ...init,
+    credentials: 'include',
+    headers: {
+      ...(DIRECT_API_KEY ? { 'X-API-Key': DIRECT_API_KEY } : {}),
+      ...((init.headers as Record<string, string>) || {}),
+    },
+  }) as Promise<T>;
+}
+
 export const VentasAPI = {
   health: async () => {
     try {
-      return await fetchJson<{ ok: boolean; ecosystem: string; version: string; db: string }>(
+      return await ventFetch<{ ok: boolean; ecosystem: string; version: string; db: string }>(
         '/api/ventas/health'
       );
     } catch {
@@ -85,33 +117,33 @@ export const VentasAPI = {
   },
 
   me: () =>
-    fetchJson<{ id: number; email: string; role: string; full_name: string; is_super_admin: boolean; ecosystem: string }>(
-      '/api/ventas/auth/me'
+    ventFetch<{
+      id: number;
+      email: string;
+      role: string;
+      full_name: string;
+      pais: string;
+      country_code: string;
+      is_super_admin: boolean;
+      ecosystem: string;
+    }>('/api/ventas/auth/me'),
+
+  dashboard: () => ventFetch<VtDashboardKpis>('/api/ventas/dashboard'),
+
+  listClientes: (params: { estado?: string; satisfaccion?: string; search?: string } = {}) =>
+    ventFetch<VtCliente[]>(ventUrl('/api/ventas/clientes', params)),
+
+  getCliente: (sapCardCode: string) =>
+    ventFetch<VtCliente>(`/api/ventas/clientes/${encodeURIComponent(sapCardCode)}`),
+
+  updateCliente: (sapCardCode: string, data: Partial<VtCliente>) =>
+    ventFetch<{ ok: boolean; updated_fields: string[] }>(
+      `/api/ventas/clientes/${encodeURIComponent(sapCardCode)}`,
+      { method: 'PATCH', body: JSON.stringify(data) }
     ),
 
-  dashboard: () =>
-    fetchJson<VtDashboardKpis>('/api/ventas/dashboard'),
-
-  listClientes: (params: { estado?: string; satisfaccion?: string; search?: string } = {}) => {
-    const qs = new URLSearchParams();
-    Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== '') qs.set(k, String(v));
-    });
-    const suffix = qs.toString() ? `?${qs.toString()}` : '';
-    return fetchJson<VtCliente[]>(`/api/ventas/clientes${suffix}`);
-  },
-
-  getCliente: (id: number) =>
-    fetchJson<VtCliente>(`/api/ventas/clientes/${id}`),
-
-  updateCliente: (id: number, data: Partial<VtCliente>) =>
-    fetchJson<{ ok: boolean; updated_fields: string[] }>(`/api/ventas/clientes/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
-
   createFeedback: (
-    clienteId: number,
+    sapCardCode: string,
     data: {
       comentario: string;
       satisfaccion: VtCliente['satisfaccion'];
@@ -119,16 +151,21 @@ export const VentasAPI = {
       dias_sin_contacto?: number;
     }
   ) =>
-    fetchJson<VtFeedback>(`/api/ventas/clientes/${clienteId}/feedback`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+    ventFetch<VtFeedback>(
+      `/api/ventas/clientes/${encodeURIComponent(sapCardCode)}/feedback`,
+      { method: 'POST', body: JSON.stringify(data) }
+    ),
 
-  listFeedback: (clienteId: number, limit = 20) =>
-    fetchJson<VtFeedback[]>(`/api/ventas/clientes/${clienteId}/feedback?limit=${limit}`),
+  listFeedback: (sapCardCode: string, limit = 20) =>
+    ventFetch<VtFeedback[]>(
+      `/api/ventas/clientes/${encodeURIComponent(sapCardCode)}/feedback?limit=${limit}`
+    ),
 
   reporteDiario: (fecha?: string) =>
-    fetchJson<VtReporteDiario>(
+    ventFetch<VtReporteDiario>(
       `/api/ventas/reportes/diario${fecha ? `?fecha=${fecha}` : ''}`
     ),
 };
+
+// Re-exports para uso externo
+export { ventUrl, ventFetch };

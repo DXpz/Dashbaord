@@ -7,7 +7,6 @@ import {
   Star,
   AlertCircle,
   Search,
-  ArrowLeft,
   ChevronRight,
   MessageSquare,
 } from 'lucide-react';
@@ -16,10 +15,6 @@ import { useVentasClientes } from '@/hooks';
 import type { VtCliente } from '@/services/api/ventas';
 
 type Satisfaccion = VtCliente['satisfaccion'];
-
-// NOTA: ya no se usan datos demo hardcoded.
-//       Si el backend no responde, la lista se muestra vacia y se muestra un
-//       mensaje de "Backend no disponible" en la UI.
 
 const emptyFilters = {
   desde: '', hasta: '', pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '',
@@ -62,17 +57,14 @@ function satBadge(s: Satisfaccion): string {
         : 'bg-red-50 text-red-700';
 }
 
-export default function ClientesVentasPage() {
+export default function ClientesSeguimientoPage() {
   const [query, setQuery] = useState('');
   const [filtroSat, setFiltroSat] = useState<'todos' | Satisfaccion>('todos');
 
-  // Hook contra el backend real. Fallback a demo si el backend no responde.
-  const { data, source } = useVentasClientes();
-  const clientes: VtCliente[] = data ?? [];
+  const { data: clientes, loading, error, source } = useVentasClientes();
   const isUnavailable = source === 'unavailable';
-  const isDemo = false; // legacy: ya no se usan datos demo, mantener para no romper UI condicional
 
-  const filtered = clientes.filter((c) => {
+  const filtered = (clientes ?? []).filter((c) => {
     if (filtroSat !== 'todos' && c.satisfaccion !== filtroSat) return false;
     if (!query) return true;
     const q = query.toLowerCase();
@@ -82,6 +74,55 @@ export default function ClientesVentasPage() {
       (c.ciudad || '').toLowerCase().includes(q)
     );
   });
+
+  if (loading) {
+    return (
+      <Shell
+        pageTitle="Mis Clientes"
+        filters={emptyFilters}
+        onFilterChange={handleChange}
+        onFiltrar={handleFiltrar}
+        onLimpiar={handleLimpiar}
+        asesores={[]}
+        connectionStatus="connecting"
+        showFilterBar={false}
+      >
+        <div className="space-y-5 max-w-7xl">
+          <div className="bg-white border border-[#EEEEEC] rounded-xl p-12 text-center">
+            <p className="text-sm text-[#B5B5AE]">Cargando clientes desde SAP...</p>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (isUnavailable) {
+    return (
+      <Shell
+        pageTitle="Mis Clientes"
+        filters={emptyFilters}
+        onFilterChange={handleChange}
+        onFiltrar={handleFiltrar}
+        onLimpiar={handleLimpiar}
+        asesores={[]}
+        connectionStatus="error"
+        showFilterBar={false}
+      >
+        <div className="space-y-5 max-w-7xl">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-semibold text-amber-900">Backend de Ventas no disponible</h3>
+              <p className="text-xs text-amber-800 mt-1">
+                No se pudieron cargar tus clientes. Verifica tu conexion o contacta al administrador.
+              </p>
+              {error && <p className="text-[10px] text-amber-700 mt-2 font-mono">{error}</p>}
+            </div>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
 
   return (
     <Shell
@@ -95,21 +136,6 @@ export default function ClientesVentasPage() {
       showFilterBar={false}
     >
       <div className="space-y-5 max-w-7xl">
-        <Link
-          href="/ventas"
-          className="inline-flex items-center gap-1.5 text-xs text-[#35325B] hover:text-[#1F1D3D] font-medium"
-        >
-          <ArrowLeft className="w-3 h-3" />
-          Volver al panel
-        </Link>
-
-        {isUnavailable && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center gap-2 text-xs text-amber-800">
-            <AlertCircle className="w-3.5 h-3.5" />
-            Backend de Ventas no disponible.
-          </div>
-        )}
-
         <section className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[220px]">
             <Search className="w-4 h-4 text-[#B5B5AE] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -133,7 +159,7 @@ export default function ClientesVentasPage() {
             <option value="insatisfecho">Insatisfecho</option>
           </select>
           <Link
-            href="/ventas/jornada"
+            href="/vendedor/seguimiento/jornada"
             className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-[#1F1D3D] text-white text-sm font-medium hover:bg-[#35325B]"
           >
             <MessageSquare className="w-4 h-4" />
@@ -146,7 +172,7 @@ export default function ClientesVentasPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#F5F5ED]">
                 <tr className="text-left text-[10px] uppercase tracking-wider text-[#B5B5AE] font-semibold">
-                  <th className="px-5 py-3">#</th>
+                  <th className="px-5 py-3 w-12">#</th>
                   <th className="px-5 py-3">Codigo</th>
                   <th className="px-5 py-3">Nombre Cliente</th>
                   <th className="px-5 py-3">Ciudad</th>
@@ -159,7 +185,9 @@ export default function ClientesVentasPage() {
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-5 py-8 text-center text-sm text-[#B5B5AE]">
-                      Sin clientes que coincidan con los filtros
+                      {clientes?.length === 0
+                        ? 'Aun no tienes clientes asignados en SAP.'
+                        : 'Sin clientes que coincidan con los filtros'}
                     </td>
                   </tr>
                 ) : (
@@ -175,7 +203,7 @@ export default function ClientesVentasPage() {
                         {c.nombre}
                       </td>
                       <td className="px-5 py-3 text-xs text-[#35325B]">
-                        {c.ciudad}
+                        {c.ciudad || '-'}
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2">
@@ -187,7 +215,7 @@ export default function ClientesVentasPage() {
                       </td>
                       <td className="px-5 py-3 text-xs text-[#35325B]">
                         <div>{c.ultima_gestion || '-'}</div>
-                        {c.dias_sin_contacto >= 7 && (
+                        {(c.dias_sin_contacto ?? 0) >= 7 && (
                           <div className="text-[10px] text-amber-600 font-medium mt-0.5">
                             Hace {c.dias_sin_contacto} dias
                           </div>
@@ -195,11 +223,14 @@ export default function ClientesVentasPage() {
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="inline-flex items-center gap-1">
-                          <button className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors" title="Llamar">
+                          <button
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                            title="Llamar"
+                          >
                             <Phone className="w-3.5 h-3.5" />
                           </button>
                           <Link
-                            href="/ventas/jornada"
+                            href="/vendedor/seguimiento/jornada"
                             className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-[#1F1D3D] text-white hover:bg-[#35325B] transition-colors"
                             title="Gestionar"
                           >

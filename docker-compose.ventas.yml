@@ -1,0 +1,42 @@
+# Compose para el backend de Ventas (FastAPI)
+# Mejoras aplicadas:
+# - restart: always (se relanza siempre, incluso tras reboot del daemon)
+# - healthcheck con timeouts mas generosos (10s timeout, 5 retries)
+# - depends_on con healthcheck para garantizar orden de arranque
+services:
+  ventas-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.ventas
+    image: ventas-api:latest
+    container_name: ventas-api
+    # always = se relanza en cualquier caso, incluyendo reboot del daemon
+    restart: always
+    network_mode: host
+    env_file: /srv/prod/ventas/.env
+    environment:
+      TZ: America/El_Salvador
+      ECOSYSTEM: ventas
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_NAME: ventas_db
+      DB_USER: ventas_user
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      API_KEY: ${API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SAP_API_URL: ${SAP_API_URL:-}
+    volumes:
+      - /srv/prod/ventas/docker-logs:/app/logs
+    healthcheck:
+      # 10s timeout (queries lentas a DB), 5 retries, 30s start period
+      test: ["CMD", "python", "-c", "import httpx, os; httpx.get(f'http://127.0.0.1:{os.getenv(\"PORT\", \"3002\")}/api/ventas/health', timeout=5).raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

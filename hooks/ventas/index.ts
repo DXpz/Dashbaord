@@ -1,14 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  VentasAPI,
-  VtCliente,
-  VtDashboardKpis,
-  VtReporteDiario,
-} from '@/services/api/ventas';
+import { VentasAPI, VtCliente, VtDashboardKpis, VtReporteDiario } from '@/services/api/ventas';
 
-export type VentasSource = 'backend' | 'demo' | 'unknown';
+export type VentasSource = 'backend' | 'unavailable';
 
 export interface UseVentasState<T> {
   data: T | null;
@@ -23,8 +18,8 @@ export interface UseVentasReporteState extends UseVentasState<VtReporteDiario> {
 
 /**
  * Hook que consulta el backend de Ventas via VentasAPI.
- * Si el backend no responde, retorna source='demo' y data=null
- * (la pagina debe usar data hardcoded como fallback).
+ * Si el backend no responde, retorna source='unavailable' y data=null
+ * (la pagina debe mostrar mensaje de error, NO datos demo hardcoded).
  */
 export function useVentasClientes(
   filtros: { estado?: string; satisfaccion?: string; search?: string } = {}
@@ -33,7 +28,7 @@ export function useVentasClientes(
     data: null,
     loading: true,
     error: null,
-    source: 'unknown',
+    source: 'unavailable',
   });
 
   useEffect(() => {
@@ -45,7 +40,7 @@ export function useVentasClientes(
       })
       .catch((err) => {
         if (!cancelled)
-          setState({ data: null, loading: false, error: String(err), source: 'demo' });
+          setState({ data: null, loading: false, error: String(err), source: 'unavailable' });
       });
     return () => {
       cancelled = true;
@@ -61,7 +56,7 @@ export function useVentasDashboard() {
     data: null,
     loading: true,
     error: null,
-    source: 'unknown',
+    source: 'unavailable',
   });
 
   useEffect(() => {
@@ -72,7 +67,7 @@ export function useVentasDashboard() {
       })
       .catch((err) => {
         if (!cancelled)
-          setState({ data: null, loading: false, error: String(err), source: 'demo' });
+          setState({ data: null, loading: false, error: String(err), source: 'unavailable' });
       });
     return () => {
       cancelled = true;
@@ -87,7 +82,7 @@ export function useVentasReporteDiario(fecha?: string) {
     data: null,
     loading: true,
     error: null,
-    source: 'unknown',
+    source: 'unavailable',
   });
 
   useEffect(() => {
@@ -99,7 +94,7 @@ export function useVentasReporteDiario(fecha?: string) {
       })
       .catch((err) => {
         if (!cancelled)
-          setState({ data: null, loading: false, error: String(err), source: 'demo' });
+          setState({ data: null, loading: false, error: String(err), source: 'unavailable' });
       });
     return () => {
       cancelled = true;

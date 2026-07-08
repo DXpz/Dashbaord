@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app/ ./app/
+COPY migrations/ ./migrations/
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV ECOSYSTEM=ventas
+
+EXPOSE 3002
+
+# Health check con timeouts mas generosos
+# - timeout=10s: suficiente para queries lentas a la DB
+# - start-period=30s: da tiempo al boot + migraciones + scheduler
+# - retries=5: tolera picos de CPU sin reiniciar el container
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=5 \
+    CMD python -c "import httpx, os; httpx.get(f'http://127.0.0.1:{os.getenv(\"PORT\", \"3002\")}/api/ventas/health', timeout=5).raise_for_status()" || exit 1
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3002"]

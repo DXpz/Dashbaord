@@ -38,7 +38,7 @@ interface Actividad {
 }
 
 interface Pendiente {
-  id: number;
+  id: string;
   codigo: string;
   nombre: string;
   ciudad: string;
@@ -49,21 +49,10 @@ interface Pendiente {
 }
 
 // Datos demo para fallback si el backend no responde.
-const DEMO_PENDIENTES: Pendiente[] = [
-  { id: 1, codigo: 'CL003342', nombre: 'P.S. LA ESPERANZA, S.A. DE C.V.', ciudad: 'San Salvador', telefono: '2260-7788', diasSinContacto: 1, satisfaccion: 'insatisfecho', estado: 'seguimiento' },
-  { id: 2, codigo: 'CL003289', nombre: 'MINISTERIO DE DESARROLLO LOCAL', ciudad: 'San Salvador', telefono: '2240-3344', diasSinContacto: 17, satisfaccion: 'satisfecho', estado: 'sin_gestion' },
-  { id: 3, codigo: 'CL003376', nombre: 'CAJA DE CREDITO Y AHORRO DE SAN JUAN OPICO', ciudad: 'San Juan Opico', telefono: '2250-6633', diasSinContacto: 35, satisfaccion: 'neutral', estado: 'sin_gestion' },
-  { id: 4, codigo: 'CL002215', nombre: 'FONDO DE DESARROLLO ECONOMICO', ciudad: 'San Salvador', telefono: '2250-8800', diasSinContacto: 7, satisfaccion: 'satisfecho', estado: 'sin_gestion' },
-  { id: 5, codigo: 'CL003422', nombre: 'INDUSTRIAS METALURGICAS UNIDAS, S.A. DE C.V.', ciudad: 'Ilopango', telefono: '2271-3388', diasSinContacto: 5, satisfaccion: 'satisfecho', estado: 'renovacion' },
-  { id: 6, codigo: 'CL002216', nombre: 'FONDO SALVADORENO DE GARANTIAS', ciudad: 'San Salvador', telefono: '2290-1234', diasSinContacto: 3, satisfaccion: 'neutral', estado: 'seguimiento' },
-];
-
-const DEMO_ACTIVIDADES: Actividad[] = [
-  { hora: '10:42', codigo: 'CL003354', cliente: 'DEVEL SECURITY', accion: 'Llamada de seguimiento registrada', estado: 'contactado' },
-  { hora: '11:15', codigo: 'CL003401', cliente: 'COMERCIALIZADORA DEL PACIFICO', accion: 'Feedback de satisfaccion registrado', satisfaccion: 'muy_satisfecho', estado: 'sin_gestion' },
-  { hora: '13:30', codigo: 'CL002216', cliente: 'FONDO SALVADORENO DE GARANTIAS', accion: 'Reunion tecnica agendada para el viernes', estado: 'seguimiento' },
-  { hora: '14:55', codigo: 'CL003422', cliente: 'INDUSTRIAS METALURGICAS UNIDAS', accion: 'Renovacion confirmada por 2 anos', satisfaccion: 'satisfecho', estado: 'renovacion' },
-];
+// NOTA: a partir del refactor del 2026-07-07 ya no se usan datos demo.
+//       Las listas se renderizan vacias si el backend no responde.
+const DEMO_PENDIENTES: Pendiente[] = [];
+const DEMO_ACTIVIDADES: Actividad[] = [];
 
 const SATISFACCION_BADGE: Record<Satisfaccion, { label: string; bg: string; text: string; stars: number }> = {
   muy_satisfecho: { label: 'Muy satisfecho', bg: 'bg-emerald-50', text: 'text-emerald-700', stars: 5 },
@@ -106,12 +95,13 @@ export default function ReportesVentasPage() {
 
   // Hook contra el backend real. Fallback a data demo si no responde.
   const { data, source, loading } = useVentasReporteDiario(fecha);
-  const isDemo = source === 'demo';
+  const isDemo = source === 'unavailable';
+  const isUnavailable = isDemo; // alias semántico
 
   // Mapear datos del backend al formato de UI, con fallback a demo.
   const pendientes: Pendiente[] =
     data?.pendientes.map((c) => ({
-      id: c.id,
+      id: c.sap_card_code,
       codigo: c.sap_card_code,
       nombre: c.nombre,
       ciudad: c.ciudad || '',
@@ -119,7 +109,7 @@ export default function ReportesVentasPage() {
       diasSinContacto: c.dias_sin_contacto,
       satisfaccion: c.satisfaccion,
       estado: c.estado,
-    })) || DEMO_PENDIENTES;
+    })) || [];
 
   const actividades: Actividad[] =
     data?.recientes.map((r, i) => ({
@@ -129,7 +119,7 @@ export default function ReportesVentasPage() {
       accion: r.comentario,
       satisfaccion: r.satisfaccion,
       estado: r.estado,
-    })) || DEMO_ACTIVIDADES;
+    })) || [];
 
   const kpis = data
     ? {

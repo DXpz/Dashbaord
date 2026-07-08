@@ -3,6 +3,12 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
+// URL del backend (Vercel env: NEXT_PUBLIC_API_UPSTREAM).
+// Llamamos DIRECTO a prospektia para evitar timeout 10s del proxy de Vercel.
+const DIRECT_BACKEND = process.env.NEXT_PUBLIC_API_UPSTREAM || 'https://prospektia.red.com.sv';
+// API key expuesta al browser (NEXT_PUBLIC_API_KEY).
+const DIRECT_API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
+
 export interface ApiUser {
   id: number;
   email: string;
@@ -81,7 +87,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' });
+      const res = await fetch(`${DIRECT_BACKEND}/api/auth/me`, {
+        cache: 'no-store',
+        credentials: 'include',
+        headers: DIRECT_API_KEY ? { 'X-API-Key': DIRECT_API_KEY } : {},
+      });
       if (res.ok) {
         const userData = await res.json();
         const u = userData.user || userData.data || userData;
@@ -109,9 +119,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     // Limpiar cache del usuario anterior ANTES de autenticar al nuevo.
     clearUserCache();
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${DIRECT_BACKEND}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(DIRECT_API_KEY ? { 'X-API-Key': DIRECT_API_KEY } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
@@ -156,7 +169,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     // Limpiar TODO el cache del usuario antes de redirigir al login.
     clearUserCache();
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch(`${DIRECT_BACKEND}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: DIRECT_API_KEY ? { 'X-API-Key': DIRECT_API_KEY } : {},
+      });
     } catch {
     }
     // Forzar recarga completa de la pagina para reiniciar Providers (EcosystemContext,

@@ -1,0 +1,25 @@
+# Compose para el front-end (DASHBOARD V5)
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: dashboard-frontend:latest
+    container_name: dashboard-frontend
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env.production.local
+    volumes:
+      - ./docker-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/login', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

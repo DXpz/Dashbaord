@@ -12,7 +12,6 @@ import {
   X,
   ChevronDown,
   ChevronUp,
-  ArrowLeft,
   Search,
   Play,
   Calendar,
@@ -20,7 +19,8 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useVentasClientes } from '@/hooks';
-import { VentasAPI, type VtCliente } from '@/services/api/ventas';
+import { VentasAPI, type VtCliente, type VtFeedback } from '@/services/api/ventas';
+import { useAuth } from '@/lib/auth-context';
 
 type Satisfaccion = VtCliente['satisfaccion'];
 type Estado = VtCliente['estado'];
@@ -34,10 +34,7 @@ interface Retroalimentacion {
 
 interface Cliente extends VtCliente {
   contacto: string;
-  cargo: string;
   telefono: string;
-  correo: string;
-  servicio: string;
   retroalimentaciones: Retroalimentacion[];
 }
 
@@ -45,10 +42,7 @@ function vtToCliente(c: VtCliente): Cliente {
   return {
     ...c,
     contacto: c.correo || '',
-    cargo: '',
     telefono: c.telefonos || '',
-    correo: c.correo || '',
-    servicio: c.ciudad || '',
     retroalimentaciones: [],
   };
 }
@@ -91,7 +85,19 @@ function satToStars(s: Satisfaccion): number {
   return s === 'muy_satisfecho' ? 5 : s === 'satisfecho' ? 4 : s === 'neutral' ? 3 : 2;
 }
 
-export default function JornadaVentasPage() {
+function feedbackToRetro(f: VtFeedback, gestorNombre: string): Retroalimentacion {
+  return {
+    fecha: f.fecha,
+    gestor: gestorNombre,
+    comentario: f.comentario,
+    satisfaccion: f.satisfaccion,
+  };
+}
+
+export default function JornadaSeguimientoPage() {
+  const { user } = useAuth();
+  const gestorNombre = user?.full_name || 'Agente de Ventas';
+
   const [modalCliente, setModalCliente] = useState<Cliente | null>(null);
   const [expandido, setExpandido] = useState<string | null>(null);
   const [jornadaActiva, setJornadaActiva] = useState(false);
@@ -99,13 +105,11 @@ export default function JornadaVentasPage() {
   const [filtroEstado, setFiltroEstado] = useState<'todos' | Estado>('todos');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Hook contra el backend real. Sin fallback demo.
   const { data, source } = useVentasClientes();
   const isUnavailable = source === 'unavailable';
-
-  // Mapeamos los datos del backend al formato local.
-  const clientes: Cliente[] = (data || []).map(vtToCliente);
+  const clientes: Cliente[] = (data ?? []).map(vtToCliente);
 
   const today = new Date();
   const dateLabel = today.toLocaleDateString('es-ES', {
@@ -122,7 +126,7 @@ export default function JornadaVentasPage() {
 
   const totalClientes = clientes.length;
   const gestionados = clientes.filter((c) => c.estado !== 'sin_gestion').length;
-  const desatendidos = clientes.filter((c) => c.dias_sin_contacto >= 7).length;
+  const desatendidos = clientes.filter((c) => (c.dias_sin_contacto ?? 0) >= 7).length;
   const enRiesgo = clientes.filter(
     (c) => c.satisfaccion === 'insatisfecho' || c.satisfaccion === 'neutral'
   ).length;
@@ -139,25 +143,81 @@ export default function JornadaVentasPage() {
     );
   });
 
+  // Cargar historial de feedback cuando se expande una fila
+  useEffect(() => {
+    if (!expandido) return;
+    const cliente = clientes.find((c) => c.sap_card_code === expandido);
+    if (!cliente || cliente.retroalimentaciones.length > 0) return;
+    VentasAPI.listFeedback(expandido, 50)
+      .then((list) => {
+        const mapped = list.map((f) => feedbackToRetro(f, gestorNombre));
+        // Actualizamos la lista en memoria
+        const updated = clientes.map((c) =>
+          c.sap_card_code === expandido ? { ...c, retroalimentaciones: mapped } : c
+        );
+        // Re-render no se hace automatico (clientes es derivado del hook).
+        // En lugar de eso, lo guardamos en un map de expansiones:
+        setExpandedRetro((prev) => ({ ...prev, [expandido]: mapped }));
+      })
+      .catch(() => {
+        // Silenciar error
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandido]);
+
+  const [expandedRetro, setExpandedRetro] = useState<Record<string, Retroalimentacion[]>>({});
+
   const handleGuardar = async (cliente: Cliente, data: Partial<Cliente>) => {
     setSaveError(null);
     setSaving(true);
     try {
-      if (source === 'backend' && data.satisfaccion) {
-        await VentasAPI.createFeedback(cliente.sap_card_code, {
-          comentario: data.retroalimentaciones?.[0]?.comentario || 'Gestion registrada',
-          satisfaccion: data.satisfaccion,
-          estado: data.estado,
-          dias_sin_contacto: 0,
-        });
-      }
+      await VentasAPI.createFeedback(cliente.sap_card_code, {
+        comentario: data.retroalimentaciones?.[0]?.comentario || 'Gestion registrada',
+        satisfaccion: data.satisfaccion!,
+        estado: data.estado,
+        dias_sin_contacto: 0,
+      });
       setModalCliente(null);
+      setRefreshKey((k) => k + 1);
     } catch (e: unknown) {
       setSaveError(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }
   };
+
+  if (isUnavailable) {
+    return (
+      <Shell
+        pageTitle="Jornada de Seguimiento"
+        filters={emptyFilters}
+        onFilterChange={handleChange}
+        onFiltrar={handleFiltrar}
+        onLimpiar={handleLimpiar}
+        asesores={[]}
+        connectionStatus="error"
+        showFilterBar={false}
+      >
+        <div className="max-w-3xl mx-auto pt-2 space-y-5">
+          <Link
+            href="/vendedor"
+            className="inline-flex items-center gap-1.5 text-xs text-[#35325B] hover:text-[#1F1D3D] font-medium"
+          >
+            ← Volver al panel
+          </Link>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-semibold text-amber-900">Backend de Ventas no disponible</h3>
+              <p className="text-xs text-amber-800 mt-1">
+                No se pueden cargar tus clientes ni registrar feedback. Verifica tu conexion o contacta al administrador.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
 
   if (!jornadaActiva) {
     return (
@@ -173,19 +233,11 @@ export default function JornadaVentasPage() {
       >
         <div className="max-w-3xl mx-auto pt-2 space-y-5">
           <Link
-            href="/ventas"
+            href="/vendedor"
             className="inline-flex items-center gap-1.5 text-xs text-[#35325B] hover:text-[#1F1D3D] font-medium"
           >
-            <ArrowLeft className="w-3 h-3" />
-            Volver al panel
+            ← Volver al panel
           </Link>
-
-          {isUnavailable && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center gap-2 text-xs text-amber-800">
-              <AlertCircle className="w-3.5 h-3.5" />
-              Backend de Ventas no disponible. No se pueden cargar clientes.
-            </div>
-          )}
 
           <section className="bg-gradient-to-br from-[#1F1D3D] to-[#35325B] rounded-xl p-8 text-white">
             <p className="text-[11px] uppercase tracking-wider text-white/60 mb-1 inline-flex items-center gap-1.5">
@@ -247,17 +299,17 @@ export default function JornadaVentasPage() {
         showFilterBar={false}
       >
         <div className="space-y-5 max-w-7xl">
-          <Link href="/ventas" className="inline-flex items-center gap-1.5 text-xs text-[#35325B] hover:text-[#1F1D3D] font-medium">
-            <ArrowLeft className="w-3 h-3" />
-            Volver al panel
+          <Link
+            href="/vendedor"
+            className="inline-flex items-center gap-1.5 text-xs text-[#35325B] hover:text-[#1F1D3D] font-medium"
+          >
+            ← Volver al panel
           </Link>
           <div className="bg-white border border-[#EEEEEC] rounded-xl p-12 text-center">
             <AlertCircle className="w-12 h-12 text-[#B5B5AE] mx-auto mb-3" />
             <h3 className="text-base font-semibold text-[#1F1D3D] mb-1">No hay clientes asignados</h3>
             <p className="text-sm text-[#B5B5AE] mb-4">
-              {isUnavailable
-                ? 'El backend de Ventas no esta disponible. No se pueden cargar clientes.'
-                : 'Aun no tienes clientes asignados en el backend de Ventas.'}
+              Aun no tienes clientes asignados en el backend de Ventas.
             </p>
             <button
               onClick={() => setJornadaActiva(false)}
@@ -284,19 +336,11 @@ export default function JornadaVentasPage() {
     >
       <div className="space-y-5 max-w-7xl">
         <Link
-          href="/ventas"
+          href="/vendedor"
           className="inline-flex items-center gap-1.5 text-xs text-[#35325B] hover:text-[#1F1D3D] font-medium"
         >
-          <ArrowLeft className="w-3 h-3" />
-          Volver al panel
+          ← Volver al panel
         </Link>
-
-        {isUnavailable && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center gap-2 text-xs text-amber-800">
-            <AlertCircle className="w-3.5 h-3.5" />
-            Backend de Ventas no disponible. Los cambios no se guardaran.
-          </div>
-        )}
 
         <section className="bg-white border border-[#EEEEEC] rounded-xl p-4">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -390,6 +434,7 @@ export default function JornadaVentasPage() {
                   filteredClientes.map((c, idx) => {
                     const isExpanded = expandido === c.sap_card_code;
                     const gestionado = c.estado !== 'sin_gestion';
+                    const retro = expandedRetro[c.sap_card_code] ?? c.retroalimentaciones;
                     return (
                       <>
                         <tr
@@ -405,9 +450,9 @@ export default function JornadaVentasPage() {
                               className="text-[#0c6aa1] hover:text-[#1F1D3D] hover:underline font-mono font-medium inline-flex items-center gap-1"
                             >
                               {c.sap_card_code}
-                              {c.retroalimentaciones.length > 0 && (
+                              {retro.length > 0 && (
                                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#EEEEEC] text-[10px] text-[#35325B]">
-                                  {c.retroalimentaciones.length}
+                                  {retro.length}
                                 </span>
                               )}
                             </button>
@@ -428,7 +473,7 @@ export default function JornadaVentasPage() {
                           </td>
                           <td className="px-5 py-3 text-xs text-[#35325B]">
                             <div>{c.ultima_gestion || '-'}</div>
-                            {c.dias_sin_contacto >= 7 && (
+                            {(c.dias_sin_contacto ?? 0) >= 7 && (
                               <div className="text-[10px] text-amber-600 font-medium mt-0.5">
                                 Hace {c.dias_sin_contacto} dias
                               </div>
@@ -459,22 +504,22 @@ export default function JornadaVentasPage() {
                                 className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-[#F5F5ED] text-[#35325B] hover:bg-[#EEEEEC] transition-colors"
                                 title="Ver historial"
                               >
-                                {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 w-3.5" />}
                               </button>
                             </div>
                           </td>
                         </tr>
-                        {isExpanded && c.retroalimentaciones.length > 0 && (
+                        {isExpanded && retro.length > 0 && (
                           <tr key={`${c.sap_card_code}-hist`} className="border-t border-[#EEEEEC] bg-[#F5F5ED]/50">
                             <td colSpan={8} className="px-5 py-4">
                               <div className="flex items-start gap-3">
                                 <MessageSquare className="w-4 h-4 text-[#0c6aa1] flex-shrink-0 mt-1" />
                                 <div className="flex-1">
                                   <p className="text-[10px] font-semibold text-[#B5B5AE] uppercase tracking-wider mb-2">
-                                    Historial de feedback ({c.retroalimentaciones.length})
+                                    Historial de feedback ({retro.length})
                                   </p>
                                   <div className="space-y-2">
-                                    {c.retroalimentaciones.map((r, i) => {
+                                    {retro.map((r, i) => {
                                       const rSat = SATISFACCION_BADGE[r.satisfaccion];
                                       return (
                                         <div key={i} className="bg-white border border-[#EEEEEC] rounded-lg p-3">
@@ -554,7 +599,7 @@ function FeedbackModal({
       estado,
       ultima_gestion: hoy,
       dias_sin_contacto: 0,
-      retroalimentaciones: [nuevaRetro, ...cliente.retroalimentaciones],
+      retroalimentaciones: [nuevaRetro, ...(cliente.retroalimentaciones || [])],
     });
   };
 
@@ -674,7 +719,7 @@ function FeedbackModal({
               </>
             ) : (
               <>
-                <Save className="w-3.5 h-3.5" />
+                <Save className="w-3.5 w-3.5" />
                 Registrar feedback
               </>
             )}
@@ -707,7 +752,7 @@ function PreJornadaKpi({
           className="w-7 h-7 rounded-md flex items-center justify-center"
           style={{ backgroundColor: `${accent}1a` }}
         >
-          <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
+          <Icon className="w-3.5 w-3.5" style={{ color: accent }} />
         </div>
         <p className="text-[10px] font-medium text-[#B5B5AE] uppercase tracking-wider">
           {label}

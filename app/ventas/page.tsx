@@ -28,20 +28,10 @@ interface ClienteResumen {
   ultimaGestion: string;
 }
 
-const DEMO_CLIENTES: VtCliente[] = [
-  { id: 1, sap_card_code: 'CL002214', nombre: 'BANCO DE DESARROLLO DE LA REPUBLICA DE EL SALVADOR', direccion: null, telefonos: '2260-5500', ciudad: 'San Salvador', categoria: null, correo: 'cobros@bandesal.gob.sv', vendedor_id: 1, satisfaccion: 'muy_satisfecho', dias_sin_contacto: 4, ultima_gestion: '2026-06-28', estado: 'contactado' },
-  { id: 2, sap_card_code: 'CL002215', nombre: 'FONDO DE DESARROLLO ECONOMICO', direccion: null, telefonos: '2250-8800', ciudad: 'San Salvador', categoria: null, correo: 'contacto@fde.gob.sv', vendedor_id: 1, satisfaccion: 'satisfecho', dias_sin_contacto: 7, ultima_gestion: '2026-06-25', estado: 'sin_gestion' },
-  { id: 3, sap_card_code: 'CL002216', nombre: 'FONDO SALVADORENO DE GARANTIAS', direccion: null, telefonos: '2290-1234', ciudad: 'San Salvador', categoria: null, correo: 'cobros@fosyga.gob.sv', vendedor_id: 1, satisfaccion: 'neutral', dias_sin_contacto: 3, ultima_gestion: '2026-06-29', estado: 'seguimiento' },
-  { id: 4, sap_card_code: 'CL003287', nombre: 'INVERSIONES TOTALES, S.A. DE C.V.', direccion: null, telefonos: '2270-9911', ciudad: 'San Salvador', categoria: null, correo: 'cobros@invtotales.com.sv', vendedor_id: 1, satisfaccion: 'muy_satisfecho', dias_sin_contacto: 6, ultima_gestion: '2026-06-26', estado: 'renovacion' },
-  { id: 5, sap_card_code: 'CL003289', nombre: 'MINISTERIO DE DESARROLLO LOCAL', direccion: null, telefonos: '2240-3344', ciudad: 'San Salvador', categoria: null, correo: 'cobros@mindel.gob.sv', vendedor_id: 1, satisfaccion: 'satisfecho', dias_sin_contacto: 17, ultima_gestion: '2026-06-15', estado: 'sin_gestion' },
-  { id: 6, sap_card_code: 'CL003342', nombre: 'P.S. LA ESPERANZA, S.A. DE C.V.', direccion: null, telefonos: '2260-7788', ciudad: 'San Salvador', categoria: null, correo: 'cobros@psesperanza.com.sv', vendedor_id: 1, satisfaccion: 'insatisfecho', dias_sin_contacto: 1, ultima_gestion: '2026-07-01', estado: 'seguimiento' },
-  { id: 7, sap_card_code: 'CL003354', nombre: 'DEVEL SECURITY, S.A. DE C.V.', direccion: null, telefonos: '2280-4455', ciudad: 'Antiguo Cuscatlan', categoria: null, correo: 'cobros@develsecurity.com.sv', vendedor_id: 1, satisfaccion: 'satisfecho', dias_sin_contacto: 2, ultima_gestion: '2026-06-30', estado: 'contactado' },
-  { id: 8, sap_card_code: 'CL003376', nombre: 'CAJA DE CREDITO Y AHORRO DE SAN JUAN OPICO', direccion: null, telefonos: '2250-6633', ciudad: 'San Juan Opico', categoria: null, correo: 'cobros@ccsjuanopico.coop.sv', vendedor_id: 1, satisfaccion: 'neutral', dias_sin_contacto: 35, ultima_gestion: '2026-05-28', estado: 'sin_gestion' },
-  { id: 9, sap_card_code: 'CL003401', nombre: 'COMERCIALIZADORA DEL PACIFICO, S.A. DE C.V.', direccion: null, telefonos: '2299-1100', ciudad: 'Soyapango', categoria: null, correo: 'cobros@cdelpacifico.com.sv', vendedor_id: 1, satisfaccion: 'muy_satisfecho', dias_sin_contacto: 3, ultima_gestion: '2026-06-29', estado: 'sin_gestion' },
-  { id: 10, sap_card_code: 'CL003422', nombre: 'INDUSTRIAS METALURGICAS UNIDAS, S.A. DE C.V.', direccion: null, telefonos: '2271-3388', ciudad: 'Ilopango', categoria: null, correo: 'cobros@imusa.com.sv', vendedor_id: 1, satisfaccion: 'satisfecho', dias_sin_contacto: 5, ultima_gestion: '2026-06-27', estado: 'renovacion' },
-];
+// NOTA: ya no se usan datos demo hardcoded. Si el backend no responde, la lista
+//       se muestra vacia y se muestra un mensaje de "Backend no disponible".
 
-const DEMO_KPIS = { mis_clientes: 10, gestionados: 0, en_riesgo: 0, desatendidos: 0 };
+const DEMO_KPIS = { mis_clientes: 0, gestionados: 0, en_riesgo: 0, desatendidos: 0 };
 
 const emptyFilters = {
   desde: '', hasta: '', pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '',
@@ -106,10 +96,10 @@ export default function VentasPage() {
   const { data: dataClientes, source: sourceClientes } = useVentasClientes();
   const { data: dataKpis } = useVentasDashboard();
 
-  const clientes: VtCliente[] =
-    dataClientes && dataClientes.length > 0 ? dataClientes : DEMO_CLIENTES;
-  const kpis = dataKpis || DEMO_KPIS;
-  const isDemo = sourceClientes === 'demo';
+  const clientes: VtCliente[] = dataClientes ?? [];
+  const kpis = dataKpis ?? DEMO_KPIS;
+  const isDemo = false; // legacy: ya no se usan datos demo
+  const isUnavailable = sourceClientes === 'unavailable';
 
   const totalClientes = clientes.length;
   const desatendidos = clientes.filter((c) => c.dias_sin_contacto >= 7).length;
@@ -130,10 +120,10 @@ export default function VentasPage() {
       showFilterBar={false}
     >
       <div className="space-y-5 max-w-7xl">
-        {isDemo && (
+        {isUnavailable && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center gap-2 text-xs text-amber-800">
             <AlertCircle className="w-3.5 h-3.5" />
-            Backend de Ventas no disponible. Mostrando datos demo.
+            Backend de Ventas no disponible.
           </div>
         )}
 
@@ -231,7 +221,7 @@ export default function VentasPage() {
                   })
                   .slice(0, 6)
                   .map((c) => (
-                    <tr key={c.id} className="border-t border-[#EEEEEC] hover:bg-[#F5F5ED]/40">
+                    <tr key={c.sap_card_code} className="border-t border-[#EEEEEC] hover:bg-[#F5F5ED]/40">
                       <td className="px-5 py-3">
                         <div className="text-xs font-medium text-[#1F1D3D] uppercase">
                           {c.nombre}

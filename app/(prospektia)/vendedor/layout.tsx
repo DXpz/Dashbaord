@@ -5,16 +5,86 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { VendedorFiltersProvider, useVendedorFilters } from '@/lib/vendedor-filters';
-import { LayoutDashboard, Calendar, FileText, LogOut, X, Menu, Lock, Info } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Calendar,
+  FileText,
+  MessageSquare,
+  Users,
+  LogOut,
+  X,
+  Menu,
+  Lock,
+  Info,
+  ChevronDown,
+  Briefcase,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const NAV_ITEMS = [
-  { href: '/vendedor', label: 'Resumen', icon: LayoutDashboard },
-  { href: '/vendedor/reuniones', label: 'Mis Reuniones', icon: Calendar },
-  { href: '/vendedor/formulario', label: 'Formulario', icon: FileText },
-  { href: '/versiones', label: 'Versiones', icon: Info },
-  { href: '/change-password', label: 'Cambiar contraseña', icon: Lock },
+type IconKey = 'resumen' | 'formulario' | 'reuniones' | 'jornada' | 'clientes' | 'versiones' | 'password';
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: IconKey;
+}
+
+interface NavGroup {
+  id: string;
+  label: string;
+  icon: 'briefcase' | 'messages' | 'users';
+  items: NavItem[];
+  defaultCollapsed?: boolean;
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'prospectos',
+    label: 'Prospectos',
+    icon: 'briefcase',
+    defaultCollapsed: false,
+    items: [
+      { href: '/vendedor/prospectos/formulario', label: 'Formulario', icon: 'formulario' },
+      { href: '/vendedor/prospectos/reuniones', label: 'Mis Reuniones', icon: 'reuniones' },
+    ],
+  },
+  {
+    id: 'seguimiento',
+    label: 'Seguimiento',
+    icon: 'messages',
+    defaultCollapsed: false,
+    items: [
+      { href: '/vendedor/seguimiento/jornada', label: 'Jornada', icon: 'jornada' },
+      { href: '/vendedor/seguimiento/clientes', label: 'Mis Clientes', icon: 'clientes' },
+    ],
+  },
+  {
+    id: 'cuenta',
+    label: 'Mi cuenta',
+    icon: 'users',
+    defaultCollapsed: true,
+    items: [
+      { href: '/vendedor/cuenta/versiones', label: 'Versiones', icon: 'versiones' },
+      { href: '/vendedor/cuenta/password', label: 'Cambiar contraseña', icon: 'password' },
+    ],
+  },
 ];
+
+const ICONS: Record<IconKey, typeof LayoutDashboard> = {
+  resumen: LayoutDashboard,
+  formulario: FileText,
+  reuniones: Calendar,
+  jornada: MessageSquare,
+  clientes: Users,
+  versiones: Info,
+  password: Lock,
+};
+
+const GROUP_ICONS = {
+  briefcase: Briefcase,
+  messages: MessageSquare,
+  users: Users,
+} as const;
 
 const EDGE_TRIGGER_WIDTH = 40;
 const LEAVE_DELAY_MS = 1500;
@@ -58,12 +128,93 @@ function FilterBar() {
   );
 }
 
+function NavGroupSection({
+  group,
+  pathname,
+  collapsedGroups,
+  toggleGroup,
+  onNavigate,
+}: {
+  group: NavGroup;
+  pathname: string;
+  collapsedGroups: Record<string, boolean>;
+  toggleGroup: (id: string) => void;
+  onNavigate: () => void;
+}) {
+  const GroupIcon = GROUP_ICONS[group.icon];
+  const isCollapsed = !!collapsedGroups[group.id];
+  const groupActive = group.items.some((it) => pathname === it.href);
+
+  return (
+    <div>
+      <button
+        onClick={() => toggleGroup(group.id)}
+        className={cn(
+          'flex items-center justify-between w-full px-3 py-2 rounded text-sm font-medium transition-colors',
+          groupActive && !isCollapsed
+            ? 'text-[#1F1D3D]'
+            : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+        )}
+      >
+        <span className="inline-flex items-center gap-2">
+          <GroupIcon className="h-4 w-4" />
+          {group.label}
+        </span>
+        <ChevronDown
+          className={cn(
+            'h-3.5 w-3.5 transition-transform',
+            isCollapsed ? '-rotate-90' : 'rotate-0'
+          )}
+        />
+      </button>
+
+      {!isCollapsed && (
+        <div className="mt-1 ml-3 pl-2 border-l border-[#EEEEEC] space-y-1">
+          {group.items.map((it) => {
+            const Icon = ICONS[it.icon];
+            const active = pathname === it.href;
+            return (
+              <Link
+                key={it.href}
+                href={it.href}
+                onClick={onNavigate}
+                className={cn(
+                  'flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors',
+                  active
+                    ? 'bg-[#1F1D3D] text-white font-medium'
+                    : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {it.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function VendedorLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Colapso: arrancamos con los defaults (prospectos+seguimiento expandidos, cuenta colapsado)
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    NAV_GROUPS.forEach((g) => {
+      init[g.id] = !!g.defaultCollapsed;
+    });
+    return init;
+  });
+
+  const toggleGroup = useCallback((id: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
   const clearLeaveTimeout = useCallback(() => {
     if (leaveTimeoutRef.current) {
@@ -97,7 +248,9 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
   }, [showSidebar, clearLeaveTimeout, isHoveringSidebar]);
 
   useEffect(() => {
-    return () => { clearLeaveTimeout(); };
+    return () => {
+      clearLeaveTimeout();
+    };
   }, [clearLeaveTimeout]);
 
   const handleMouseEnter = () => {
@@ -115,6 +268,13 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
     clearLeaveTimeout();
     setIsOpen(false);
   };
+
+  // Titulo de la pagina actual (para el header)
+  const allItems: NavItem[] = [
+    { href: '/vendedor', label: 'Resumen', icon: 'resumen' },
+    ...NAV_GROUPS.flatMap((g) => g.items),
+  ];
+  const currentTitle = allItems.find((n) => n.href === pathname)?.label ?? 'Dashboard';
 
   return (
     <VendedorFiltersProvider>
@@ -155,26 +315,35 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
             </div>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={handleClose}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                    active
-                      ? 'bg-[#1F1D3D] text-white'
-                      : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </Link>
-              );
-            })}
+          <nav className="flex-1 p-4 space-y-3 overflow-y-auto">
+            {/* Resumen: item plano, fuera de las carpetas */}
+            <Link
+              href="/vendedor"
+              onClick={handleClose}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                pathname === '/vendedor'
+                  ? 'bg-[#1F1D3D] text-white'
+                  : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+              )}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Resumen
+            </Link>
+
+            <div className="pt-2 border-t border-[#EEEEEC]" />
+
+            {/* 3 carpetas colapsables */}
+            {NAV_GROUPS.map((g) => (
+              <NavGroupSection
+                key={g.id}
+                group={g}
+                pathname={pathname}
+                collapsedGroups={collapsedGroups}
+                toggleGroup={toggleGroup}
+                onNavigate={handleClose}
+              />
+            ))}
           </nav>
 
           <div className="p-4 border-t border-[#EEEEEC]">
@@ -197,16 +366,12 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
               >
                 <Menu className="w-6 h-6" />
               </button>
-              <h1 className="text-base font-semibold text-[#1F1D3D]">
-                {NAV_ITEMS.find(n => n.href === pathname)?.label ?? 'Dashboard'}
-              </h1>
+              <h1 className="text-base font-semibold text-[#1F1D3D]">{currentTitle}</h1>
               <div className="w-10 lg:hidden" />
             </div>
             <FilterBar />
           </header>
-          <div className="p-4 lg:p-6">
-            {children}
-          </div>
+          <div className="p-4 lg:p-6">{children}</div>
         </main>
       </div>
     </VendedorFiltersProvider>
