@@ -1,6 +1,6 @@
 'use client';
 
-import { Shell } from '@/components/layout/Shell';
+import { VendedorContent } from '@/components/layout/VendedorContent';
 import Link from 'next/link';
 import {
   Phone,
@@ -15,13 +15,6 @@ import { useVentasClientes } from '@/hooks';
 import type { VtCliente } from '@/services/api/ventas';
 
 type Satisfaccion = VtCliente['satisfaccion'];
-
-const emptyFilters = {
-  desde: '', hasta: '', pais: '', asesor: '', tipoLead: '', origen: '', tipoLlamada: '',
-};
-const handleChange = () => {};
-const handleFiltrar = () => {};
-const handleLimpiar = () => {};
 
 const SATISFACCION_LABEL: Record<Satisfaccion, string> = {
   muy_satisfecho: 'Muy satisfecho',
@@ -77,37 +70,19 @@ export default function ClientesSeguimientoPage() {
 
   if (loading) {
     return (
-      <Shell
-        pageTitle="Mis Clientes"
-        filters={emptyFilters}
-        onFilterChange={handleChange}
-        onFiltrar={handleFiltrar}
-        onLimpiar={handleLimpiar}
-        asesores={[]}
-        connectionStatus="connecting"
-        showFilterBar={false}
-      >
+      <VendedorContent pageTitle="Mis Clientes" showFilterBar={false}>
         <div className="space-y-5 max-w-7xl">
           <div className="bg-white border border-[#EEEEEC] rounded-xl p-12 text-center">
             <p className="text-sm text-[#B5B5AE]">Cargando clientes desde SAP...</p>
           </div>
         </div>
-      </Shell>
+      </VendedorContent>
     );
   }
 
   if (isUnavailable) {
     return (
-      <Shell
-        pageTitle="Mis Clientes"
-        filters={emptyFilters}
-        onFilterChange={handleChange}
-        onFiltrar={handleFiltrar}
-        onLimpiar={handleLimpiar}
-        asesores={[]}
-        connectionStatus="error"
-        showFilterBar={false}
-      >
+      <VendedorContent pageTitle="Mis Clientes" showFilterBar={false}>
         <div className="space-y-5 max-w-7xl">
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
@@ -120,21 +95,12 @@ export default function ClientesSeguimientoPage() {
             </div>
           </div>
         </div>
-      </Shell>
+      </VendedorContent>
     );
   }
 
   return (
-    <Shell
-      pageTitle="Mis Clientes"
-      filters={emptyFilters}
-      onFilterChange={handleChange}
-      onFiltrar={handleFiltrar}
-      onLimpiar={handleLimpiar}
-      asesores={[]}
-      connectionStatus="connected"
-      showFilterBar={false}
-    >
+    <VendedorContent pageTitle="Mis Clientes" showFilterBar={false}>
       <div className="space-y-5 max-w-7xl">
         <section className="bg-white border border-[#EEEEEC] rounded-xl p-3 flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[220px]">
@@ -246,6 +212,6 @@ export default function ClientesSeguimientoPage() {
           </div>
         </div>
       </div>
-    </Shell>
+    </VendedorContent>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -17,22 +18,23 @@ import {
   Lock,
   Info,
   ChevronDown,
+  ChevronRight,
   Briefcase,
+  type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-type IconKey = 'resumen' | 'formulario' | 'reuniones' | 'jornada' | 'clientes' | 'versiones' | 'password';
 
 interface NavItem {
   href: string;
   label: string;
-  icon: IconKey;
+  icon: LucideIcon;
+  adminOnly?: boolean;
 }
 
 interface NavGroup {
   id: string;
   label: string;
-  icon: 'briefcase' | 'messages' | 'users';
+  icon?: LucideIcon;
   items: NavItem[];
   defaultCollapsed?: boolean;
 }
@@ -41,53 +43,37 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: 'prospectos',
     label: 'Prospectos',
-    icon: 'briefcase',
+    icon: Briefcase,
     defaultCollapsed: false,
     items: [
-      { href: '/vendedor/prospectos/formulario', label: 'Formulario', icon: 'formulario' },
-      { href: '/vendedor/prospectos/reuniones', label: 'Mis Reuniones', icon: 'reuniones' },
+      { href: '/vendedor/prospectos/formulario', label: 'Formulario', icon: FileText },
+      { href: '/vendedor/prospectos/reuniones', label: 'Mis Reuniones', icon: Calendar },
     ],
   },
   {
     id: 'seguimiento',
     label: 'Seguimiento',
-    icon: 'messages',
+    icon: MessageSquare,
     defaultCollapsed: false,
     items: [
-      { href: '/vendedor/seguimiento/jornada', label: 'Jornada', icon: 'jornada' },
-      { href: '/vendedor/seguimiento/clientes', label: 'Mis Clientes', icon: 'clientes' },
+      { href: '/vendedor/seguimiento/jornada', label: 'Jornada', icon: MessageSquare },
+      { href: '/vendedor/seguimiento/clientes', label: 'Mis Clientes', icon: Users },
     ],
   },
   {
     id: 'cuenta',
     label: 'Mi cuenta',
-    icon: 'users',
+    icon: Lock,
     defaultCollapsed: true,
     items: [
-      { href: '/vendedor/cuenta/versiones', label: 'Versiones', icon: 'versiones' },
-      { href: '/vendedor/cuenta/password', label: 'Cambiar contraseña', icon: 'password' },
+      { href: '/vendedor/cuenta/versiones', label: 'Versiones', icon: Info },
+      { href: '/vendedor/cuenta/password', label: 'Cambiar contraseña', icon: Lock },
     ],
   },
 ];
 
-const ICONS: Record<IconKey, typeof LayoutDashboard> = {
-  resumen: LayoutDashboard,
-  formulario: FileText,
-  reuniones: Calendar,
-  jornada: MessageSquare,
-  clientes: Users,
-  versiones: Info,
-  password: Lock,
-};
-
-const GROUP_ICONS = {
-  briefcase: Briefcase,
-  messages: MessageSquare,
-  users: Users,
-} as const;
-
-const EDGE_TRIGGER_WIDTH = 40;
-const LEAVE_DELAY_MS = 1500;
+const EDGE_TRIGGER_WIDTH = 60;
+const LEAVE_DELAY_MS = 2000;
 
 function FilterBar() {
   const { month, year, setMonth, setYear, handleLimpiar, availableYears, months } = useVendedorFilters();
@@ -128,68 +114,76 @@ function FilterBar() {
   );
 }
 
-function NavGroupSection({
+function NavLink({
+  item,
+  pathname,
+  onClick,
+}: {
+  item: NavItem;
+  pathname: string;
+  onClick: () => void;
+}) {
+  const isActive = pathname === item.href;
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-colors',
+        isActive
+          ? 'bg-[#1F1D3D] text-[#F5F5ED]'
+          : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+      )}
+    >
+      <item.icon className="w-3.5 h-3.5 flex-shrink-0" />
+      <span>{item.label}</span>
+    </Link>
+  );
+}
+
+function GroupSection({
   group,
   pathname,
-  collapsedGroups,
-  toggleGroup,
-  onNavigate,
+  collapsed,
+  onToggle,
+  onItemClick,
 }: {
   group: NavGroup;
   pathname: string;
-  collapsedGroups: Record<string, boolean>;
-  toggleGroup: (id: string) => void;
-  onNavigate: () => void;
+  collapsed: boolean;
+  onToggle: () => void;
+  onItemClick: () => void;
 }) {
-  const GroupIcon = GROUP_ICONS[group.icon];
-  const isCollapsed = !!collapsedGroups[group.id];
-  const groupActive = group.items.some((it) => pathname === it.href);
-
   return (
-    <div>
+    <div className="mb-0.5">
       <button
-        onClick={() => toggleGroup(group.id)}
+        onClick={onToggle}
         className={cn(
-          'flex items-center justify-between w-full px-3 py-2 rounded text-sm font-medium transition-colors',
-          groupActive && !isCollapsed
-            ? 'text-[#1F1D3D]'
-            : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
+          'w-full flex items-center justify-between px-2.5 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wider transition-colors',
+          'text-[#1F1D3D] hover:bg-[#EEEEEC]'
         )}
+        aria-expanded={!collapsed}
       >
-        <span className="inline-flex items-center gap-2">
-          <GroupIcon className="h-4 w-4" />
+        <span className="inline-flex items-center gap-1.5">
+          {group.icon && <group.icon className="w-3 h-3" />}
           {group.label}
         </span>
-        <ChevronDown
-          className={cn(
-            'h-3.5 w-3.5 transition-transform',
-            isCollapsed ? '-rotate-90' : 'rotate-0'
-          )}
-        />
+        {collapsed ? (
+          <ChevronRight className="w-3 h-3" />
+        ) : (
+          <ChevronDown className="w-3 h-3" />
+        )}
       </button>
-
-      {!isCollapsed && (
-        <div className="mt-1 ml-3 pl-2 border-l border-[#EEEEEC] space-y-1">
-          {group.items.map((it) => {
-            const Icon = ICONS[it.icon];
-            const active = pathname === it.href;
-            return (
-              <Link
-                key={it.href}
-                href={it.href}
-                onClick={onNavigate}
-                className={cn(
-                  'flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors',
-                  active
-                    ? 'bg-[#1F1D3D] text-white font-medium'
-                    : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {it.label}
-              </Link>
-            );
-          })}
+      {!collapsed && (
+        <div className="mt-0.5 ml-2 pl-2.5 border-l border-[#EEEEEC] space-y-0.5">
+          {group.items.map((it) => (
+            <NavLink
+              key={it.href}
+              item={it}
+              pathname={pathname}
+              onClick={onItemClick}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -198,8 +192,9 @@ function NavGroupSection({
 
 export default function VendedorLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpenDesktop, setIsOpenDesktop] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -225,12 +220,12 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
 
   const showSidebar = useCallback(() => {
     clearLeaveTimeout();
-    setIsOpen(true);
+    setIsOpenDesktop(true);
   }, [clearLeaveTimeout]);
 
   const scheduleHide = useCallback(() => {
     leaveTimeoutRef.current = setTimeout(() => {
-      setIsOpen(false);
+      setIsOpenDesktop(false);
     }, LEAVE_DELAY_MS);
   }, [clearLeaveTimeout]);
 
@@ -256,7 +251,7 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
   const handleMouseEnter = () => {
     setIsHoveringSidebar(true);
     clearLeaveTimeout();
-    setIsOpen(true);
+    setIsOpenDesktop(true);
   };
 
   const handleMouseLeave = () => {
@@ -264,14 +259,17 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
     scheduleHide();
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     clearLeaveTimeout();
     setIsOpen(false);
-  };
+    setIsOpenDesktop(false);
+  }, [clearLeaveTimeout]);
+
+  const isVisible = isOpen || isOpenDesktop;
 
   // Titulo de la pagina actual (para el header)
   const allItems: NavItem[] = [
-    { href: '/vendedor', label: 'Resumen', icon: 'resumen' },
+    { href: '/vendedor', label: 'Resumen', icon: LayoutDashboard },
     ...NAV_GROUPS.flatMap((g) => g.items),
   ];
   const currentTitle = allItems.find((n) => n.href === pathname)?.label ?? 'Dashboard';
@@ -279,7 +277,7 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
   return (
     <VendedorFiltersProvider>
       <div className="flex min-h-screen bg-[#EEEEEC]">
-        {isOpen && (
+        {isVisible && (
           <div
             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30"
             onClick={handleClose}
@@ -290,68 +288,71 @@ export default function VendedorLayout({ children }: { children: React.ReactNode
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           className={cn(
-            'fixed top-0 left-0 z-40 h-screen w-64 bg-[#F5F5ED] border-r border-[#EEEEEC] flex flex-col',
+            'fixed top-0 left-0 z-40 h-screen w-60 bg-[#F5F5ED] border-r border-[#EEEEEC] flex flex-col',
             'transform transition-transform duration-200 ease-out',
-            isOpen ? 'translate-x-0' : '-translate-x-full'
+            isVisible ? 'translate-x-0' : '-translate-x-full'
           )}
         >
-          <div className="p-4 border-b border-[#EEEEEC]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#1F1D3D] rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">{user?.full_name?.[0] ?? 'V'}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-[#1F1D3D]">{user?.full_name}</p>
-                  <p className="text-xs text-[#B5B5AE] capitalize">{user?.role}</p>
-                </div>
+          {/* Header: solo logo + X */}
+          <div className="flex items-center justify-between px-3 pt-4 pb-3 flex-shrink-0">
+            <div className="flex-1 flex items-center justify-center">
+              <div className="relative h-9 rounded overflow-hidden">
+                <Image
+                  src="/logos/prospektia.png"
+                  alt="ProspektIA"
+                  width={130}
+                  height={33}
+                  className="object-contain"
+                  priority
+                />
               </div>
-              <button
-                onClick={handleClose}
-                className="w-8 h-8 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B]"
-              >
-                <X className="h-4 w-4" />
-              </button>
             </div>
+            <button
+              onClick={handleClose}
+              className="w-7 h-7 flex items-center justify-center text-[#B5B5AE] hover:text-[#35325B] lg:hidden"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          <nav className="flex-1 p-4 space-y-3 overflow-y-auto">
-            {/* Resumen: item plano, fuera de las carpetas */}
+          <nav className="flex-1 min-h-0 px-3 mt-2 space-y-0.5 overflow-hidden">
+            {/* Resumen: item plano, mismo estilo que NavLink */}
             <Link
               href="/vendedor"
               onClick={handleClose}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                'flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-colors',
                 pathname === '/vendedor'
-                  ? 'bg-[#1F1D3D] text-white'
+                  ? 'bg-[#1F1D3D] text-[#F5F5ED]'
                   : 'text-[#35325B] hover:text-[#1F1D3D] hover:bg-[#EEEEEC]'
               )}
             >
-              <LayoutDashboard className="h-4 w-4" />
-              Resumen
+              <LayoutDashboard className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Resumen</span>
             </Link>
 
-            <div className="pt-2 border-t border-[#EEEEEC]" />
+            <div className="my-1.5 border-t border-[#EEEEEC]" />
 
-            {/* 3 carpetas colapsables */}
+            {/* 3 carpetas colapsables (mismo estilo que super admin) */}
             {NAV_GROUPS.map((g) => (
-              <NavGroupSection
+              <GroupSection
                 key={g.id}
                 group={g}
                 pathname={pathname}
-                collapsedGroups={collapsedGroups}
-                toggleGroup={toggleGroup}
-                onNavigate={handleClose}
+                collapsed={!!collapsedGroups[g.id]}
+                onToggle={() => toggleGroup(g.id)}
+                onItemClick={handleClose}
               />
             ))}
           </nav>
 
-          <div className="p-4 border-t border-[#EEEEEC]">
+          {/* Footer: solo logout (igual al super admin) */}
+          <div className="flex-shrink-0 px-3 py-3 border-t border-[#EEEEEC] bg-[#F5F5ED]">
             <button
               onClick={logout}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded text-sm font-medium text-[#B5B5AE] hover:text-[#c8151b] hover:bg-red-50 transition-colors"
+              className="flex items-center gap-2 w-full px-2.5 py-2 text-xs text-[#35325B] hover:text-[#c8151b] hover:bg-red-50 rounded transition-colors"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="w-3.5 h-3.5" />
               Cerrar sesión
             </button>
           </div>

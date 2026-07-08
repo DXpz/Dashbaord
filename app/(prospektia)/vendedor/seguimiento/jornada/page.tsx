@@ -1,6 +1,6 @@
 'use client';
 
-import { Shell } from '@/components/layout/Shell';
+import { VendedorContent } from '@/components/layout/VendedorContent';
 import Link from 'next/link';
 import {
   Phone,
@@ -100,6 +100,7 @@ export default function JornadaSeguimientoPage() {
 
   const [modalCliente, setModalCliente] = useState<Cliente | null>(null);
   const [expandido, setExpandido] = useState<string | null>(null);
+  const [expandedRetro, setExpandedRetro] = useState<Record<string, Retroalimentacion[]>>({});
   const [jornadaActiva, setJornadaActiva] = useState(false);
   const [query, setQuery] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'todos' | Estado>('todos');
@@ -143,20 +144,14 @@ export default function JornadaSeguimientoPage() {
     );
   });
 
-  // Cargar historial de feedback cuando se expande una fila
+  // Cargar historial de feedback cuando se expande una fila.
+  // Solo si no tenemos datos cacheados en `expandedRetro`.
   useEffect(() => {
     if (!expandido) return;
-    const cliente = clientes.find((c) => c.sap_card_code === expandido);
-    if (!cliente || cliente.retroalimentaciones.length > 0) return;
+    if (expandedRetro[expandido]) return; // ya tenemos el historial
     VentasAPI.listFeedback(expandido, 50)
       .then((list) => {
         const mapped = list.map((f) => feedbackToRetro(f, gestorNombre));
-        // Actualizamos la lista en memoria
-        const updated = clientes.map((c) =>
-          c.sap_card_code === expandido ? { ...c, retroalimentaciones: mapped } : c
-        );
-        // Re-render no se hace automatico (clientes es derivado del hook).
-        // En lugar de eso, lo guardamos en un map de expansiones:
         setExpandedRetro((prev) => ({ ...prev, [expandido]: mapped }));
       })
       .catch(() => {
@@ -164,8 +159,6 @@ export default function JornadaSeguimientoPage() {
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expandido]);
-
-  const [expandedRetro, setExpandedRetro] = useState<Record<string, Retroalimentacion[]>>({});
 
   const handleGuardar = async (cliente: Cliente, data: Partial<Cliente>) => {
     setSaveError(null);
@@ -188,16 +181,7 @@ export default function JornadaSeguimientoPage() {
 
   if (isUnavailable) {
     return (
-      <Shell
-        pageTitle="Jornada de Seguimiento"
-        filters={emptyFilters}
-        onFilterChange={handleChange}
-        onFiltrar={handleFiltrar}
-        onLimpiar={handleLimpiar}
-        asesores={[]}
-        connectionStatus="error"
-        showFilterBar={false}
-      >
+      <VendedorContent pageTitle="Jornada de Seguimiento" showFilterBar={false}>
         <div className="max-w-3xl mx-auto pt-2 space-y-5">
           <Link
             href="/vendedor"
@@ -215,22 +199,13 @@ export default function JornadaSeguimientoPage() {
             </div>
           </div>
         </div>
-      </Shell>
+      </VendedorContent>
     );
   }
 
   if (!jornadaActiva) {
     return (
-      <Shell
-        pageTitle="Jornada de Seguimiento"
-        filters={emptyFilters}
-        onFilterChange={handleChange}
-        onFiltrar={handleFiltrar}
-        onLimpiar={handleLimpiar}
-        asesores={[]}
-        connectionStatus="connected"
-        showFilterBar={false}
-      >
+      <VendedorContent pageTitle="Jornada de Seguimiento" showFilterBar={false}>
         <div className="max-w-3xl mx-auto pt-2 space-y-5">
           <Link
             href="/vendedor"
@@ -282,22 +257,13 @@ export default function JornadaSeguimientoPage() {
             />
           </section>
         </div>
-      </Shell>
+      </VendedorContent>
     );
   }
 
   if (clientes.length === 0) {
     return (
-      <Shell
-        pageTitle="Jornada de Seguimiento"
-        filters={emptyFilters}
-        onFilterChange={handleChange}
-        onFiltrar={handleFiltrar}
-        onLimpiar={handleLimpiar}
-        asesores={[]}
-        connectionStatus="connected"
-        showFilterBar={false}
-      >
+      <VendedorContent pageTitle="Jornada de Seguimiento" showFilterBar={false}>
         <div className="space-y-5 max-w-7xl">
           <Link
             href="/vendedor"
@@ -319,21 +285,12 @@ export default function JornadaSeguimientoPage() {
             </button>
           </div>
         </div>
-      </Shell>
+      </VendedorContent>
     );
   }
 
   return (
-    <Shell
-      pageTitle="Jornada de Seguimiento"
-      filters={emptyFilters}
-      onFilterChange={handleChange}
-      onFiltrar={handleFiltrar}
-      onLimpiar={handleLimpiar}
-      asesores={[]}
-      connectionStatus="connected"
-      showFilterBar={false}
-    >
+    <VendedorContent pageTitle="Jornada de Seguimiento" showFilterBar={false}>
       <div className="space-y-5 max-w-7xl">
         <Link
           href="/vendedor"
@@ -434,7 +391,7 @@ export default function JornadaSeguimientoPage() {
                   filteredClientes.map((c, idx) => {
                     const isExpanded = expandido === c.sap_card_code;
                     const gestionado = c.estado !== 'sin_gestion';
-                    const retro = expandedRetro[c.sap_card_code] ?? c.retroalimentaciones;
+                    const retro = expandedRetro[c.sap_card_code] ?? [];
                     return (
                       <>
                         <tr
@@ -563,7 +520,7 @@ export default function JornadaSeguimientoPage() {
           error={saveError}
         />
       )}
-    </Shell>
+    </VendedorContent>
   );
 }
 

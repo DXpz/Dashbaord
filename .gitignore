@@ -25,3 +25,4 @@ yarn-error.log*
 
 # Local-only (templates, drafts, etc)
 templates/
+tsconfig.tsbuildinfo
